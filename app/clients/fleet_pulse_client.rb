@@ -11,7 +11,7 @@ module FleetPulse
     attr_reader :host
 
     sig { params(host: String).void }
-    def initialize(host: "localhost:50052")
+    def initialize(host: ENV.fetch("MATCHING_GRPC_HOST", "localhost:4000"))
       @host = host
     end
 

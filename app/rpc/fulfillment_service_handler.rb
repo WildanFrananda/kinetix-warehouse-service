@@ -54,7 +54,7 @@ module Rpc
 
       form = Orders::CreateOrderForm.new(
         order_number: req.order_number.presence || "ORD-#{SecureRandom.hex(4).upcase}",
-        buyer_name: addr ? addr.recipient_name : req.buyer_name,
+        buyer_name: addr ? addr.recipient_name : "Customer",
         buyer_phone: buyer_phone,
         shipping_address: shipping_str,
         total_amount: total_amt,
