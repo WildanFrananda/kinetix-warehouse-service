@@ -5,7 +5,7 @@ require "rails_helper"
 require_relative "../../app/clients/fleet_pulse_client"
 
 RSpec.describe FleetPulse::GrpcClient do
-  let(:client) { FleetPulse::GrpcClient.new(host: "localhost:50052") }
+  let(:client) { FleetPulse::GrpcClient.new(host: "localhost:50053") }
 
   describe "#dispatch_courier" do
     it "handles connection error gracefully when FleetPulse server is offline" do
@@ -17,8 +17,8 @@ RSpec.describe FleetPulse::GrpcClient do
       )
 
       expect(result[:success]).to eq(false)
-      expect(result[:driver_name]).to eq("FleetPulse Pending")
-      expect(result[:vehicle]).to eq("Motorcycle")
+      expect(result[:driver_name]).to eq("")
+      expect(result[:eta_minutes]).to eq(0)
     end
   end
 end

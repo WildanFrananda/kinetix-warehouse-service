@@ -11,7 +11,7 @@ module FleetPulse
     attr_reader :host
 
     sig { params(host: String).void }
-    def initialize(host: ENV.fetch("MATCHING_GRPC_HOST", "localhost:4000"))
+    def initialize(host: ENV.fetch("MATCHING_GRPC_HOST", "localhost:50053"))
       @host = host
     end
 
@@ -53,10 +53,10 @@ module FleetPulse
       {
         success: false,
         dispatch_ref: "",
-        driver_name: "FleetPulse Pending",
+        driver_name: "",
         driver_phone: "",
-        vehicle: "Motorcycle",
-        eta_minutes: 15,
+        vehicle: "",
+        eta_minutes: 0,
         error: e.message
       }
     end

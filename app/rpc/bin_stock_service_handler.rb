@@ -14,53 +14,45 @@ module Rpc
 
     sig do
       params(
-        req: Fulfillment::V1::GetBinStockInfoRequest,
+        req: Fulfillment::V1::CheckBinStockRequest,
         _call: T.nilable(GRPC::ActiveCall)
-      ).returns(Fulfillment::V1::GetBinStockInfoResponse)
+      ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
-    def get_bin_stock_info(req, _call)
-      inventory = BinInventory.joins(:warehouse_bin).find_by(sku: req.sku)
+    def check_bin_stock(req, _call)
+      sku = req.sku
+      inventory = BinInventory.joins(:warehouse_bin).find_by(sku: sku)
 
       if inventory
-        bin_code = inventory.warehouse_bin.bin_code
         available = inventory.available_quantity
-        reserved = inventory.reserved_quantity
+        reserved = inventory.reserved_quantity || 0
+        physical = inventory.quantity || (available + reserved)
+        bin_code = inventory.warehouse_bin.bin_code
       else
-        bin_code = "Rak A-01, Bin 01"
         available = 0
         reserved = 0
+        physical = 0
+        bin_code = "Unavailable"
       end
 
-      Fulfillment::V1::GetBinStockInfoResponse.new(
-        sku: req.sku,
+      Fulfillment::V1::CheckBinStockResponse.new(
+        sku: sku,
+        product_name: "Physical Inventory SKU #{sku}",
+        physical_stock: physical,
+        allocated_stock: reserved,
+        available_stock: available,
         bin_location: bin_code,
-        available_quantity: available,
-        reserved_quantity: reserved
+        low_stock_warning: available < 5
       )
     end
 
     sig do
       params(
-        req: T.untyped,
+        req: Fulfillment::V1::CheckBinStockRequest,
         _call: T.nilable(GRPC::ActiveCall)
-      ).returns(T.untyped)
+      ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
-    def check_bin_stock(req, _call)
-      sku = req.respond_to?(:sku) ? req.sku : ""
-      inventory = BinInventory.joins(:warehouse_bin).find_by(sku: sku)
-
-      available = inventory ? inventory.available_quantity : 25
-      bin_code = inventory ? inventory.warehouse_bin.bin_code : "Rak A-01, Bin 01"
-
-      Fulfillment::V1::CheckBinStockResponse.new(
-        sku: sku,
-        product_name: "Verified Product",
-        physical_stock: available + 5,
-        allocated_stock: 5,
-        available_stock: available,
-        bin_location: bin_code,
-        low_stock_warning: available < 5
-      )
+    def get_bin_stock_info(req, _call)
+      check_bin_stock(req, _call)
     end
 
     sig do
@@ -70,28 +62,32 @@ module Rpc
       ).returns(Fulfillment::V1::ReserveStockResponse)
     end
     def reserve_stock(req, _call)
-      inventory = BinInventory.find_by(sku: req.sku)
+      inventory = BinInventory.joins(:warehouse_bin).find_by(sku: req.sku)
 
       unless inventory
         return Fulfillment::V1::ReserveStockResponse.new(
           success: false,
-          reserved_quantity: 0,
-          message: "SKU #{req.sku} not found in physical inventory"
+          bin_location: "N/A",
+          remaining_available: 0
         )
       end
 
-      if inventory.available_quantity >= req.requested_quantity
-        inventory.update!(reserved_quantity: inventory.reserved_quantity + req.requested_quantity)
+      req_qty = req.quantity
+      if inventory.available_quantity >= req_qty
+        new_reserved = (inventory.reserved_quantity || 0) + req_qty
+        inventory.update!(reserved_quantity: new_reserved)
+        remaining = inventory.available_quantity
+
         Fulfillment::V1::ReserveStockResponse.new(
           success: true,
-          reserved_quantity: req.requested_quantity,
-          message: "Successfully reserved #{req.requested_quantity} units of SKU #{req.sku}"
+          bin_location: inventory.warehouse_bin.bin_code,
+          remaining_available: remaining
         )
       else
         Fulfillment::V1::ReserveStockResponse.new(
           success: false,
-          reserved_quantity: 0,
-          message: "Insufficient physical stock for SKU #{req.sku}"
+          bin_location: inventory.warehouse_bin.bin_code,
+          remaining_available: inventory.available_quantity
         )
       end
     end

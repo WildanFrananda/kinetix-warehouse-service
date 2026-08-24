@@ -21,40 +21,55 @@ class SessionsController < ApplicationController
       redirect_to login_path and return
     end
 
-    staff = StaffUser.find_by(email: email)
-
-    if staff.nil?
-      flash[:alert] = "⚠️ No registered staff account found for '#{email}'!"
-      redirect_to login_path and return
+    staff = begin
+      StaffUser.find_by(email: email)
+    rescue StandardError
+      nil
     end
 
-    valid_staff = T.must(staff)
-    merchant_id = valid_staff.merchant_id
+    identity_client = Identity::GrpcClient.new
+    merchant_info = identity_client.get_merchant_by_api_key(api_key: password_input)
 
-    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-    merchant = merchant_repo.find_by_id(merchant_id)
-
-    if merchant.nil?
-      flash[:alert] = "⚠️ Associated Merchant record not found!"
-      redirect_to login_path and return
+    if merchant_info
+      m_id = merchant_info[:user_id].to_i
+      session[:merchant_id] = m_id
+      session[:staff_id] = staff&.id
+      session[:role] = staff&.role || "Warehouse Staff"
+      flash[:notice] = "🔓 Authentication Successful via gRPC IdentityService! Welcome back, #{email}."
+      redirect_to orders_path(merchant_id: m_id)
+      return
     end
 
-    valid_merchant = T.must(merchant)
+    if staff
+      valid_staff = staff
+      merchant_id = valid_staff.merchant_id
+      merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+      merchant = merchant_repo.find_by_id(merchant_id)
 
-    # BCrypt Password & Merchant API Key Verification
-    password_valid = T.unsafe(valid_staff).authenticate(password_input) || (password_input == valid_merchant.api_key)
+      if merchant.nil?
+        flash[:alert] = "⚠️ Associated Merchant record not found!"
+        redirect_to login_path and return
+      end
 
-    unless password_valid
-      flash[:alert] = "⚠️ Invalid Password for #{valid_staff.name}!"
-      redirect_to login_path and return
+      valid_merchant = T.must(merchant)
+      password_valid = T.unsafe(valid_staff).authenticate(password_input) || (password_input == valid_merchant.api_key)
+
+      unless password_valid
+        flash[:alert] = "⚠️ Invalid Password for #{valid_staff.name}!"
+        redirect_to login_path and return
+      end
+
+      session[:merchant_id] = merchant_id
+      session[:staff_id] = valid_staff.id
+      session[:role] = valid_staff.role
+
+      flash[:notice] = "🔓 Authentication Successful! Welcome to #{valid_merchant.name}, #{valid_staff.name}."
+      redirect_to orders_path(merchant_id: merchant_id)
+      return
     end
 
-    session[:merchant_id] = merchant_id
-    session[:staff_id] = valid_staff.id
-    session[:role] = valid_staff.role
-
-    flash[:notice] = "🔓 Authentication Successful! Welcome to #{valid_merchant.name}, #{valid_staff.name}."
-    redirect_to orders_path(merchant_id: merchant_id)
+    flash[:alert] = "No registered staff account found for '#{email}'!"
+    redirect_to login_path
   end
 
   sig { void }
