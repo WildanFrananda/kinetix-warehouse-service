@@ -9,7 +9,6 @@ class Merchant < ApplicationRecord
 
   validates :name, presence: true
   validates :code, presence: true, uniqueness: true
-  validates :api_key, presence: true, uniqueness: true
   validates :latitude, presence: true
   validates :longitude, presence: true
 
@@ -23,5 +22,3 @@ class Merchant < ApplicationRecord
     (T.unsafe(self).longitude || BigDecimal("106.8456")).to_f
   end
 end
-
-

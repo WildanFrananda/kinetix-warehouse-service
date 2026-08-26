@@ -19,20 +19,21 @@ module Rpc
       ).returns(Fulfillment::V1::CreateOrderResponse)
     end
     def create_order(req, _call)
-      merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-      merchant = merchant_repo.find_by_api_key(req.merchant_api_key)
+      merchant = Merchant.first
 
       unless merchant
         return Fulfillment::V1::CreateOrderResponse.new(
           error: Common::V1::ErrorDetail.new(
             error_code: "UNAUTHORIZED",
-            message: "Invalid merchant_api_key"
+            message: "No active merchant found in warehouse database"
           )
         )
       end
 
+      total_calculated = BigDecimal("0")
       raw_items = req.items.map do |item|
         item_price = item.price ? BigDecimal(item.price.units.to_s) : BigDecimal("0")
+        total_calculated += item_price * BigDecimal(item.quantity.to_s)
         Orders::CreateOrderForm::ItemInput.new(
           sku: item.sku,
           product_name: item.product_name,
@@ -42,46 +43,38 @@ module Rpc
       end
 
       addr = req.shipping_address
-      shipping_str = addr ? "#{addr.street_address}, #{addr.city} #{addr.postal_code}".strip : "Main Street"
-      buyer_phone = addr ? addr.phone_number : ""
-
-      tot_amt_obj = req.total_amount
-      total_amt = if tot_amt_obj
-        BigDecimal(tot_amt_obj.units.to_s)
-      else
-        BigDecimal("0")
-      end
+      recipient_name = addr ? addr.recipient_name : "Customer"
+      phone_number = addr ? addr.phone_number : "08123456789"
+      street_address = addr ? addr.street_address : "Main Street 123"
 
       form = Orders::CreateOrderForm.new(
-        order_number: req.order_number.presence || "ORD-#{SecureRandom.hex(4).upcase}",
-        buyer_name: addr ? addr.recipient_name : "Customer",
-        buyer_phone: buyer_phone,
-        shipping_address: shipping_str,
-        total_amount: total_amt,
+        order_number: req.order_number.empty? ? "ORD-#{SecureRandom.hex(4).upcase}" : req.order_number,
+        buyer_name: recipient_name,
+        buyer_phone: phone_number,
+        shipping_address: street_address,
+        total_amount: total_calculated,
         items: raw_items
       )
 
-      service = T.let(Container[:create_order_service], Orders::CreateOrderService)
-      result = service.call(
-        merchant_id: merchant.id,
-        form: form
-      )
+      usecase = T.let(Container[:create_order_usecase], Orders::CreateOrderService)
+      res = usecase.call(merchant_id: merchant.id, form: form)
 
-      if result.success?
-        ord_data = T.cast(result.data, Orders::CreateOrderService::ResultData)
+      if res.success? && res.data
+        data = T.cast(res.data, Orders::CreateOrderService::ResultData)
+        pb_status = map_order_status(data.status)
 
         Fulfillment::V1::CreateOrderResponse.new(
-          order_id: ord_data.id,
-          order_number: ord_data.order_number,
-          status: Common::V1::OrderStatus::ORDER_STATUS_RECEIVED,
+          order_id: data.id,
+          order_number: data.order_number,
+          status: pb_status,
           merchant_id: merchant.id,
           created_at: Time.current.iso8601
         )
       else
         Fulfillment::V1::CreateOrderResponse.new(
           error: Common::V1::ErrorDetail.new(
-            error_code: "CREATE_ORDER_FAILED",
-            message: result.error || "Failed to create order"
+            error_code: "VALIDATION_FAILED",
+            message: res.error || "Order creation failed"
           )
         )
       end
@@ -94,8 +87,7 @@ module Rpc
       ).returns(Fulfillment::V1::GetOrderStatusResponse)
     end
     def get_order_status(req, _call)
-      merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-      merchant = merchant_repo.find_by_api_key(req.merchant_api_key)
+      merchant = Merchant.first
 
       unless merchant
         return Fulfillment::V1::GetOrderStatusResponse.new
@@ -130,55 +122,55 @@ module Rpc
       ).returns(Fulfillment::V1::CancelOrderResponse)
     end
     def cancel_order(req, _call)
-      merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-      merchant = merchant_repo.find_by_api_key(req.merchant_api_key)
+      merchant = Merchant.first
 
       unless merchant
         return Fulfillment::V1::CancelOrderResponse.new(
           success: false,
-          message: "Invalid merchant_api_key"
+          message: "No active merchant found"
         )
       end
 
       order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
       ord = order_repo.find_by_id(merchant_id: merchant.id, id: req.order_id)
 
-      unless ord && ord.merchant_id == merchant.id
+      unless ord
         return Fulfillment::V1::CancelOrderResponse.new(
           success: false,
-          message: "Order not found"
-        )
-      end
-
-      if [ "dispatched", "in_transit", "delivered" ].include?(ord.status)
-        return Fulfillment::V1::CancelOrderResponse.new(
-          success: false,
-          message: "Cannot cancel order in status: #{ord.status}",
-          current_status: map_order_status(ord.status || "")
+          message: "Order ##{req.order_id} not found"
         )
       end
 
       ord.update!(status: "cancelled")
+
       Fulfillment::V1::CancelOrderResponse.new(
         success: true,
-        message: "Order cancelled successfully",
+        message: "Order ##{req.order_id} has been cancelled",
         current_status: Common::V1::OrderStatus::ORDER_STATUS_CANCELLED
       )
     end
 
     private
 
-    sig { params(status: String).returns(Integer) }
-    def map_order_status(status)
-      case status
-      when "received" then Common::V1::OrderStatus::ORDER_STATUS_RECEIVED
-      when "packing" then Common::V1::OrderStatus::ORDER_STATUS_PACKING
-      when "packed" then Common::V1::OrderStatus::ORDER_STATUS_PACKED
-      when "dispatched" then Common::V1::OrderStatus::ORDER_STATUS_DISPATCHED
-      when "in_transit" then Common::V1::OrderStatus::ORDER_STATUS_IN_TRANSIT
-      when "delivered" then Common::V1::OrderStatus::ORDER_STATUS_DELIVERED
-      when "cancelled" then Common::V1::OrderStatus::ORDER_STATUS_CANCELLED
-      else Common::V1::OrderStatus::ORDER_STATUS_UNSPECIFIED
+    sig { params(status_str: String).returns(Integer) }
+    def map_order_status(status_str)
+      case status_str.downcase
+      when "received", "pending"
+        Common::V1::OrderStatus::ORDER_STATUS_RECEIVED
+      when "packing"
+        Common::V1::OrderStatus::ORDER_STATUS_PACKING
+      when "packed"
+        Common::V1::OrderStatus::ORDER_STATUS_PACKED
+      when "dispatched"
+        Common::V1::OrderStatus::ORDER_STATUS_DISPATCHED
+      when "in_transit"
+        Common::V1::OrderStatus::ORDER_STATUS_IN_TRANSIT
+      when "delivered"
+        Common::V1::OrderStatus::ORDER_STATUS_DELIVERED
+      when "cancelled"
+        Common::V1::OrderStatus::ORDER_STATUS_CANCELLED
+      else
+        Common::V1::OrderStatus::ORDER_STATUS_UNSPECIFIED
       end
     end
   end
