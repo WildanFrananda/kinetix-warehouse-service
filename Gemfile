@@ -81,7 +81,7 @@ end
 group :development, :test do
   gem "tapioca", require: false
   gem "ruby-lsp", require: false
-  gem "rspec-rails", "~> 7.0"
+  gem "rspec-rails", "~> 8.0"
   gem "factory_bot_rails"
 end
 
