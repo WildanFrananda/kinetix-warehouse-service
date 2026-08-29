@@ -21,6 +21,7 @@ gem "faye-websocket"
 gem "barby"
 gem "phlex-rails"
 gem "grpc"
+gem "redis", "~> 5.1"
 
 group :development do
   gem "grpc-tools"

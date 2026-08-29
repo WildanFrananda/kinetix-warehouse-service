@@ -3256,5 +3256,7 @@ end
 
 module Process
   extend ::FFI::ModernForkTracking
+  extend ::RedisClient::PIDCache::CoreExt
+  extend ::ConnectionPool::ForkTracker
   extend ::ActiveSupport::ForkTracker::CoreExt
 end

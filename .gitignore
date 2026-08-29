@@ -78,3 +78,5 @@ pickle-email-*.html
 *.old
 *.jar
 xerial*.*
+
+.env
