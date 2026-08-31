@@ -81,3 +81,11 @@ pickle-email-*.html
 xerial*.*
 
 .env
+/config/master.key
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
+
+# Local-only port publishing for host-run tests (S1 / P0-NET-01)
+docker-compose.override.yml

@@ -8,8 +8,8 @@ services:
     container_name: fashion_oms_postgres
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_USER: ${DB_SUPERUSER:?DB_SUPERUSER is required}
+      POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD:?DB_SUPERUSER_PASSWORD is required}
       POSTGRES_DB: fashion_fulfillment_oms_development
     volumes:
       - postgres_data:/var/lib/postgresql/data
