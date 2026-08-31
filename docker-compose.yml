@@ -1,14 +1,16 @@
+# Secrets are read from the environment with the ${VAR:?message} form, which makes
+# `docker compose` refuse to render at all when a value is missing rather than starting
+# on a committed default (S1 / P0-SEC-02). Datastore ports are deliberately NOT published
+# to the host: reach them from inside the compose network, or with `docker compose exec`.
 services:
   postgres:
     image: postgres:16-alpine
     container_name: fashion_oms_postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_DB: fashion_fulfillment_oms_development
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -16,8 +18,6 @@ services:
     image: redis:7-alpine
     container_name: fashion_oms_redis
     restart: always
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
 

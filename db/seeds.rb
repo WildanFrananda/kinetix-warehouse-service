@@ -1,5 +1,18 @@
 # typed: false
+
 # db/seeds.rb
+
+require "securerandom"
+
+if Rails.env.production? && ENV["ALLOW_DESTRUCTIVE_SEED"] != "yes"
+  abort <<~MSG
+    Refusing to seed in production: this script calls destroy_all on orders, labels,
+    returns, staff and merchants, and installs demo accounts.
+    Set ALLOW_DESTRUCTIVE_SEED=yes only if you genuinely intend to wipe this database.
+  MSG
+end
+
+SEED_STAFF_PASSWORD = ENV.fetch("SEED_STAFF_PASSWORD") { SecureRandom.urlsafe_base64(18) }
 
 puts "🌱 Clearing old records and seeding Fashion Fulfillment OMS with Logic-Driven Seeder..."
 
@@ -36,7 +49,7 @@ BUYER_PERSONAS = [
   { name: "Dewi Sartika", phone: "085678901234", address: "Jl. Pemuda No. 101, Surabaya" }
 ].freeze
 
-STATUS_PIPELINE = ["received", "packing", "packed", "dispatched", "in_transit", "delivered"].freeze
+STATUS_PIPELINE = [ "received", "packing", "packed", "dispatched", "in_transit", "delivered" ].freeze
 
 # 2. Logic Step: Seed Merchants & Staff Users
 # -------------------------------------------------------------
@@ -44,7 +57,7 @@ created_merchants = MERCHANTS_DATA.map do |data|
   merchant = Merchant.create!(
     code: data[:code],
     name: data[:name],
-    api_key: "luxe_prod_sec_#{Digest::SHA256.hexdigest(data[:code]).first(16)}",
+    api_key: "luxe_#{SecureRandom.hex(32)}",
     cutoff_hour: data[:cutoff_hour]
   )
 
@@ -53,7 +66,7 @@ created_merchants = MERCHANTS_DATA.map do |data|
     email: data[:manager_email],
     name: data[:manager_name],
     role: data[:role],
-    password: "secret123"
+    password: SEED_STAFF_PASSWORD
   )
 
 
@@ -68,7 +81,7 @@ now = Time.current
 
 created_merchants.each_with_index do |merchant, m_idx|
   merchant_catalog = m_idx.zero? ? CATALOG_ITEMS.take(5) : CATALOG_ITEMS.drop(4)
-  sla_cutoff_offsets = [-1.hour, 30.minutes, 4.hours, 2.hours, -2.hours]
+  sla_cutoff_offsets = [ -1.hour, 30.minutes, 4.hours, 2.hours, -2.hours ]
 
   BUYER_PERSONAS.each_with_index do |buyer, b_idx|
     order_num_seq = 1000 + b_idx + (m_idx * 100)
@@ -101,7 +114,7 @@ created_merchants.each_with_index do |merchant, m_idx|
       )
     end
 
-    if ["packed", "dispatched", "in_transit", "delivered"].include?(status)
+    if [ "packed", "dispatched", "in_transit", "delivered" ].include?(status)
       ShippingLabel.create!(
         order: order,
         awb_number: "TRK-#{order.id}#{order_num_seq}-XYZ",
@@ -122,3 +135,8 @@ created_merchants.each_with_index do |merchant, m_idx|
 end
 
 puts "🎉 Database successfully reset & seeded with new logic-driven records!"
+puts
+puts "Staff password for this run (shown once, not stored anywhere else):"
+puts "  #{SEED_STAFF_PASSWORD}"
+puts "Merchant API keys were generated randomly. Read them with:"
+puts "  bin/rails runner 'Merchant.pluck(:code, :api_key).each { |c, k| puts \"#{'%s'} #{'%s'}\" % [c, k] }'"
