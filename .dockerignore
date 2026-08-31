@@ -49,3 +49,12 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Secrets must never enter the build context (S1 / P0-IMG-01). This file existed but did
+# not cover .env, so freshly rotated secrets would be baked into distributable layers.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+config/master.key
