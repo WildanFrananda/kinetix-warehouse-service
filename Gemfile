@@ -39,6 +39,11 @@ gem "sorbet-runtime"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
+# Loads .env so credentials reach the app from the environment rather than from a
+# committed default (S1 / P0-SEC-03). config/database.yml now uses ENV.fetch with no
+# fallback, so without this the app cannot read its own local configuration.
+gem "dotenv-rails", "~> 3.1", groups: [:development, :test]
+
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
