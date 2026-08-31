@@ -44,9 +44,10 @@ db/*.sqlite3
 /capybara*
 /capybara-*.html
 /gems
-/spec/requests
-/spec/routing
-/spec/views
+# NOTE: /spec/requests, /spec/routing and /spec/views were ignored here (S1 / P0-WH-02).
+# They are our own test suites, not generated artefacts — this rule is a leftover from an
+# old rdoc/rspec-1 template. It hid 6 of 15 spec files from the repo and from CI, which is
+# why the pipeline could report green while executing no request specs at all.
 /specifications
 rerun.txt
 pickle-email-*.html
