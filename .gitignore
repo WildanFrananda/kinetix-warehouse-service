@@ -23,11 +23,16 @@ db/*.sqlite3
 **.war
 *.rbc
 *.sassc
-.rspec
+# .rspec is configuration, not an artifact. Ignoring it meant `rspec` ran without
+# --require spec_helper, so the support chain differed between developers and CI.
+# (S2 / P1-CI-02)
 .redcar/
 .sass-cache
 /config/config.yml
-/config/database.yml
+# config/database.yml is tracked. It was ignored, so a clone had no database config at
+# all and Rails could not boot — and the S1 rewrite that removed the hardcoded
+# postgres/postgres credentials never reached the repository. The file now contains only
+# ENV.fetch with no fallback, so there is nothing in it to hide. (S2 / P1-CI-02)
 /coverage.data
 /coverage/
 /db/*.javadb/

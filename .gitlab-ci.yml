@@ -1,0 +1,109 @@
+# Kinetix warehouse CI. (S2 / P1-CI-02)
+#
+# Replaces a GitHub Actions workflow that never ran — this repository's origin is gitlab.com,
+# so `.github/workflows/ci.yml` was inert config. Left running, it would have been worse than
+# nothing: it invoked `bin/rails db:test:prepare test`, which runs **Minitest**, against a
+# suite written entirely in RSpec. Zero examples executed and the job reported green.
+#
+# Four things that workflow was missing and this one has:
+#   1. RSpec, so the 18 spec files are actually executed.
+#   2. A test-count floor, so an empty run fails instead of passing.
+#   3. Redis, which the dispatch and tracking specs need.
+#   4. RAILS_MASTER_KEY, which was commented out, so anything touching credentials blew up.
+#
+# The database credentials here are per-pipeline, not the postgres/postgres literal the old
+# workflow used — that literal is one of the values this platform spent S1 invalidating.
+
+include:
+  - project: 'WildanFrananda/kinetix-infrastructure'
+    ref: main
+    file: '/ci/service-ci.yml'
+
+stages:
+  - verify
+  - build
+  - test
+
+variables:
+  RAILS_ENV: test
+  BUNDLE_PATH: vendor/bundle
+
+cache:
+  key:
+    files:
+      - Gemfile.lock
+  paths:
+    - vendor/bundle
+
+.ruby:
+  image: ruby:4.0.6
+  before_script:
+    - apt-get update -qq && apt-get install -y --no-install-recommends libpq-dev libvips
+    - gem install bundler --conservative
+    - bundle install --jobs 4
+
+secret-scan:
+  extends: .secret-scan
+
+lint:
+  extends: .ruby
+  stage: verify
+  script:
+    - bundle exec rubocop --format simple
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+security-scan:
+  extends: .ruby
+  stage: verify
+  script:
+    - bundle exec brakeman --no-pager
+    - bundle exec bundler-audit check --update
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build-image:
+  extends: .build-image
+
+rspec:
+  extends: .ruby
+  stage: test
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+    - name: redis:7.2-alpine
+      alias: redis
+  variables:
+    POSTGRES_USER: ci
+    POSTGRES_PASSWORD: $CI_JOB_TOKEN
+    POSTGRES_DB: kinetix_warehouse_test
+    POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_USERNAME: ci
+    DB_PASSWORD: $CI_JOB_TOKEN
+    TEST_DB_NAME: kinetix_warehouse_test
+    REDIS_URL: redis://redis:6379/0
+    # Masked, protected CI variable. Commented out in the old workflow, which meant any spec
+    # touching encrypted credentials failed for a reason nobody ever saw.
+    RAILS_MASTER_KEY: $RAILS_MASTER_KEY
+  script:
+    - test -n "$RAILS_MASTER_KEY" || { echo "RAILS_MASTER_KEY is not set"; exit 1; }
+    - bundle exec rails db:prepare
+    - bundle exec rspec --format progress --format json --out rspec.json
+    # A suite that runs no examples is a failed suite, not a passing one. This is the exact
+    # failure mode the previous pipeline had for its entire life.
+    - |
+      count=$(ruby -rjson -e 'puts JSON.parse(File.read("rspec.json"))["summary"]["example_count"]')
+      echo "executed $count examples"
+      test "$count" -ge 30 || { echo "expected at least 30 examples, ran $count — the suite is not being discovered"; exit 1; }
+  artifacts:
+    when: always
+    paths:
+      - rspec.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
