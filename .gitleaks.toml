@@ -1,0 +1,53 @@
+# gitleaks configuration for kinetix-warehouse-service.
+#
+# gitleaks reads this from the repository root, so CI and a local `gitleaks detect` agree.
+# Every exception below is scoped as narrowly as the finding allows and has to justify itself:
+# an allowlist that is easier to extend than to argue with stops being a secret scanner.
+
+[extend]
+# Keep every default rule. This file only subtracts specific, argued exceptions.
+useDefault = true
+
+[allowlist]
+description = "Paths that cannot hold a plaintext credential"
+paths = [
+  # Rails encrypted credentials. The file IS ciphertext and is committed on purpose — that is
+  # the entire design: it is inert without config/master.key, which is gitignored and has been
+  # rotated since its value was public. Scanning it flags the encryption, not a leak.
+  '''config/credentials\.yml\.enc$''',
+
+  # Sorbet RBI stubs, generated from third-party gems. Not this project's code: the hits are
+  # documentation comments inside websocket and uri gem stubs, including the same
+  # Sec-WebSocket-Key handshake nonce that RFC 6455 defines as public by design. Regenerating
+  # them would reproduce every hit, so treating them as source to be audited is a category
+  # error.
+  '''^sorbet/rbi/gems/''',
+]
+
+[[rules]]
+# The default generic-api-key rule fires on any high-entropy string near a key-ish word. That
+# is the right default, which is why the exception below is narrowed to the fixture rather than
+# the rule being weakened.
+id = "generic-api-key"
+description = "Generic API key"
+regex = '''(?i)(?:key|api|token|secret|client|passwd|password|auth|access)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\||:|<=|=>|:=)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["key", "api", "token", "secret", "client", "passwd", "password", "auth", "access"]
+
+  [rules.allowlist]
+  # Merchant API keys in the request specs. These are RSpec fixtures created by
+  # `create(:merchant, api_key: ...)` and sent back in X-Merchant-Api-Key to assert the
+  # controller accepts them — they authenticate nothing outside the test database, which the
+  # suite creates and drops.
+  #
+  # The merchant API key mechanism is being removed entirely: the platform will have no
+  # third-party integrations, so first-party clients move to identity-issued JWTs and the
+  # warehouse→matching call moves to an mTLS service credential. When that lands, these specs
+  # and this exception go with it.
+  #
+  # Scoped to the literal fixture values, not to spec/: a real credential pasted into a spec
+  # would still be caught, which is the point of not widening this to a path.
+  regexes = [
+    '''valid_api_key_\d+''',
+    '''luxe_[a-z0-9]+''',
+  ]
+  regexTarget = "line"
