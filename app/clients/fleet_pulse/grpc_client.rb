@@ -1,7 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative "../../lib/generated/fleet/v1/courier_telemetry_services_pb"
+require_relative "../../../lib/generated/fleet/v1/courier_telemetry_services_pb"
 
 module FleetPulse
   class GrpcClient

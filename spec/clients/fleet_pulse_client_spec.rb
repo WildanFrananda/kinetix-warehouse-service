@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-require_relative "../../app/clients/fleet_pulse_client"
 
 RSpec.describe FleetPulse::GrpcClient do
   let(:client) { FleetPulse::GrpcClient.new(host: "localhost:50053") }

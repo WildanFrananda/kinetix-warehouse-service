@@ -1,8 +1,4 @@
 require "rails_helper"
-require_relative "../../app/components/base"
-require_relative "../../app/components/ui/badge"
-require_relative "../../app/components/ui/button"
-require_relative "../../app/components/ui/card"
 
 RSpec.describe "Phlex UI Components", type: :component do
   describe Components::UI::Badge do

@@ -56,7 +56,7 @@ module Rpc
         items: raw_items
       )
 
-      usecase = T.let(Container[:create_order_usecase], Orders::CreateOrderService)
+      usecase = T.let(Container[:create_order_service], Orders::CreateOrderService)
       res = usecase.call(merchant_id: merchant.id, form: form)
 
       if res.success? && res.data
