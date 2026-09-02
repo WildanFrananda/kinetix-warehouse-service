@@ -56,4 +56,3 @@ Container.register(:verify_scan_barcode_service) do
     order_repository: Container[:order_repository]
   )
 end
-

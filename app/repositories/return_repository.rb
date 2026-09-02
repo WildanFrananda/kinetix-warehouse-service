@@ -39,7 +39,6 @@ class ReturnRepository < BaseRepository
     ).returns(T.nilable(Return))
   end
   def update_status(merchant_id:, id:, status:, resolved_at: nil)
-
     record = find_by_id(merchant_id: merchant_id, id: id)
     return nil unless record
 

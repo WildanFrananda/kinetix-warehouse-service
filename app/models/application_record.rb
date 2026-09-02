@@ -1,4 +1,5 @@
 # typed: strict
+
 class ApplicationRecord < ActiveRecord::Base
   extend T::Sig
 

@@ -1,4 +1,5 @@
 # typed: false
+
 require "rails_helper"
 
 RSpec.describe "FleetRadar", type: :request do
@@ -41,6 +42,5 @@ RSpec.describe "FleetRadar", type: :request do
       expect(response.body).to include("ORD-RADAR-101")
       expect(response.body).to include("Sudirman Central Business District")
     end
-
   end
 end

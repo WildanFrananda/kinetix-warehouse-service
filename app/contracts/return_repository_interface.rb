@@ -27,5 +27,4 @@ module ReturnRepositoryInterface
     ).returns(T.nilable(Return))
   end
   def update_status(merchant_id:, id:, status:, resolved_at: nil); end
-
 end

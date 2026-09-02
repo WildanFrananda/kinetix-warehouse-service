@@ -20,6 +20,10 @@ RSpec.describe Rpc::FulfillmentServiceHandler do
   let(:bin_handler) { Rpc::BinStockServiceHandler.new }
 
   describe "#create_order via gRPC" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 1, 15, 9, 0, 0)) { example.run }
+    end
+
     it "creates an order successfully with Protobuf parameters" do
       req = Fulfillment::V1::CreateOrderRequest.new(
         merchant_api_key: merchant.api_key,

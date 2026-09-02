@@ -1,4 +1,5 @@
 # typed: strict
+
 require "bcrypt"
 
 class StaffUser < ApplicationRecord

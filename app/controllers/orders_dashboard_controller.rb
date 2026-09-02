@@ -166,7 +166,7 @@ class OrdersDashboardController < ApplicationController
       buyer_phone: buyer_phone,
       shipping_address: shipping_address,
       total_amount: price,
-      items: [item_input]
+      items: [ item_input ]
     )
 
     service = T.let(Container[:create_order_service], Orders::CreateOrderService)

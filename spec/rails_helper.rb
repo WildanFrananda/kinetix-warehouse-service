@@ -9,6 +9,8 @@ require "rspec/rails"
 require_relative "../app/clients/identity_client"
 
 RSpec.configure do |config|
+  config.include ActiveSupport::Testing::TimeHelpers
+
   config.include FactoryBot::Syntax::Methods
   config.fixture_paths = [
     Rails.root.join("spec/fixtures")

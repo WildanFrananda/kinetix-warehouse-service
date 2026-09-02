@@ -14,6 +14,6 @@ class BinInventory < ApplicationRecord
   def available_quantity
     q = T.unsafe(self).quantity.to_i
     r = T.unsafe(self).reserved_quantity.to_i
-    [q - r, 0].max
+    [ q - r, 0 ].max
   end
 end
