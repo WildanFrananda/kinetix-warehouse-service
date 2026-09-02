@@ -1,0 +1,127 @@
+name: CI
+
+# Restored and corrected. The previous version of this file was deleted on a wrong premise —
+# that this repository lives on GitLab — when in fact `origin` is GitHub and this workflow is
+# the CI that actually runs. What was genuinely wrong with it is fixed here:
+#
+#   * The test job ran `bin/rails db:test:prepare test`, which invokes **Minitest**, against a
+#     suite written entirely in RSpec. Zero examples executed and the job reported green.
+#   * Redis was commented out, so every spec touching the dispatch or tracking path failed or
+#     was quietly skipped.
+#   * RAILS_MASTER_KEY was commented out, so anything reading encrypted credentials blew up.
+#   * The database credentials were `postgres`/`postgres` — the shared literal that was
+#     committed across this platform and is invalid everywhere else now.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  RAILS_ENV: test
+
+jobs:
+  scan-ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Scan for Rails security vulnerabilities
+        run: bin/brakeman --no-pager
+      - name: Scan for known vulnerabilities in gems
+        run: bin/bundler-audit check --update
+
+  scan-js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Scan JavaScript dependencies
+        run: bin/importmap audit
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: bin/rubocop -f github
+
+  rspec:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-ephemeral-not-a-deployed-credential
+          POSTGRES_DB: kinetix_warehouse_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U ci"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+      # Present, not commented out. The dispatch and tracking specs need it.
+      redis:
+        image: redis:7.2-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_USERNAME: ci
+      DB_PASSWORD: ci-ephemeral-not-a-deployed-credential
+      TEST_DB_NAME: kinetix_warehouse_test
+      REDIS_URL: redis://localhost:6379/0
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+
+    steps:
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Require the master key
+        run: |
+          test -n "$RAILS_MASTER_KEY" || {
+            echo "RAILS_MASTER_KEY is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          }
+
+      - name: Prepare the database
+        run: bin/rails db:prepare
+
+      # RSpec, not `rails test`. `rails test` runs Minitest, finds no Minitest files, and exits
+      # 0 — which is how this suite reported green while executing nothing.
+      - name: Run RSpec
+        run: bundle exec rspec --format progress --format json --out rspec.json
+
+      # A suite that discovers no examples is a failed suite. This is the exact failure the
+      # previous workflow had for its entire life, so it is asserted rather than assumed.
+      - name: Assert the suite actually ran
+        run: |
+          count=$(ruby -rjson -e 'puts JSON.parse(File.read("rspec.json"))["summary"]["example_count"]')
+          echo "executed $count examples"
+          test "$count" -ge 30 || {
+            echo "expected at least 30 examples, ran $count — the suite is not being discovered"
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rspec-report
+          path: rspec.json
+          retention-days: 7

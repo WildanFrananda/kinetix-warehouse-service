@@ -1,4 +1,8 @@
-# Kinetix warehouse CI. (S2 / P1-CI-02)
+# Kinetix warehouse CI — GitLab.
+#
+# ⚠ PAIRED FILE: .github/workflows/ci.yml
+# `origin` is GitHub and GitLab is a mirror. Both assert the same things and must be changed
+# together; if they drift, the two platforms disagree about whether the same commit is good.
 #
 # Replaces a GitHub Actions workflow that never ran — this repository's origin is gitlab.com,
 # so `.github/workflows/ci.yml` was inert config. Left running, it would have been worse than
