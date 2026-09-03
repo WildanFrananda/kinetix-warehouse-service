@@ -24,7 +24,7 @@ gem "grpc"
 # Server reflection, so grpcurl and the platform gates can list and call this service
 # without a local copy of the .proto files. Ruby's grpc gem does not ship it.
 gem "grpc_reflection"
-gem "redis", "~> 5.1"
+gem "redis", "~> 6.0"
 
 group :development do
   gem "grpc-tools"
