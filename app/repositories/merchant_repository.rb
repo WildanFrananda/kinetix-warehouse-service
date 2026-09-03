@@ -1,8 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative "../clients/identity_client"
-
 class MerchantRepository < BaseRepository
   include MerchantRepositoryInterface
 

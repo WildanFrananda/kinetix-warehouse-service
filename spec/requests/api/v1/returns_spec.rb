@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Returns", type: :request do
+  include_context "identity resolves merchants"
+
   let!(:merchant) { create(:merchant, api_key: "valid_return_api_key") }
   let!(:order) { create(:order, merchant: merchant) }
   let(:valid_headers) { { "X-Merchant-Api-Key" => "valid_return_api_key" } }

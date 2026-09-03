@@ -93,15 +93,35 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Require the master key
+      # A shape check, not just a presence check. Rails' master key is 32 hex characters that
+      # decode to exactly 16 bytes; one stray newline or space makes it decode to something else
+      # and Rails dies with "ArgumentError: key must be 16 bytes" from deep inside ActiveSupport.
+      # Only the length and character class are reported; neither is the secret.
+      - name: The master key must have the right shape
         run: |
-          test -n "$RAILS_MASTER_KEY" || {
-            echo "RAILS_MASTER_KEY is not set. Add it under Settings → Secrets and variables → Actions."
+          if [ -z "$RAILS_MASTER_KEY" ]; then
+            echo "RAILS_MASTER_KEY is not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          len=$(printf '%s' "$RAILS_MASTER_KEY" | wc -c | tr -d ' ')
+          if [ "$len" -ne 32 ]; then
+            echo "RAILS_MASTER_KEY is $len characters; it must be exactly 32."
+            echo "A trailing newline is the usual cause. Re-copy it with:"
+            echo "    tr -d '\\n' < config/master.key | pbcopy"
+            exit 1
+          fi
+          printf '%s' "$RAILS_MASTER_KEY" | grep -qE '^[a-f0-9]{32}$' || {
+            echo "RAILS_MASTER_KEY is 32 characters but is not lowercase hexadecimal."
             exit 1
           }
+          echo "RAILS_MASTER_KEY is 32 hex characters, as required"
 
-      - name: Prepare the database
-        run: bin/rails db:prepare
+      # db:schema:load, not db:prepare. db:prepare seeds a database it considers newly set
+      # up, and db/seeds.rb creates the same merchant codes the request specs create in their
+      # own `let!` blocks — thirteen specs fail on "Code has already been taken" for a reason
+      # that has nothing to do with the code under test.
+      - name: Load the schema
+        run: bin/rails db:schema:load
 
       # RSpec, not `rails test`. `rails test` runs Minitest, finds no Minitest files, and exits
       # 0 — which is how this suite reported green while executing nothing.

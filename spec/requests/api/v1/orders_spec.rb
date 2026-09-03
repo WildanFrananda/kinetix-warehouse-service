@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Orders", type: :request do
+  include_context "identity resolves merchants"
+
   let!(:merchant) { create(:merchant, api_key: "valid_api_key_123") }
 
   describe "POST /api/v1/orders" do

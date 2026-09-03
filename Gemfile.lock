@@ -189,6 +189,9 @@ GEM
       google-protobuf (>= 3.25, < 5.0)
       googleapis-common-protos-types (~> 1.0)
     grpc-tools (1.83.0)
+    grpc_reflection (0.4.0)
+      google-protobuf (>= 4.31.0)
+      grpc
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     image_processing (1.14.0)
@@ -540,6 +543,7 @@ DEPENDENCIES
   faye-websocket
   grpc
   grpc-tools
+  grpc_reflection
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
@@ -637,6 +641,7 @@ CHECKSUMS
   grpc (1.83.0-x86_64-linux-gnu) sha256=25d66bfa3cb1b05258b3f9632478c7e7ceb52cb16ccc0b4b26d7df36be7158b1
   grpc (1.83.0-x86_64-linux-musl) sha256=a5023264dbb8038c23b147bbf80adb06932ef11b5ab493412e9e37a43114fa8c
   grpc-tools (1.83.0) sha256=d73ad7d181f32aa0bc53b797b55fa9eaca1c3f391bb624ac3d11f4069ce5ee9a
+  grpc_reflection (0.4.0) sha256=72d3e743f049821f976a4280b3d1b1a3369775121d75d35954f0e139e4e3f0cf
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   image_processing (1.14.0) sha256=754cc169c9c262980889bec6bfd325ed1dafad34f85242b5a07b60af004742fb
   importmap-rails (2.2.3) sha256=7101be2a4dc97cf1558fb8f573a718404c5f6bcfe94f304bf1f39e444feeb16a
