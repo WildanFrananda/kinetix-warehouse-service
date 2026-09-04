@@ -1,8 +1,0 @@
-<div style="display: flex; gap: 12px; margin-bottom: 24px;">
-  <%= link_to "📦 Warehouse Order Queue", orders_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(orders_path)}" %>
-  <%= link_to "⚡ FleetPulse Driver Radar", fleet_radar_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(fleet_radar_path)}" %>
-  <%= link_to "🔄 Returns & Exchange Hub", returns_dashboard_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(returns_dashboard_path)}" %>
-  <%= link_to "🏭 Inventory & Bins", inventory_dashboard_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(inventory_dashboard_path)}" %>
-  <%= link_to "📊 SLA Analytics", analytics_dashboard_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(analytics_dashboard_path)}" %>
-  <%= link_to "📄 Driver Manifests", manifests_dashboard_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if current_page?(manifests_dashboard_path)}" %>
-</div>

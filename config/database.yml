@@ -15,9 +15,19 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  # For details on connection pooling, see Rails configuration guide
+  # `pool`, not `max_connections`. Rails has no `max_connections` key: the value went into a
+  # setting nothing reads, the pool silently fell back to Rails' hardcoded default of 5, and
+  # RAILS_MAX_THREADS did nothing at all. Verified at runtime — `configuration_hash[:pool]` was
+  # nil while `connection_pool.size` reported 5.
+  #
+  # It happened to work only because Puma also defaults low: config/puma.rb takes 3 threads from
+  # the same variable, and 3 threads fit in 5 connections. Raising RAILS_MAX_THREADS would have
+  # given Puma more threads without giving them anywhere to connect, and the extra threads would
+  # have blocked on ActiveRecord::ConnectionTimeoutError under load.
+  #
+  # One variable now drives both, which is what makes the two move together.
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 
 # Credentials come from the environment in every environment, with no fallback
