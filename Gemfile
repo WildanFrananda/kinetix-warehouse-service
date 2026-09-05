@@ -101,3 +101,4 @@ group :test do
 end
 
 gem "jwt", "~> 2.9"
+gem "kinetix-contracts", "~> 1.0"

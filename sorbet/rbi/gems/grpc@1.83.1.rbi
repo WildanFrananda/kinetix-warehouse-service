@@ -2473,6 +2473,17 @@ end
 # pkg:gem/grpc#src/ruby/lib/grpc/version.rb:17
 GRPC::VERSION = T.let(T.unsafe(nil), String)
 
+module Grpc; end
+module Grpc::Reflection; end
+module Grpc::Reflection::V1; end
+module Grpc::Reflection::V1::ServerReflection; end
+class Grpc::Reflection::V1::ServerReflection::Service; end
+class Grpc::Reflection::V1::ServerReflection::Stub < ::GRPC::ClientStub; end
+module Grpc::Reflection::V1alpha; end
+module Grpc::Reflection::V1alpha::ServerReflection; end
+class Grpc::Reflection::V1alpha::ServerReflection::Service; end
+class Grpc::Reflection::V1alpha::ServerReflection::Stub < ::GRPC::ClientStub; end
+
 # pkg:gem/grpc#src/ruby/lib/grpc/generic/active_call.rb:19
 class Struct
   include ::Enumerable

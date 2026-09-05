@@ -287,60 +287,60 @@ class Google::Protobuf::DescriptorProto::ExtensionRange < ::Google::Protobuf::Ab
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:19
 class Google::Protobuf::DescriptorProto::ReservedRange < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 module Google::Protobuf::Edition
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_1_TEST_ONLY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_2023 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_2024 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_2026 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_2_TEST_ONLY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_99997_TEST_ONLY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_99998_TEST_ONLY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_99999_TEST_ONLY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_LEGACY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_MAX = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_PROTO2 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_PROTO3 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:69
 Google::Protobuf::Edition::EDITION_UNSTABLE = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/google-protobuf#lib/google/protobuf_native.rb:13
@@ -425,171 +425,197 @@ Google::Protobuf::ExtensionRangeOptions::VerificationState::UNVERIFIED = T.let(T
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:50
 class Google::Protobuf::FeatureSet < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
 module Google::Protobuf::FeatureSet::EnforceNamingStyle
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
 Google::Protobuf::FeatureSet::EnforceNamingStyle::ENFORCE_NAMING_STYLE_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
 Google::Protobuf::FeatureSet::EnforceNamingStyle::STYLE2024 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
 Google::Protobuf::FeatureSet::EnforceNamingStyle::STYLE2026 = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
 Google::Protobuf::FeatureSet::EnforceNamingStyle::STYLE_LEGACY = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
 module Google::Protobuf::FeatureSet::EnumType
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
 Google::Protobuf::FeatureSet::EnumType::CLOSED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
 Google::Protobuf::FeatureSet::EnumType::ENUM_TYPE_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
 Google::Protobuf::FeatureSet::EnumType::OPEN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
 module Google::Protobuf::FeatureSet::FieldPresence
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
 Google::Protobuf::FeatureSet::FieldPresence::EXPLICIT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
 Google::Protobuf::FeatureSet::FieldPresence::FIELD_PRESENCE_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
 Google::Protobuf::FeatureSet::FieldPresence::IMPLICIT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
 Google::Protobuf::FeatureSet::FieldPresence::LEGACY_REQUIRED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
 module Google::Protobuf::FeatureSet::JsonFormat
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
 Google::Protobuf::FeatureSet::JsonFormat::ALLOW = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
 Google::Protobuf::FeatureSet::JsonFormat::JSON_FORMAT_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
 Google::Protobuf::FeatureSet::JsonFormat::LEGACY_BEST_EFFORT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
 module Google::Protobuf::FeatureSet::MessageEncoding
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
 Google::Protobuf::FeatureSet::MessageEncoding::DELIMITED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
 Google::Protobuf::FeatureSet::MessageEncoding::LENGTH_PREFIXED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:59
 Google::Protobuf::FeatureSet::MessageEncoding::MESSAGE_ENCODING_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:53
+class Google::Protobuf::FeatureSet::ProtoLimitsFeature < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+module Google::Protobuf::FeatureSet::ProtoLimitsFeature::EnforceProtoLimits
+  class << self
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    def descriptor; end
+
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    def lookup(_arg0); end
+
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+    def resolve(_arg0); end
+  end
+end
+
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+Google::Protobuf::FeatureSet::ProtoLimitsFeature::EnforceProtoLimits::LEGACY_NO_EXPLICIT_LIMITS = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+Google::Protobuf::FeatureSet::ProtoLimitsFeature::EnforceProtoLimits::PROTO_LIMITS2026 = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:54
+Google::Protobuf::FeatureSet::ProtoLimitsFeature::EnforceProtoLimits::PROTO_LIMITS_UNKNOWN = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
 module Google::Protobuf::FeatureSet::RepeatedFieldEncoding
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
 Google::Protobuf::FeatureSet::RepeatedFieldEncoding::EXPANDED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
 Google::Protobuf::FeatureSet::RepeatedFieldEncoding::PACKED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:55
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:57
 Google::Protobuf::FeatureSet::RepeatedFieldEncoding::REPEATED_FIELD_ENCODING_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
 module Google::Protobuf::FeatureSet::Utf8Validation
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
 Google::Protobuf::FeatureSet::Utf8Validation::NONE = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
 Google::Protobuf::FeatureSet::Utf8Validation::UTF8_VALIDATION_UNKNOWN = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:56
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:58
 Google::Protobuf::FeatureSet::Utf8Validation::VERIFY = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:51
@@ -624,10 +650,10 @@ Google::Protobuf::FeatureSet::VisibilityFeature::DefaultSymbolVisibility::LOCAL_
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:52
 Google::Protobuf::FeatureSet::VisibilityFeature::DefaultSymbolVisibility::STRICT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:60
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:62
 class Google::Protobuf::FeatureSetDefaults < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:61
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:63
 class Google::Protobuf::FeatureSetDefaults::FeatureSetEditionDefault < ::Google::Protobuf::AbstractMessage; end
 
 # pkg:gem/google-protobuf#lib/google/protobuf_native.rb:13
@@ -988,33 +1014,33 @@ Google::Protobuf::FileOptions::OptimizeMode::LITE_RUNTIME = T.let(T.unsafe(nil),
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:33
 Google::Protobuf::FileOptions::OptimizeMode::SPEED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:64
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
 class Google::Protobuf::GeneratedCodeInfo < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:65
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:67
 class Google::Protobuf::GeneratedCodeInfo::Annotation < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
 module Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
 Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic::ALIAS = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
 Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic::NONE = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:66
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
 Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic::SET = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/google-protobuf#lib/google/protobuf.rb:46
@@ -1690,33 +1716,33 @@ class Google::Protobuf::ServiceDescriptorProto < ::Google::Protobuf::AbstractMes
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:45
 class Google::Protobuf::ServiceOptions < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:62
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:64
 class Google::Protobuf::SourceCodeInfo < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:63
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:65
 class Google::Protobuf::SourceCodeInfo::Location < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
 module Google::Protobuf::SymbolVisibility
   class << self
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
     def descriptor; end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
     def lookup(_arg0); end
 
-    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+    # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
 Google::Protobuf::SymbolVisibility::VISIBILITY_EXPORT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
 Google::Protobuf::SymbolVisibility::VISIBILITY_LOCAL = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:68
+# pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
 Google::Protobuf::SymbolVisibility::VISIBILITY_UNSET = T.let(T.unsafe(nil), Integer)
 
 # pkg:gem/google-protobuf#lib/google/protobuf.rb:18
