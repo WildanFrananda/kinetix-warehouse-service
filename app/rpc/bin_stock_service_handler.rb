@@ -15,7 +15,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::CheckBinStockRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
     def check_bin_stock(req, _call)
@@ -48,7 +48,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::CheckBinStockRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
     def get_bin_stock_info(req, _call)
@@ -58,7 +58,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::ReserveStockRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::ReserveStockResponse)
     end
     def reserve_stock(req, _call)

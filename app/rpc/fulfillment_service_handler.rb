@@ -15,7 +15,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::CreateOrderRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::CreateOrderResponse)
     end
     def create_order(req, _call)
@@ -83,7 +83,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::GetOrderStatusRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::GetOrderStatusResponse)
     end
     def get_order_status(req, _call)
@@ -118,7 +118,7 @@ module Rpc
     sig do
       params(
         req: Fulfillment::V1::CancelOrderRequest,
-        _call: T.nilable(GRPC::ActiveCall)
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::CancelOrderResponse)
     end
     def cancel_order(req, _call)

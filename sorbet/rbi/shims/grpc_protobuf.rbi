@@ -379,3 +379,18 @@ module Returns
     end
   end
 end
+
+# The second argument a unary handler receives.
+#
+# gRPC passes a `SingleReqView`, not the `ActiveCall` itself — a narrow view that exposes the
+# metadata and deadline but not the stream. Every handler was annotated
+# `T.nilable(GRPC::ActiveCall)` and the runtime check never fired, because the only callers were
+# specs passing `nil`: no real client had ever completed a call to these handlers.
+#
+# Only the class is declared here. `sorbet/rbi/gems/grpc@1.83.0.rbi` already types its methods,
+# and redeclaring one is a redefinition error rather than a refinement.
+module GRPC
+  class ActiveCall
+    class SingleReqView; end
+  end
+end
