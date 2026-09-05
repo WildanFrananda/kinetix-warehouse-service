@@ -5,8 +5,7 @@ require "grpc"
 require "grpc_reflection"
 require_relative "kinetix/service_identity"
 require_relative "kinetix/peer_authorization_interceptor"
-require_relative "generated/fulfillment/v1/fulfillment_service_services_pb"
-require_relative "generated/fulfillment/v1/bin_stock_service_services_pb"
+require "fulfillment/v1/fulfillment_services_pb"
 
 class GrpcServer
   extend T::Sig

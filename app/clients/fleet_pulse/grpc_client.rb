@@ -1,7 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative "../../../lib/generated/fleet/v1/courier_telemetry_services_pb"
+require "fleet/v1/fleet_services_pb"
 require Rails.root.join("lib/kinetix/service_identity").to_s
 
 module FleetPulse
@@ -32,8 +32,8 @@ module FleetPulse
       )
 
       req = Fleet::V1::DispatchCourierRequest.new(
-        merchant_api_key: "",
-        order_id: order_id,
+        merchant_principal_id: "",
+        order_id: order_id.to_s,
         order_number: order_number,
         pickup_address: Common::V1::Address.new(street_address: pickup_address),
         delivery_address: Common::V1::Address.new(street_address: delivery_address)

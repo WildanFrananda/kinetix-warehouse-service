@@ -1,7 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative "../../lib/generated/fulfillment/v1/fulfillment_service_services_pb"
+require "fulfillment/v1/fulfillment_services_pb"
 
 module Rpc
   class FulfillmentServiceHandler < Fulfillment::V1::FulfillmentService::Service
@@ -12,6 +12,8 @@ module Rpc
       super
     end
 
+    MINOR_UNITS_PER_MAJOR = T.let(BigDecimal("100"), BigDecimal)
+
     sig do
       params(
         req: Fulfillment::V1::CreateOrderRequest,
@@ -19,20 +21,25 @@ module Rpc
       ).returns(Fulfillment::V1::CreateOrderResponse)
     end
     def create_order(req, _call)
-      merchant = Merchant.first
+      merchant = merchant_for(req.merchant_principal_id)
 
       unless merchant
         return Fulfillment::V1::CreateOrderResponse.new(
+          success: false,
           error: Common::V1::ErrorDetail.new(
-            error_code: "UNAUTHORIZED",
-            message: "No active merchant found in warehouse database"
+            error_code: "UNKNOWN_MERCHANT",
+            message: "no merchant in this warehouse is linked to that principal"
           )
         )
       end
 
       total_calculated = BigDecimal("0")
       raw_items = req.items.map do |item|
-        item_price = item.price ? BigDecimal(item.price.units.to_s) : BigDecimal("0")
+        item_price = if item.unit_price
+          BigDecimal(item.unit_price.amount_minor.to_s) / MINOR_UNITS_PER_MAJOR
+        else
+          BigDecimal("0")
+        end
         total_calculated += item_price * BigDecimal(item.quantity.to_s)
         Orders::CreateOrderForm::ItemInput.new(
           sku: item.sku,
@@ -64,14 +71,16 @@ module Rpc
         pb_status = map_order_status(data.status)
 
         Fulfillment::V1::CreateOrderResponse.new(
-          order_id: data.id,
+          success: true,
+          order_id: data.id.to_s,
           order_number: data.order_number,
           status: pb_status,
-          merchant_id: merchant.id,
-          created_at: Time.current.iso8601
+          merchant_principal_id: req.merchant_principal_id,
+          created_at: Google::Protobuf::Timestamp.new(seconds: Time.current.to_i)
         )
       else
         Fulfillment::V1::CreateOrderResponse.new(
+          success: false,
           error: Common::V1::ErrorDetail.new(
             error_code: "VALIDATION_FAILED",
             message: res.error || "Order creation failed"
@@ -87,31 +96,30 @@ module Rpc
       ).returns(Fulfillment::V1::GetOrderStatusResponse)
     end
     def get_order_status(req, _call)
-      merchant = Merchant.first
+      merchant = merchant_for(req.merchant_principal_id)
 
       unless merchant
-        return Fulfillment::V1::GetOrderStatusResponse.new
+        return Fulfillment::V1::GetOrderStatusResponse.new(found: false)
       end
 
       order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
-      ord = if req.order_id.positive?
-        order_repo.find_by_id(merchant_id: merchant.id, id: req.order_id)
+      numeric_id = req.order_id.to_i
+      ord = if numeric_id.positive?
+        order_repo.find_by_id(merchant_id: merchant.id, id: numeric_id)
       elsif req.order_number.present?
         order_repo.find_by_order_number(merchant_id: merchant.id, order_number: req.order_number)
       end
 
       unless ord && ord.merchant_id == merchant.id
-        return Fulfillment::V1::GetOrderStatusResponse.new
+        return Fulfillment::V1::GetOrderStatusResponse.new(found: false)
       end
 
-      pb_status = map_order_status(ord.status || "")
-      updated_str = ord.updated_at.iso8601
-
       Fulfillment::V1::GetOrderStatusResponse.new(
-        order_id: ord.id,
+        found: true,
+        order_id: ord.id.to_s,
         order_number: ord.order_number || "",
-        status: pb_status,
-        updated_at: updated_str
+        status: map_order_status(ord.status || ""),
+        updated_at: Google::Protobuf::Timestamp.new(seconds: ord.updated_at.to_i)
       )
     end
 
@@ -122,17 +130,17 @@ module Rpc
       ).returns(Fulfillment::V1::CancelOrderResponse)
     end
     def cancel_order(req, _call)
-      merchant = Merchant.first
+      merchant = merchant_for(req.merchant_principal_id)
 
       unless merchant
         return Fulfillment::V1::CancelOrderResponse.new(
           success: false,
-          message: "No active merchant found"
+          message: "no merchant in this warehouse is linked to that principal"
         )
       end
 
       order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
-      ord = order_repo.find_by_id(merchant_id: merchant.id, id: req.order_id)
+      ord = order_repo.find_by_id(merchant_id: merchant.id, id: req.order_id.to_i)
 
       unless ord
         return Fulfillment::V1::CancelOrderResponse.new(
@@ -151,6 +159,13 @@ module Rpc
     end
 
     private
+
+    sig { params(principal_id: String).returns(T.nilable(Merchant)) }
+    def merchant_for(principal_id)
+      return nil if principal_id.empty?
+
+      Merchant.find_by(principal_id: principal_id)
+    end
 
     sig { params(status_str: String).returns(Integer) }
     def map_order_status(status_str)

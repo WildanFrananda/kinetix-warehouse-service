@@ -5,6 +5,306 @@
 # Please instead update this file by running `bin/tapioca gem kinetix-contracts`.
 
 
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:13
+module Common; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:14
+module Common::V1; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:17
+class Common::V1::Address < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+module Common::V1::CourierStatus
+  class << self
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+    def descriptor; end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+    def lookup(_arg0); end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+    def resolve(_arg0); end
+  end
+end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_ASSIGNED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_COMPLETED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_EN_ROUTE_DELIVERY = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_EN_ROUTE_PICKUP = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_IDLE = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_PICKED_UP = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:22
+Common::V1::CourierStatus::COURIER_STATUS_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:19
+class Common::V1::ErrorDetail < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:16
+class Common::V1::GeoPoint < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:20
+class Common::V1::IdempotencyKey < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:15
+class Common::V1::Money < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:18
+class Common::V1::OrderItem < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+module Common::V1::OrderStatus
+  class << self
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+    def descriptor; end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+    def lookup(_arg0); end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+    def resolve(_arg0); end
+  end
+end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_ASSIGNED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_CANCELLED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_COMPLETED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_DELIVERED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_DISPATCHED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_IN_TRANSIT = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_PACKED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_PACKING = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_PAID = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_PENDING_PAYMENT = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_RECEIVED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_REFUNDED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:21
+Common::V1::OrderStatus::ORDER_STATUS_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+module Common::V1::ReturnStatus
+  class << self
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+    def descriptor; end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+    def lookup(_arg0); end
+
+    # pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+    def resolve(_arg0); end
+  end
+end
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_INSPECTED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_PICKED_UP_FROM_BUYER = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_RECEIVED_AT_WAREHOUSE = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_REJECTED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_REQUESTED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_RESOLVED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#common/v1/common_pb.rb:23
+Common::V1::ReturnStatus::RETURN_STATUS_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:16
+module Fleet; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:17
+module Fleet::V1; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:9
+module Fleet::V1::CourierTelemetryService; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:10
+class Fleet::V1::CourierTelemetryService::Service
+  include ::GRPC::GenericService
+  extend ::GRPC::GenericService::Dsl
+
+  # pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:18
+  def dispatch_courier(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:19
+  def stream_driver_location(*_arg0); end
+end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:22
+class Fleet::V1::CourierTelemetryService::Stub < ::GRPC::ClientStub
+  # pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:22
+  def initialize(host, creds, **kw); end
+
+  # pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:22
+  def dispatch_courier(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fleet/v1/fleet_services_pb.rb:22
+  def stream_driver_location(reqs, metadata = T.unsafe(nil), &blk); end
+end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:18
+class Fleet::V1::DispatchCourierRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:19
+class Fleet::V1::DispatchCourierResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:21
+class Fleet::V1::DriverLocationAck < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fleet/v1/fleet_pb.rb:20
+class Fleet::V1::DriverLocationPing < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:16
+module Fulfillment; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:17
+module Fulfillment::V1; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:9
+module Fulfillment::V1::BinStockService; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:10
+class Fulfillment::V1::BinStockService::Service
+  include ::GRPC::GenericService
+  extend ::GRPC::GenericService::Dsl
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:18
+  def check_bin_stock(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:20
+  def release_stock(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:19
+  def reserve_stock(*_arg0); end
+end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+class Fulfillment::V1::BinStockService::Stub < ::GRPC::ClientStub
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  def initialize(host, creds, **kw); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  def check_bin_stock(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  def release_stock(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  def reserve_stock(req, metadata = T.unsafe(nil)); end
+end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:28
+class Fulfillment::V1::CancelOrderRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:29
+class Fulfillment::V1::CancelOrderResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:18
+class Fulfillment::V1::CheckBinStockRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:19
+class Fulfillment::V1::CheckBinStockResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:24
+class Fulfillment::V1::CreateOrderRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:25
+class Fulfillment::V1::CreateOrderResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:25
+module Fulfillment::V1::FulfillmentService; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:26
+class Fulfillment::V1::FulfillmentService::Service
+  include ::GRPC::GenericService
+  extend ::GRPC::GenericService::Dsl
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:36
+  def cancel_order(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:34
+  def create_order(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:35
+  def get_order_status(*_arg0); end
+end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+class Fulfillment::V1::FulfillmentService::Stub < ::GRPC::ClientStub
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  def initialize(host, creds, **kw); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  def cancel_order(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  def create_order(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  def get_order_status(req, metadata = T.unsafe(nil)); end
+end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:26
+class Fulfillment::V1::GetOrderStatusRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:27
+class Fulfillment::V1::GetOrderStatusResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:22
+class Fulfillment::V1::ReleaseStockRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:23
+class Fulfillment::V1::ReleaseStockResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:20
+class Fulfillment::V1::ReserveStockRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:21
+class Fulfillment::V1::ReserveStockResponse < ::Google::Protobuf::AbstractMessage; end
+
 # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:13
 module Identity; end
 

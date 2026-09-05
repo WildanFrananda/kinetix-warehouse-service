@@ -1,11 +1,16 @@
 # typed: strict
 # frozen_string_literal: true
 
-require_relative "../../lib/generated/fulfillment/v1/bin_stock_service_services_pb"
+require "fulfillment/v1/fulfillment_services_pb"
 
 module Rpc
   class BinStockServiceHandler < Fulfillment::V1::BinStockService::Service
     extend T::Sig
+
+    NOT_FOUND_STOCK = T.let(
+      Fulfillment::V1::CheckBinStockResponse.new(found: false),
+      Fulfillment::V1::CheckBinStockResponse
+    )
 
     sig { void }
     def initialize
@@ -19,28 +24,25 @@ module Rpc
       ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
     def check_bin_stock(req, _call)
+      merchant = merchant_for(req.merchant_principal_id)
+      return NOT_FOUND_STOCK if merchant.nil?
+
       sku = req.sku
       inventory = BinInventory.joins(:warehouse_bin).find_by(sku: sku)
 
-      if inventory
-        available = inventory.available_quantity
-        reserved = inventory.reserved_quantity || 0
-        physical = inventory.quantity || (available + reserved)
-        bin_code = inventory.warehouse_bin.bin_code
-      else
-        available = 0
-        reserved = 0
-        physical = 0
-        bin_code = "Unavailable"
-      end
+      return NOT_FOUND_STOCK if inventory.nil?
+
+      available = inventory.available_quantity
+      reserved = inventory.reserved_quantity || 0
 
       Fulfillment::V1::CheckBinStockResponse.new(
+        found: true,
         sku: sku,
         product_name: "Physical Inventory SKU #{sku}",
-        physical_stock: physical,
+        physical_stock: inventory.quantity || (available + reserved),
         allocated_stock: reserved,
         available_stock: available,
-        bin_location: bin_code,
+        bin_location: inventory.warehouse_bin.bin_code,
         low_stock_warning: available < 5
       )
     end
@@ -62,6 +64,19 @@ module Rpc
       ).returns(Fulfillment::V1::ReserveStockResponse)
     end
     def reserve_stock(req, _call)
+      merchant = merchant_for(req.merchant_principal_id)
+      if merchant.nil?
+        return Fulfillment::V1::ReserveStockResponse.new(
+          success: false,
+          bin_location: "",
+          remaining_available: 0,
+          error: Common::V1::ErrorDetail.new(
+            error_code: "UNKNOWN_MERCHANT",
+            message: "no merchant in this warehouse is linked to that principal"
+          )
+        )
+      end
+
       sku = req.sku
       req_qty = req.quantity
 
@@ -126,6 +141,25 @@ module Rpc
         bin_location: bin_code,
         remaining_available: remaining
       )
+    end
+
+    sig do
+      params(
+        _req: Fulfillment::V1::ReleaseStockRequest,
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
+      ).returns(Fulfillment::V1::ReleaseStockResponse)
+    end
+    def release_stock(_req, _call)
+      raise GRPC::Unimplemented, "ReleaseStock lands with the idempotency ledger in S10"
+    end
+
+    private
+
+    sig { params(principal_id: String).returns(T.nilable(Merchant)) }
+    def merchant_for(principal_id)
+      return nil if principal_id.empty?
+
+      Merchant.find_by(principal_id: principal_id)
     end
   end
 end
