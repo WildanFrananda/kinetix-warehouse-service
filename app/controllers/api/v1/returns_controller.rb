@@ -4,16 +4,12 @@ module Api
   module V1
     class ReturnsController < ApplicationController
       extend T::Sig
+      include ApiAuthentication
 
       sig { void }
       def create
-        header = request.headers["X-Merchant-Api-Key"].to_s.strip
-        api_key = header.empty? ? params[:api_key].to_s : header
-        return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
-
-        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-        merchant = merchant_repo.find_by_api_key(api_key)
-        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+        merchant = require_api_merchant!
+        return if merchant.nil?
 
         form = Returns::InitiateReturnForm.new(
           order_id: params[:order_id].to_i,
@@ -32,14 +28,8 @@ module Api
 
       sig { void }
       def update_status
-        header = request.headers["X-Merchant-Api-Key"].to_s.strip
-        api_key = header.empty? ? params[:api_key].to_s : header
-        return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
-
-        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-        merchant = merchant_repo.find_by_api_key(api_key)
-
-        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+        merchant = require_api_merchant!
+        return if merchant.nil?
 
         service = T.let(Container[:update_return_status_service], Returns::UpdateReturnStatusService)
         result = service.call(

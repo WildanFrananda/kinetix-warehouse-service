@@ -43,24 +43,6 @@ class SettingsController < ApplicationController
     redirect_to settings_path(merchant_id: merchant_id)
   end
 
-  sig { void }
-  def regenerate_api_key
-    merchant_id_param = params[:merchant_id]
-    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
-
-    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-    merchant = merchant_repo.find_by_id(merchant_id)
-
-    if merchant
-      new_key = "luxe_prod_sec_#{SecureRandom.hex(16)}"
-      merchant.update!(api_key: new_key)
-      flash[:notice] = "🔑 Production API Key successfully regenerated! Keep it safe."
-    else
-      flash[:alert] = "⚠️ Merchant record not found!"
-    end
-
-    redirect_to settings_path(merchant_id: merchant_id)
-  end
 
   sig { void }
   def test_ping

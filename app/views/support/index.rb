@@ -168,7 +168,6 @@ module Views
       sig { params(m_id: Integer).void }
       def render_modals(m_id)
         cutoff = @current_merchant ? @current_merchant.cutoff_hour : 14
-        key = @current_merchant ? @current_merchant.api_key : "OMS_KEY_SAMPLE"
 
         # SOP Modal
         render_modal_container("sop-modal", "📖 Warehouse SLA SOP Guide") do
@@ -190,7 +189,7 @@ module Views
           end
           p do
             strong(class: "text-white") { "Auth Header: " }
-            code(class: "text-indigo-400 font-mono") { "X-Merchant-Api-Key: #{key}" }
+            code(class: "text-indigo-400 font-mono") { "Authorization: Bearer <access token>" }
           end
         end
 

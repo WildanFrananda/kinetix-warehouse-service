@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe "FleetRadar", type: :request do
   describe "GET /fleet_radar" do
-    let!(:merchant) { Merchant.create!(name: "Luxe Fashion Radar Test", code: "LUXERADAR", cutoff_hour: 16, api_key: "luxe_radar_123") }
+    let!(:merchant) { Merchant.create!(name: "Luxe Fashion Radar Test", code: "LUXERADAR", cutoff_hour: 16) }
 
     let!(:staff) do
       StaffUser.create!(

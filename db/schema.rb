@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_051417) do
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bin_inventories", force: :cascade do |t|
@@ -25,14 +25,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_160000) do
   end
 
   create_table "merchants", force: :cascade do |t|
-    t.string "api_key", null: false
     t.string "code", null: false
     t.datetime "created_at", null: false
     t.integer "cutoff_hour", default: 14
     t.decimal "latitude", precision: 10, scale: 6, default: "-6.2088"
     t.decimal "longitude", precision: 10, scale: 6, default: "106.8456"
     t.string "name", null: false
+    t.uuid "principal_id"
     t.datetime "updated_at", null: false
+    t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
   end
 
   create_table "order_items", force: :cascade do |t|

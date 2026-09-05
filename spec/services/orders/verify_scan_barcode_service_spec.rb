@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe Orders::VerifyScanBarcodeService, type: :service do
-  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", api_key: "luxe_sec_123", cutoff_hour: 14) }
+  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", cutoff_hour: 14) }
   let!(:order) do
     Order.create!(
       merchant: merchant,

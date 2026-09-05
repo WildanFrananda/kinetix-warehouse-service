@@ -8,6 +8,6 @@ module MerchantRepositoryInterface
   sig { abstract.params(id: Integer).returns(T.nilable(Merchant)) }
   def find_by_id(id); end
 
-  sig { abstract.params(api_key: String).returns(T.nilable(Merchant)) }
-  def find_by_api_key(api_key); end
+  sig { abstract.params(principal_id: String).returns(T.nilable(Merchant)) }
+  def find_by_principal_id(principal_id); end
 end

@@ -7,3 +7,4 @@
 --ignore=/config/ci.rb
 --suppress-payload-superclass-redefinition-for=Net::IMAP::Literal
 --suppress-payload-superclass-redefinition-for=Net::IMAP::QuotedString
+--enable-experimental-requires-ancestor

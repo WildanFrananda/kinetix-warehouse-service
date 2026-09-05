@@ -57,7 +57,6 @@ created_merchants = MERCHANTS_DATA.map do |data|
   merchant = Merchant.create!(
     code: data[:code],
     name: data[:name],
-    api_key: "luxe_#{SecureRandom.hex(32)}",
     cutoff_hour: data[:cutoff_hour]
   )
 
@@ -138,5 +137,6 @@ puts "🎉 Database successfully reset & seeded with new logic-driven records!"
 puts
 puts "Staff password for this run (shown once, not stored anywhere else):"
 puts "  #{SEED_STAFF_PASSWORD}"
-puts "Merchant API keys were generated randomly. Read them with:"
-puts "  bin/rails runner 'Merchant.pluck(:code, :api_key).each { |c, k| puts \"#{'%s'} #{'%s'}\" % [c, k] }'"
+puts "Merchants have no API key. The JSON API takes an identity access token, and a merchant is"
+puts "reachable only once its principal_id is linked to the identity principal that owns it:"
+puts "  bin/rails runner 'Merchant.pluck(:code, :principal_id).each { |c, p| puts \"#{'%s'} #{'%s'}\" % [c, p || \"(unlinked)\"] }'"

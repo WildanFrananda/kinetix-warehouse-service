@@ -3,6 +3,8 @@
 
 require "grpc"
 require "grpc_reflection"
+require_relative "kinetix/service_identity"
+require_relative "kinetix/peer_authorization_interceptor"
 require_relative "generated/fulfillment/v1/fulfillment_service_services_pb"
 require_relative "generated/fulfillment/v1/bin_stock_service_services_pb"
 
@@ -11,8 +13,10 @@ class GrpcServer
 
   sig { params(port: Integer).void }
   def self.run(port: Integer(ENV.fetch("GRPC_PORT")))
-    server = GRPC::RpcServer.new
-    server.add_http2_port("0.0.0.0:#{port}", :this_port_is_insecure)
+    identity = Kinetix::ServiceIdentity.new
+
+    server = GRPC::RpcServer.new(interceptors: [ Kinetix::PeerAuthorizationInterceptor.new ])
+    server.add_http2_port("0.0.0.0:#{port}", identity.server_credentials)
     server.handle(Rpc::FulfillmentServiceHandler.new)
     server.handle(Rpc::BinStockServiceHandler.new)
 
@@ -21,7 +25,7 @@ class GrpcServer
     server.handle(GrpcReflection::Server)
     server.handle(GrpcReflection::ServerAlpha)
 
-    Rails.logger.info("gRPC server listening on 0.0.0.0:#{port}")
+    Rails.logger.info("gRPC server listening on 0.0.0.0:#{port} (mTLS)")
     server.run_till_terminated_or_interrupted([ 15, "INT", "TERM" ])
   end
 end

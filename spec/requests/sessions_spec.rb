@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe "Authentication Sessions", type: :request do
-  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", api_key: "luxe_prod_sec_key_123", cutoff_hour: 14) }
+  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", cutoff_hour: 14) }
 
   let!(:staff) do
     StaffUser.create!(
@@ -58,10 +58,13 @@ RSpec.describe "Authentication Sessions", type: :request do
       end
     end
 
-    # Regression guards for the two auth bypasses removed in S1 / P0-WH-01.
-    context "when the merchant API key is submitted as the password" do
+    # Regression guards for the two auth bypasses removed in S1 / P0-WH-01. The merchant API key
+    # that used to open a session here no longer exists as a column, so the guard is phrased
+    # against a string of that shape: what it pins is that only a staff password authenticates,
+    # not that one particular credential stopped working.
+    context "when a merchant-key-shaped string is submitted as the password" do
       it "refuses to open a session for a staff account" do
-        post login_path, params: { email: "budi@boutiquehijab.id", password: merchant.api_key }
+        post login_path, params: { email: "budi@boutiquehijab.id", password: "luxe_prod_sec_key_123" }
 
         expect(response).to redirect_to(login_path)
         expect(session[:merchant_id]).to be_nil
@@ -71,7 +74,7 @@ RSpec.describe "Authentication Sessions", type: :request do
       end
 
       it "refuses to open a session when the email belongs to no staff account" do
-        post login_path, params: { email: "attacker@example.com", password: merchant.api_key }
+        post login_path, params: { email: "attacker@example.com", password: "luxe_prod_sec_key_123" }
 
         expect(response).to redirect_to(login_path)
         expect(session[:merchant_id]).to be_nil

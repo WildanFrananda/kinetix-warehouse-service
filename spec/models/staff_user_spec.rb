@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe StaffUser, type: :model do
-  let(:merchant) { Merchant.create!(code: "TST-01", name: "Test Merchant", api_key: "secret-api-key-test", cutoff_hour: 14) }
+  let(:merchant) { Merchant.create!(code: "TST-01", name: "Test Merchant", cutoff_hour: 14) }
 
 
   describe "BCrypt Password Authentication" do

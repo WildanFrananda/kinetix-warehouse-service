@@ -2,7 +2,7 @@
 require "rails_helper"
 
 RSpec.describe "Scanner Controller", type: :request do
-  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", api_key: "luxe_sec_123", cutoff_hour: 14) }
+  let!(:merchant) { Merchant.create!(code: "BH-001", name: "Boutique Hijab Premium", cutoff_hour: 14) }
   let!(:staff) do
     StaffUser.create!(
       merchant: merchant,

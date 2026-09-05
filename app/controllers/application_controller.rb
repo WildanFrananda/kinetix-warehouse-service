@@ -26,13 +26,9 @@ class ApplicationController < ActionController::Base
 
   sig { returns(Integer) }
   def active_merchant_id
-    param_id = params[:merchant_id]
-    if param_id.present?
-      param_id.to_i
-    elsif session[:merchant_id].present?
-      session[:merchant_id].to_i
-    else
-      1
-    end
+    id = session[:merchant_id].presence
+    raise "active_merchant_id called without a signed-in merchant" if id.nil?
+
+    id.to_i
   end
 end

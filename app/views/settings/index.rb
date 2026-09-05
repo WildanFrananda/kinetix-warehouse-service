@@ -46,7 +46,6 @@ module Views
           div(class: "grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-8") do
             # Left Column
             div(class: "flex flex-col gap-6") do
-              render_api_key_card(m_id)
               render_endpoints_card(m_id)
             end
 
@@ -73,55 +72,6 @@ module Views
         end
       end
 
-      sig { params(m_id: Integer).void }
-      def render_api_key_card(m_id)
-        merchant_name = @current_merchant ? @current_merchant.name : "Merchant"
-        api_key = @current_merchant ? @current_merchant.api_key : "OMS_KEY_SAMPLE"
-        updated_at = @current_merchant ? @current_merchant.updated_at : Time.current
-
-        render Components::UI::Card.new do
-          div(class: "flex items-center justify-between mb-2") do
-            div(class: "flex items-center gap-3") do
-              span(class: "text-xl") { "🔑" }
-              h3(class: "text-lg font-bold text-white font-sans") { "Merchant Production Key" }
-            end
-
-            span(class: "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono") do
-              "ACTIVE"
-            end
-          end
-
-          p(class: "text-xs text-slate-400 mb-4") do
-            "Use this key to authenticate REST API requests for merchant "
-            strong(class: "text-white") { merchant_name }
-            ". Keep it secure."
-          end
-
-          div(class: "flex items-center gap-3 mb-4") do
-            div(class: "flex-1 h-11 bg-slate-950 border border-slate-800 rounded-lg px-4 flex items-center font-mono text-sm text-indigo-400 tracking-wider overflow-hidden") do
-              span(id: "api-key-text", class: "truncate") { api_key }
-            end
-
-            button(
-              type: "button",
-              class: "h-11 px-4 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all",
-              data_action: "click->clipboard#copy"
-            ) do
-              "📋 Copy"
-            end
-
-            form(action: regenerate_api_key_settings_path(merchant_id: m_id), method: "post", class: "inline-block") do
-              input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-              render Components::UI::Button.new(variant: "secondary", type: "submit", custom_class: "h-11 px-3") { "🔄" }
-            end
-          end
-
-          div(class: "text-xs text-slate-500 flex items-center gap-2") do
-            span { "ℹ️" }
-            span { "Last rotated: #{updated_at.strftime('%d %b %Y')}" }
-          end
-        end
-      end
 
       sig { params(m_id: Integer).void }
       def render_endpoints_card(m_id)

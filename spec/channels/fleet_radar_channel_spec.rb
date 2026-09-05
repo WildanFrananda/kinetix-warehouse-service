@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe FleetRadarChannel, type: :channel do
-  let!(:merchant) { Merchant.create!(name: "Channel Merchant Test", code: "CHAN123", cutoff_hour: 16, api_key: "chan_123") }
+  let!(:merchant) { Merchant.create!(name: "Channel Merchant Test", code: "CHAN123", cutoff_hour: 16) }
 
   it "subscribes to the merchant fleet radar stream" do
     subscribe(merchant_id: merchant.id)

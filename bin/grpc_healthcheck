@@ -4,11 +4,15 @@
 require "bundler/setup"
 require "grpc"
 require "grpc/health/v1/health_services_pb"
+require_relative "../lib/kinetix/service_identity"
 
+identity = Kinetix::ServiceIdentity.new
 port = Integer(ENV.fetch("GRPC_PORT"))
+authority = ENV.fetch("KINETIX_GRPC_SELF_HOST", "kinetix-warehouse-grpc")
+
 stub = Grpc::Health::V1::Health::Stub.new(
-  "127.0.0.1:#{port}",
-  :this_channel_is_insecure,
+  "#{authority}:#{port}",
+  identity.channel_credentials,
   timeout: 8
 )
 

@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require_relative "../../../lib/generated/fleet/v1/courier_telemetry_services_pb"
+require Rails.root.join("lib/kinetix/service_identity").to_s
 
 module FleetPulse
   class GrpcClient
@@ -11,7 +12,7 @@ module FleetPulse
     attr_reader :host
 
     sig { params(host: String).void }
-    def initialize(host: ENV.fetch("MATCHING_GRPC_HOST", "localhost:50053"))
+    def initialize(host: ENV.fetch("MATCHING_GRPC_HOST"))
       @host = host
     end
 
@@ -26,12 +27,12 @@ module FleetPulse
     def dispatch_courier(order_id:, order_number:, pickup_address:, delivery_address:)
       stub = Fleet::V1::CourierTelemetryService::Stub.new(
         @host,
-        :this_channel_is_insecure,
+        Kinetix::ServiceIdentity.new.channel_credentials,
         timeout: 5
       )
 
       req = Fleet::V1::DispatchCourierRequest.new(
-        merchant_api_key: "INTERNAL_OMS_KEY",
+        merchant_api_key: "",
         order_id: order_id,
         order_number: order_number,
         pickup_address: Common::V1::Address.new(street_address: pickup_address),

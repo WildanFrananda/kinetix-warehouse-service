@@ -39,7 +39,6 @@ Rails.application.routes.draw do
   get "/manifests/handover_pdf", to: "manifests#handover_pdf", as: "handover_pdf_manifests"
   get "/settings", to: "settings#index", as: "settings"
   patch "/settings/update_cutoff", to: "settings#update_cutoff", as: "update_cutoff_settings"
-  post "/settings/regenerate_api_key", to: "settings#regenerate_api_key", as: "regenerate_api_key_settings"
   post "/settings/test_ping", to: "settings#test_ping", as: "test_ping_settings"
   get "/support", to: "support#index", as: "support"
   post "/support/create_ticket", to: "support#create_ticket", as: "create_ticket_support"

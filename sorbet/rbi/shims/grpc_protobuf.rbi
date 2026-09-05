@@ -1,3 +1,10 @@
+# Hand-written shims for the generated gRPC stubs.
+#
+# `creds` was typed `Symbol` because the only value ever passed was
+# `:this_channel_is_insecure`. Every client speaks mTLS now and passes a
+# `GRPC::Core::ChannelCredentials`, which the real `Stub#initialize` has always accepted — the
+# shim was narrower than the thing it describes, so widening it is a correction, not a
+# concession.
 # typed: true
 
 module Google
@@ -351,7 +358,7 @@ module Fleet
       class Service; end
       class Stub
         extend T::Sig
-        sig { params(host: String, creds: Symbol, timeout: Integer).void }
+        sig { params(host: String, creds: T.any(Symbol, GRPC::Core::ChannelCredentials), timeout: Integer).void }
         def initialize(host, creds, timeout: 5); end
         sig { params(req: DispatchCourierRequest).returns(DispatchCourierResponse) }
         def dispatch_courier(req); end

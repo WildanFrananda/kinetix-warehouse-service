@@ -4,7 +4,6 @@ FactoryBot.define do
   factory :merchant do
     sequence(:name) { |n| "Boutique #{n}" }
     sequence(:code) { |n| "BTQ#{n}" }
-    sequence(:api_key) { |n| "key_secret_#{n}" }
     cutoff_hour { 14 }
   end
 
