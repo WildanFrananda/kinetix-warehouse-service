@@ -5,6 +5,7 @@ module Api
     class OrdersController < ApplicationController
       extend T::Sig
       include ApiAuthentication
+      include ApiErrorHandling
 
       sig { void }
       def create

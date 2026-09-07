@@ -56,7 +56,8 @@ module Couriers
       begin
         http = Net::HTTP.new(host, port)
         path = uri.path.to_s.empty? ? "/api/v1/merchant/orders" : uri.path.to_s
-        request = Net::HTTP::Post.new(path, { "Content-Type" => "application/json" })
+        headers = { "Content-Type" => "application/json" }.merge(Kinetix::RequestId.metadata)
+        request = Net::HTTP::Post.new(path, headers)
         request.body = payload.to_json
         response = http.request(request)
 
@@ -74,7 +75,11 @@ module Couriers
         else
           failure("FleetPulse API returned status: #{response.code}")
         end
-      rescue StandardError
+      rescue StandardError => e
+        Rails.logger.error(
+          "FleetPulse dispatch for order #{order_id} raised #{e.class}: #{e.message} " \
+          "(request_id=#{Kinetix::RequestId.current || '-'})"
+        )
         success(
           ResultData.new(
             order_id: order_id,
