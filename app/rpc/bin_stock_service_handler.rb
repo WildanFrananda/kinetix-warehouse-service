@@ -84,7 +84,7 @@ module Rpc
       lock_acquired = false
 
       begin
-        lock_acquired = REDIS.set(lock_key, "locked", nx: true, px: 3000) == "OK"
+        lock_acquired = REDIS.set(lock_key, "locked", nx: true, px: 3000) ? true : false
       rescue StandardError => e
         Rails.logger.warn("Redis Tier-1 Lock unavailable: #{e.message}")
         lock_acquired = true
