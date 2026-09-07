@@ -3,6 +3,7 @@
 
 require "grpc"
 require "identity/v1/identity_services_pb"
+require Rails.root.join("lib/kinetix/request_id").to_s
 require Rails.root.join("lib/kinetix/service_identity").to_s
 
 module Identity
@@ -26,7 +27,7 @@ module Identity
       )
 
       req = Identity::V1::GetUserProfileRequest.new(principal_id: principal_id)
-      res = stub.get_user_profile(req)
+      res = stub.get_user_profile(req, metadata: Kinetix::RequestId.metadata)
 
       return nil unless res.found
 

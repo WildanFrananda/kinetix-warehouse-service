@@ -3,6 +3,7 @@
 
 require "sorbet-runtime"
 require "grpc"
+require_relative "request_id"
 require_relative "spiffe"
 
 module Kinetix
@@ -57,7 +58,10 @@ module Kinetix
 
       return if @allowed.include?(peer)
 
-      Rails.logger.warn("refused a gRPC call to #{method} from #{peer}, which is not on the allow list")
+      Rails.logger.warn(
+        "refused a gRPC call to #{method} from #{peer}, which is not on the allow list " \
+        "(request_id=#{Kinetix::RequestId.current || '-'})"
+      )
       raise GRPC::PermissionDenied.new("this service is not permitted to call warehouse")
     end
   end

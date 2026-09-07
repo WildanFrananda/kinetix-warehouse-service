@@ -14,6 +14,9 @@ module FashionFulfillmentOms
 
     config.autoload_lib(ignore: %w[assets tasks generated])
 
+    require_relative "../lib/kinetix/request_id_middleware"
+    config.middleware.insert_after ActionDispatch::RequestId, Kinetix::RequestIdMiddleware
+
     Rails.autoloaders.main.inflector.inflect("ui" => "UI")
 
     app_root = File.expand_path("..", __dir__)

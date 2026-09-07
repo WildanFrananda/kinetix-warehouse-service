@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "fleet/v1/fleet_services_pb"
+require Rails.root.join("lib/kinetix/request_id").to_s
 require Rails.root.join("lib/kinetix/service_identity").to_s
 
 module FleetPulse
@@ -39,7 +40,7 @@ module FleetPulse
         delivery_address: Common::V1::Address.new(street_address: delivery_address)
       )
 
-      res = stub.dispatch_courier(req)
+      res = stub.dispatch_courier(req, metadata: Kinetix::RequestId.metadata)
 
       {
         success: res.success,
