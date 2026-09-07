@@ -80,14 +80,9 @@ module Couriers
           "FleetPulse dispatch for order #{order_id} raised #{e.class}: #{e.message} " \
           "(request_id=#{Kinetix::RequestId.current || '-'})"
         )
-        success(
-          ResultData.new(
-            order_id: order_id,
-            order_number: T.must(order.order_number),
-            merchant_id: merchant_id,
-            dispatch_ref: dispatch_ref,
-            status: "dispatch_requested"
-          )
+        failure(
+          "FleetPulse could not be reached, so this order was not dispatched and its status is " \
+          "unchanged. Try again; the reason is in the log under this request's id."
         )
       end
     end
