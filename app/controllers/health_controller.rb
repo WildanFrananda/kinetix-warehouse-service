@@ -5,17 +5,15 @@ class HealthController < ApplicationController
 
   sig { void }
   def show
-    db_healthy = begin
-      ActiveRecord::Base.connection.execute("SELECT 1")
-      true
-    rescue StandardError
-      false
-    end
+    render json: { status: "ok", service: "kinetix-warehouse-service" }
+  end
 
-    if db_healthy
-      render json: { status: "ok", database: "connected", timestamp: Time.current.iso8601 }
-    else
-      render json: { status: "error", database: "disconnected", timestamp: Time.current.iso8601 }, status: :service_unavailable
-    end
+  sig { void }
+  def ready
+    ActiveRecord::Base.connection.execute("SELECT 1")
+    render json: { status: "ok", database: "reachable" }
+  rescue StandardError => e
+    Rails.logger.error("readiness check failed: #{e.class}: #{e.message}")
+    render json: { status: "unavailable", database: "unreachable" }, status: :service_unavailable
   end
 end
