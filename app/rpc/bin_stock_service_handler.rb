@@ -110,9 +110,14 @@ module Rpc
             success = false
             bin_code = "N/A"
             remaining = 0
+          elsif already_held?(req.order_number, sku)
+            success = true
+            bin_code = inventory.warehouse_bin.bin_code
+            remaining = inventory.available_quantity
           elsif inventory.available_quantity >= req_qty
             new_reserved = (inventory.reserved_quantity || 0) + req_qty
             inventory.update!(reserved_quantity: new_reserved)
+            record_reservation(merchant, req.order_number, sku, req_qty)
             success = true
             bin_code = inventory.warehouse_bin.bin_code
             remaining = inventory.available_quantity
@@ -145,15 +150,86 @@ module Rpc
 
     sig do
       params(
-        _req: Fulfillment::V1::ReleaseStockRequest,
+        req: Fulfillment::V1::ReleaseStockRequest,
         _call: T.nilable(GRPC::ActiveCall::SingleReqView)
       ).returns(Fulfillment::V1::ReleaseStockResponse)
     end
-    def release_stock(_req, _call)
-      raise GRPC::Unimplemented, "ReleaseStock lands with the idempotency ledger in S10"
+    def release_stock(req, _call)
+      merchant = merchant_for(req.merchant_principal_id)
+      if merchant.nil?
+        return Fulfillment::V1::ReleaseStockResponse.new(
+          success: false,
+          already_released: false,
+          remaining_available: 0,
+          error: Common::V1::ErrorDetail.new(
+            error_code: "UNKNOWN_MERCHANT",
+            message: "no merchant in this warehouse is linked to that principal"
+          )
+        )
+      end
+
+      released = T.let(false, T::Boolean)
+      already = T.let(false, T::Boolean)
+      remaining = T.let(0, Integer)
+
+      BinInventory.transaction do
+        reservation = StockReservation.lock("FOR UPDATE")
+                                      .find_by(order_number: req.order_number, sku: req.sku)
+        inventory = BinInventory.lock("FOR UPDATE").find_by(sku: req.sku)
+        remaining = inventory&.available_quantity || 0
+
+        if reservation.nil? || !reservation.held?
+          already = true
+          released = true
+        elsif inventory.nil?
+          released = false
+        else
+          give_back = [ reservation.quantity, inventory.reserved_quantity || 0 ].min
+          inventory.update!(reserved_quantity: (inventory.reserved_quantity || 0) - give_back)
+          reservation.update!(released_at: Time.current)
+          remaining = inventory.reload.available_quantity
+          released = true
+
+          begin
+            REDIS.set("inventory:available:#{req.sku}", remaining.to_s)
+          rescue StandardError => e
+            Rails.logger.warn("Failed to update Redis inventory cache: #{e.message}")
+          end
+        end
+      end
+
+      Fulfillment::V1::ReleaseStockResponse.new(
+        success: released,
+        already_released: already,
+        remaining_available: remaining
+      )
     end
 
     private
+
+    sig { params(order_number: String, sku: String).returns(T::Boolean) }
+    def already_held?(order_number, sku)
+      return false if order_number.empty?
+
+      StockReservation.held.exists?(order_number: order_number, sku: sku)
+    end
+
+    sig do
+      params(merchant: Merchant, order_number: String, sku: String, quantity: Integer)
+        .returns(T.untyped)
+    end
+    def record_reservation(merchant, order_number, sku, quantity)
+      return if order_number.empty?
+
+      existing = StockReservation.find_by(order_number: order_number, sku: sku)
+      if existing
+        existing.update!(quantity: quantity, released_at: nil, merchant: merchant)
+      else
+        StockReservation.create!(
+          order_number: order_number, sku: sku, quantity: quantity, merchant: merchant
+        )
+      end
+    end
 
     sig { params(principal_id: String).returns(T.nilable(Merchant)) }
     def merchant_for(principal_id)
