@@ -12,6 +12,9 @@ module Rpc
       Fulfillment::V1::CheckBinStockResponse
     )
 
+    UNKNOWN_MERCHANT = "UNKNOWN_MERCHANT"
+    INVALID_ARGUMENT = "INVALID_ARGUMENT"
+
     sig { void }
     def initialize
       super
@@ -33,16 +36,16 @@ module Rpc
       return NOT_FOUND_STOCK if inventory.nil?
 
       available = inventory.available_quantity
-      reserved = inventory.reserved_quantity || 0
+      reserved = inventory.reserved_quantity
 
       Fulfillment::V1::CheckBinStockResponse.new(
         found: true,
         sku: sku,
         product_name: "Physical Inventory SKU #{sku}",
-        physical_stock: inventory.quantity || (available + reserved),
+        physical_stock: inventory.quantity,
         allocated_stock: reserved,
         available_stock: available,
-        bin_location: inventory.warehouse_bin.bin_code,
+        bin_location: inventory.warehouse_bin&.bin_code.to_s,
         low_stock_warning: available < 5
       )
     end
@@ -66,86 +69,42 @@ module Rpc
     def reserve_stock(req, _call)
       merchant = merchant_for(req.merchant_principal_id)
       if merchant.nil?
-        return Fulfillment::V1::ReserveStockResponse.new(
-          success: false,
-          bin_location: "",
-          remaining_available: 0,
-          error: Common::V1::ErrorDetail.new(
-            error_code: "UNKNOWN_MERCHANT",
-            message: "no merchant in this warehouse is linked to that principal"
-          )
+        return reserve_refusal(
+          UNKNOWN_MERCHANT, "no merchant in this warehouse is linked to that principal"
         )
       end
 
-      sku = req.sku
-      req_qty = req.quantity
-
-      lock_key = "lock:inventory:#{sku}"
-      lock_acquired = false
-
-      begin
-        lock_acquired = REDIS.set(lock_key, "locked", nx: true, px: 3000) ? true : false
-      rescue StandardError => e
-        Rails.logger.warn("Redis Tier-1 Lock unavailable: #{e.message}")
-        lock_acquired = true
+      if req.quantity < 1
+        return reserve_refusal(INVALID_ARGUMENT, "quantity must be at least 1")
       end
 
-      unless lock_acquired
-        return Fulfillment::V1::ReserveStockResponse.new(
-          success: false,
-          bin_location: "N/A",
-          remaining_available: 0
-        )
+      key = idempotency_key(StockOperation::RESERVE, req)
+      if key.nil?
+        return reserve_refusal(INVALID_ARGUMENT, invalid_argument_reason(req))
       end
 
-      success = T.let(false, T::Boolean)
-      bin_code = T.let("N/A", String)
-      remaining = T.let(0, Integer)
-
-      begin
-        BinInventory.transaction do
-          inventory = BinInventory.lock("FOR UPDATE").joins(:warehouse_bin).find_by(sku: sku)
-
-          if inventory.nil?
-            success = false
-            bin_code = "N/A"
-            remaining = 0
-          elsif already_held?(req.order_number, sku)
-            success = true
-            bin_code = inventory.warehouse_bin.bin_code
-            remaining = inventory.available_quantity
-          elsif inventory.available_quantity >= req_qty
-            new_reserved = (inventory.reserved_quantity || 0) + req_qty
-            inventory.update!(reserved_quantity: new_reserved)
-            record_reservation(merchant, req.order_number, sku, req_qty)
-            success = true
-            bin_code = inventory.warehouse_bin.bin_code
-            remaining = inventory.available_quantity
-
-            begin
-              REDIS.set("inventory:available:#{sku}", remaining.to_s)
-            rescue StandardError => e
-              Rails.logger.warn("Failed to update Redis inventory cache: #{e.message}")
-            end
-          else
-            success = false
-            bin_code = inventory.warehouse_bin.bin_code
-            remaining = inventory.available_quantity
-          end
-        end
-      ensure
-        begin
-          REDIS.del(lock_key)
-        rescue StandardError => e
-          Rails.logger.warn("Failed to release Redis lock: #{e.message}")
-        end
+      outcome = Inventory::IdempotentOperation.new(
+        operation: StockOperation::RESERVE,
+        key: key,
+        digest: StockOperation.digest_of(
+          [
+            StockOperation::RESERVE, merchant.principal_id.to_s,
+            req.order_number, req.sku, req.quantity.to_s
+          ]
+        ),
+        merchant: merchant,
+        order_number: req.order_number,
+        sku: req.sku,
+        quantity: req.quantity
+      ).call do
+        Inventory::ReserveStockService.new(
+          merchant: merchant, order_number: req.order_number,
+          sku: req.sku, quantity: req.quantity
+        ).call
       end
 
-      Fulfillment::V1::ReserveStockResponse.new(
-        success: success,
-        bin_location: bin_code,
-        remaining_available: remaining
-      )
+      log_outcome(StockOperation::RESERVE, key, req.order_number, req.sku, outcome)
+      T.cast(outcome.message, Fulfillment::V1::ReserveStockResponse)
     end
 
     sig do
@@ -157,78 +116,121 @@ module Rpc
     def release_stock(req, _call)
       merchant = merchant_for(req.merchant_principal_id)
       if merchant.nil?
-        return Fulfillment::V1::ReleaseStockResponse.new(
-          success: false,
-          already_released: false,
-          remaining_available: 0,
-          error: Common::V1::ErrorDetail.new(
-            error_code: "UNKNOWN_MERCHANT",
-            message: "no merchant in this warehouse is linked to that principal"
-          )
+        return release_refusal(
+          UNKNOWN_MERCHANT, "no merchant in this warehouse is linked to that principal"
         )
       end
 
-      released = T.let(false, T::Boolean)
-      already = T.let(false, T::Boolean)
-      remaining = T.let(0, Integer)
-
-      BinInventory.transaction do
-        reservation = StockReservation.lock("FOR UPDATE")
-                                      .find_by(order_number: req.order_number, sku: req.sku)
-        inventory = BinInventory.lock("FOR UPDATE").find_by(sku: req.sku)
-        remaining = inventory&.available_quantity || 0
-
-        if reservation.nil? || !reservation.held?
-          already = true
-          released = true
-        elsif inventory.nil?
-          released = false
-        else
-          give_back = [ reservation.quantity, inventory.reserved_quantity || 0 ].min
-          inventory.update!(reserved_quantity: (inventory.reserved_quantity || 0) - give_back)
-          reservation.update!(released_at: Time.current)
-          remaining = inventory.reload.available_quantity
-          released = true
-
-          begin
-            REDIS.set("inventory:available:#{req.sku}", remaining.to_s)
-          rescue StandardError => e
-            Rails.logger.warn("Failed to update Redis inventory cache: #{e.message}")
-          end
-        end
+      key = idempotency_key(StockOperation::RELEASE, req)
+      if key.nil?
+        return release_refusal(INVALID_ARGUMENT, invalid_argument_reason(req))
       end
 
-      Fulfillment::V1::ReleaseStockResponse.new(
-        success: released,
-        already_released: already,
-        remaining_available: remaining
-      )
+      outcome = Inventory::IdempotentOperation.new(
+        operation: StockOperation::RELEASE,
+        key: key,
+        digest: StockOperation.digest_of(
+          [ StockOperation::RELEASE, merchant.principal_id.to_s, req.order_number, req.sku ]
+        ),
+        merchant: merchant,
+        order_number: req.order_number,
+        sku: req.sku,
+        quantity: req.quantity
+      ).call do
+        Inventory::ReleaseStockService.new(
+          merchant: merchant, order_number: req.order_number, sku: req.sku
+        ).call
+      end
+
+      log_outcome(StockOperation::RELEASE, key, req.order_number, req.sku, outcome)
+      T.cast(outcome.message, Fulfillment::V1::ReleaseStockResponse)
     end
 
     private
 
-    sig { params(order_number: String, sku: String).returns(T::Boolean) }
-    def already_held?(order_number, sku)
-      return false if order_number.empty?
+    sig do
+      params(
+        operation: String,
+        req: T.any(Fulfillment::V1::ReserveStockRequest, Fulfillment::V1::ReleaseStockRequest)
+      ).returns(T.nilable(String))
+    end
+    def idempotency_key(operation, req)
+      return nil if req.order_number.blank? || req.sku.blank?
+      return nil if req.order_number.length > StockOperation::MAX_ORDER_NUMBER_LENGTH
+      return nil if req.sku.length > StockOperation::MAX_SKU_LENGTH
 
-      StockReservation.held.exists?(order_number: order_number, sku: sku)
+      key = req.idempotency_key&.key.presence || "#{operation}:#{req.order_number}:#{req.sku}"
+      return nil if key.length > StockOperation::MAX_KEY_LENGTH
+
+      key
     end
 
     sig do
-      params(merchant: Merchant, order_number: String, sku: String, quantity: Integer)
-        .returns(T.untyped)
+      params(
+        req: T.any(Fulfillment::V1::ReserveStockRequest, Fulfillment::V1::ReleaseStockRequest)
+      ).returns(String)
     end
-    def record_reservation(merchant, order_number, sku, quantity)
-      return if order_number.empty?
+    def invalid_argument_reason(req)
+      return "order_number is required" if req.order_number.blank?
+      return "sku is required" if req.sku.blank?
 
-      existing = StockReservation.find_by(order_number: order_number, sku: sku)
-      if existing
-        existing.update!(quantity: quantity, released_at: nil, merchant: merchant)
-      else
-        StockReservation.create!(
-          order_number: order_number, sku: sku, quantity: quantity, merchant: merchant
+      if req.order_number.length > StockOperation::MAX_ORDER_NUMBER_LENGTH
+        return "order_number must be at most #{StockOperation::MAX_ORDER_NUMBER_LENGTH} characters"
+      end
+
+      if req.sku.length > StockOperation::MAX_SKU_LENGTH
+        return "sku must be at most #{StockOperation::MAX_SKU_LENGTH} characters"
+      end
+
+      "idempotency_key must be at most #{StockOperation::MAX_KEY_LENGTH} characters"
+    end
+
+    sig do
+      params(
+        operation: String, key: String, order_number: String, sku: String,
+        outcome: Inventory::OperationOutcome
+      ).void
+    end
+    def log_outcome(operation, key, order_number, sku, outcome)
+      context = "operation=#{operation} key=#{key} order_number=#{order_number} sku=#{sku} " \
+                "(request_id=#{Kinetix::RequestId.current || '-'})"
+
+      case outcome.status
+      when Inventory::OperationOutcome::REPLAYED
+        Rails.logger.warn("stock.idem replay #{context}")
+      when Inventory::OperationOutcome::REPLAY_REFUSED
+        Rails.logger.error(
+          "stock.idem replay_refused error_code=#{outcome.message.error&.error_code} #{context}"
+        )
+      when Inventory::OperationOutcome::CONFLICT
+        Rails.logger.error("stock.idem conflict #{context}")
+      when Inventory::OperationOutcome::RETRY_LATER
+        Rails.logger.error("stock.idem retry_later #{context}")
+      when Inventory::OperationOutcome::REFUSED
+        Rails.logger.warn(
+          "stock.idem refused error_code=#{outcome.message.error&.error_code} #{context}"
         )
       end
+    end
+
+    sig { params(code: String, text: String).returns(Fulfillment::V1::ReserveStockResponse) }
+    def reserve_refusal(code, text)
+      Fulfillment::V1::ReserveStockResponse.new(
+        success: false,
+        bin_location: "N/A",
+        remaining_available: 0,
+        error: Common::V1::ErrorDetail.new(error_code: code, message: text)
+      )
+    end
+
+    sig { params(code: String, text: String).returns(Fulfillment::V1::ReleaseStockResponse) }
+    def release_refusal(code, text)
+      Fulfillment::V1::ReleaseStockResponse.new(
+        success: false,
+        already_released: false,
+        remaining_available: 0,
+        error: Common::V1::ErrorDetail.new(error_code: code, message: text)
+      )
     end
 
     sig { params(principal_id: String).returns(T.nilable(Merchant)) }

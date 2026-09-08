@@ -37,6 +37,9 @@ module GeneratedPathHelpersModule
   def health_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def health_ready_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def inventory_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -149,9 +152,6 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def rails_storage_redirect_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def regenerate_api_key_settings_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def returns_dashboard_path(*args); end

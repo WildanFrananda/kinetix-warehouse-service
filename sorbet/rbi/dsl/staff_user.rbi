@@ -11,6 +11,36 @@ class StaffUser
   extend CommonRelationMethods
   extend GeneratedRelationMethods
 
+  sig { params(unencrypted_password: T.untyped).returns(T.any(StaffUser, FalseClass)) }
+  def authenticate(unencrypted_password); end
+
+  sig { params(unencrypted_password: T.untyped).returns(T.any(StaffUser, FalseClass)) }
+  def authenticate_password(unencrypted_password); end
+
+  sig { returns(T.untyped) }
+  def password; end
+
+  sig { params(unencrypted_password: T.untyped).returns(T.untyped) }
+  def password=(unencrypted_password); end
+
+  sig { returns(T.untyped) }
+  def password_challenge; end
+
+  sig { params(_arg0: T.untyped).returns(T.untyped) }
+  def password_challenge=(_arg0); end
+
+  sig { returns(T.untyped) }
+  def password_confirmation; end
+
+  sig { params(_arg0: T.untyped).returns(T.untyped) }
+  def password_confirmation=(_arg0); end
+
+  sig { returns(T.untyped) }
+  def password_reset_token; end
+
+  sig { returns(T.untyped) }
+  def password_salt; end
+
   private
 
   sig { returns(NilClass) }
@@ -634,10 +664,10 @@ class StaffUser
     sig { void }
     def created_at_will_change!; end
 
-    sig { returns(T.nilable(::String)) }
+    sig { returns(::String) }
     def email; end
 
-    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
+    sig { params(value: ::String).returns(::String) }
     def email=(value); end
 
     sig { returns(T::Boolean) }
@@ -652,10 +682,10 @@ class StaffUser
     sig { returns(T::Boolean) }
     def email_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def email_change; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def email_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -664,7 +694,7 @@ class StaffUser
     sig { returns(T.nilable(::String)) }
     def email_in_database; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def email_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -814,10 +844,10 @@ class StaffUser
     sig { void }
     def merchant_id_will_change!; end
 
-    sig { returns(T.nilable(::String)) }
+    sig { returns(::String) }
     def name; end
 
-    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
+    sig { params(value: ::String).returns(::String) }
     def name=(value); end
 
     sig { returns(T::Boolean) }
@@ -832,10 +862,10 @@ class StaffUser
     sig { returns(T::Boolean) }
     def name_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def name_change; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def name_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -844,7 +874,7 @@ class StaffUser
     sig { returns(T.nilable(::String)) }
     def name_in_database; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def name_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -858,6 +888,51 @@ class StaffUser
 
     sig { void }
     def name_will_change!; end
+
+    sig { returns(T.nilable(::String)) }
+    def password_digest; end
+
+    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
+    def password_digest=(value); end
+
+    sig { returns(T::Boolean) }
+    def password_digest?; end
+
+    sig { returns(T.nilable(::String)) }
+    def password_digest_before_last_save; end
+
+    sig { returns(T.untyped) }
+    def password_digest_before_type_cast; end
+
+    sig { returns(T::Boolean) }
+    def password_digest_came_from_user?; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def password_digest_change; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def password_digest_change_to_be_saved; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def password_digest_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::String)) }
+    def password_digest_in_database; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def password_digest_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def password_digest_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::String)) }
+    def password_digest_previously_was; end
+
+    sig { returns(T.nilable(::String)) }
+    def password_digest_was; end
+
+    sig { void }
+    def password_digest_will_change!; end
 
     sig { void }
     def restore_created_at!; end
@@ -878,15 +953,18 @@ class StaffUser
     def restore_name!; end
 
     sig { void }
+    def restore_password_digest!; end
+
+    sig { void }
     def restore_role!; end
 
     sig { void }
     def restore_updated_at!; end
 
-    sig { returns(T.nilable(::String)) }
+    sig { returns(::String) }
     def role; end
 
-    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
+    sig { params(value: ::String).returns(::String) }
     def role=(value); end
 
     sig { returns(T::Boolean) }
@@ -901,10 +979,10 @@ class StaffUser
     sig { returns(T::Boolean) }
     def role_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def role_change; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def role_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -913,7 +991,7 @@ class StaffUser
     sig { returns(T.nilable(::String)) }
     def role_in_database; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def role_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -934,7 +1012,7 @@ class StaffUser
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_created_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def saved_change_to_email; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -958,13 +1036,19 @@ class StaffUser
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_merchant_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    sig { returns(T.nilable([::String, ::String])) }
     def saved_change_to_name; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_name?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def saved_change_to_password_digest; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def saved_change_to_password_digest?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable([::String, ::String])) }
     def saved_change_to_role; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -1038,6 +1122,9 @@ class StaffUser
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_name?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def will_save_change_to_password_digest?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_role?(from: T.unsafe(nil), to: T.unsafe(nil)); end

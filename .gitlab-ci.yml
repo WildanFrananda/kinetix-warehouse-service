@@ -4,10 +4,13 @@
 # `origin` is GitHub and GitLab is a mirror. Both assert the same things and must be changed
 # together; if they drift, the two platforms disagree about whether the same commit is good.
 #
-# Replaces a GitHub Actions workflow that never ran — this repository's origin is gitlab.com,
-# so `.github/workflows/ci.yml` was inert config. Left running, it would have been worse than
-# nothing: it invoked `bin/rails db:test:prepare test`, which runs **Minitest**, against a
-# suite written entirely in RSpec. Zero examples executed and the job reported green.
+# Written alongside a GitHub Actions workflow that was broken rather than absent — an earlier
+# revision of this header claimed origin was gitlab.com and that `.github/workflows/ci.yml` was
+# therefore inert. That was wrong, and it contradicted the paired-file note three lines above it:
+# origin is GitHub, this is the mirror, and BOTH files run. What was actually wrong with that
+# workflow is fixed in it, not worked around here: it invoked `bin/rails db:test:prepare test`,
+# which runs **Minitest**, against a suite written entirely in RSpec. Zero examples executed and
+# the job reported green.
 #
 # Four things that workflow was missing and this one has:
 #   1. RSpec, so the 18 spec files are actually executed.
@@ -93,6 +96,20 @@ rspec:
     # Masked, protected CI variable. Commented out in the old workflow, which meant any spec
     # touching encrypted credentials failed for a reason nobody ever saw.
     RAILS_MASTER_KEY: $RAILS_MASTER_KEY
+    # Not secrets: the issuer and audience are public claim values, and the JWKS URL is never
+    # fetched under test — spec/support/identity_tokens.rb stubs Net::HTTP.get and mints its own
+    # RS256 keypair. They are here because lib/kinetix/token_verifier.rb builds every verifier
+    # through require_env, which raises on a missing name, and spec/support/identity_tokens.rb
+    # signs its tokens with ENV.fetch("JWT_ISSUER") / ENV.fetch("JWT_AUDIENCE"). Measured with all
+    # three unset: `bundle exec rspec spec/requests` reports 29 examples, 11 failures, every one of
+    # them `KeyError: key not found: "JWT_ISSUER"`. Without these lines the job is red for a reason
+    # that has nothing to do with the commit under test.
+    #
+    # 127.0.0.1:1 rather than a name that might resolve: if the stub is ever removed, the suite
+    # must fail fast on a refused connection instead of reaching a real identity service.
+    JWT_ISSUER: https://identity.kinetix.local
+    JWT_AUDIENCE: kinetix
+    IDENTITY_JWKS_URL: http://127.0.0.1:1/.well-known/jwks.json
   script:
     - |
       # A shape check, not just a presence check. Rails' master key is 32 hex characters that

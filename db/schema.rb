@@ -10,7 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_051417) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_08_000006) do
+  # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bin_inventories", force: :cascade do |t|
@@ -96,6 +97,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_051417) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "stock_operations", force: :cascade do |t|
+    t.boolean "applied", default: false, null: false
+    t.integer "conflict_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "first_request_id", default: "", null: false
+    t.string "idempotency_key", limit: 255, null: false
+    t.string "last_replay_request_id"
+    t.bigint "merchant_id", null: false
+    t.string "operation", limit: 16, null: false
+    t.string "order_number", limit: 64, null: false
+    t.integer "quantity", null: false
+    t.integer "replay_count", default: 0, null: false
+    t.integer "replay_refused_count", default: 0, null: false
+    t.string "request_digest", limit: 64, null: false
+    t.binary "response", null: false
+    t.string "sku", limit: 128, null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_stock_operations_on_created_at"
+    t.index ["merchant_id", "operation", "idempotency_key"], name: "index_stock_operations_on_merchant_operation_and_key", unique: true
+    t.index ["merchant_id"], name: "index_stock_operations_on_merchant_id"
+    t.index ["order_number"], name: "index_stock_operations_on_order_number"
+  end
+
+  create_table "stock_reservations", force: :cascade do |t|
+    t.bigint "bin_inventory_id"
+    t.datetime "created_at", null: false
+    t.bigint "merchant_id", null: false
+    t.string "order_number", limit: 64, null: false
+    t.integer "quantity", null: false
+    t.datetime "released_at"
+    t.string "sku", limit: 128, null: false
+    t.datetime "updated_at", null: false
+    t.index ["bin_inventory_id"], name: "index_stock_reservations_on_bin_inventory_id"
+    t.index ["merchant_id", "order_number", "sku"], name: "index_stock_reservations_on_merchant_order_and_sku", unique: true
+    t.index ["merchant_id"], name: "index_stock_reservations_on_merchant_id"
+    t.index ["sku"], name: "index_stock_reservations_on_sku"
+  end
+
   create_table "warehouse_bins", force: :cascade do |t|
     t.string "bin_code", null: false
     t.datetime "created_at", null: false
@@ -104,4 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_051417) do
     t.string "zone", null: false
     t.index ["bin_code"], name: "index_warehouse_bins_on_bin_code", unique: true
   end
+
+  add_foreign_key "stock_operations", "merchants"
+  add_foreign_key "stock_reservations", "merchants"
 end

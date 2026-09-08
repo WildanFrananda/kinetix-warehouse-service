@@ -416,8 +416,29 @@ class StockReservation
   end
 
   module GeneratedAssociationMethods
+    sig { returns(T.nilable(::BinInventory)) }
+    def bin_inventory; end
+
+    sig { params(value: T.nilable(::BinInventory)).void }
+    def bin_inventory=(value); end
+
+    sig { returns(T::Boolean) }
+    def bin_inventory_changed?; end
+
+    sig { returns(T::Boolean) }
+    def bin_inventory_previously_changed?; end
+
+    sig { params(args: T.untyped, blk: T.untyped).returns(::BinInventory) }
+    def build_bin_inventory(*args, &blk); end
+
     sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
     def build_merchant(*args, &blk); end
+
+    sig { params(args: T.untyped, blk: T.untyped).returns(::BinInventory) }
+    def create_bin_inventory(*args, &blk); end
+
+    sig { params(args: T.untyped, blk: T.untyped).returns(::BinInventory) }
+    def create_bin_inventory!(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
     def create_merchant(*args, &blk); end
@@ -437,8 +458,14 @@ class StockReservation
     sig { returns(T::Boolean) }
     def merchant_previously_changed?; end
 
+    sig { returns(T.nilable(::BinInventory)) }
+    def reload_bin_inventory; end
+
     sig { returns(T.nilable(::Merchant)) }
     def reload_merchant; end
+
+    sig { void }
+    def reset_bin_inventory; end
 
     sig { void }
     def reset_merchant; end
@@ -489,6 +516,9 @@ class StockReservation
 
     sig { params(args: T.untyped, blk: T.untyped).returns(PrivateAssociationRelation) }
     def held(*args, &blk); end
+
+    sig { params(args: T.untyped, blk: T.untyped).returns(PrivateAssociationRelation) }
+    def held_before(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(PrivateAssociationRelation) }
     def in_order_of(*args, &blk); end
@@ -601,6 +631,51 @@ class StockReservation
   end
 
   module GeneratedAttributeMethods
+    sig { returns(T.nilable(::Integer)) }
+    def bin_inventory_id; end
+
+    sig { params(value: T.nilable(::Integer)).returns(T.nilable(::Integer)) }
+    def bin_inventory_id=(value); end
+
+    sig { returns(T::Boolean) }
+    def bin_inventory_id?; end
+
+    sig { returns(T.nilable(::Integer)) }
+    def bin_inventory_id_before_last_save; end
+
+    sig { returns(T.untyped) }
+    def bin_inventory_id_before_type_cast; end
+
+    sig { returns(T::Boolean) }
+    def bin_inventory_id_came_from_user?; end
+
+    sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
+    def bin_inventory_id_change; end
+
+    sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
+    def bin_inventory_id_change_to_be_saved; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def bin_inventory_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::Integer)) }
+    def bin_inventory_id_in_database; end
+
+    sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
+    def bin_inventory_id_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def bin_inventory_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::Integer)) }
+    def bin_inventory_id_previously_was; end
+
+    sig { returns(T.nilable(::Integer)) }
+    def bin_inventory_id_was; end
+
+    sig { void }
+    def bin_inventory_id_will_change!; end
+
     sig { returns(::ActiveSupport::TimeWithZone) }
     def created_at; end
 
@@ -917,6 +992,9 @@ class StockReservation
     def released_at_will_change!; end
 
     sig { void }
+    def restore_bin_inventory_id!; end
+
+    sig { void }
     def restore_created_at!; end
 
     sig { void }
@@ -942,6 +1020,12 @@ class StockReservation
 
     sig { void }
     def restore_updated_at!; end
+
+    sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
+    def saved_change_to_bin_inventory_id; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def saved_change_to_bin_inventory_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([::ActiveSupport::TimeWithZone, ::ActiveSupport::TimeWithZone])) }
     def saved_change_to_created_at; end
@@ -1088,6 +1172,9 @@ class StockReservation
     def updated_at_will_change!; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def will_save_change_to_bin_inventory_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_created_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -1160,6 +1247,9 @@ class StockReservation
 
     sig { params(args: T.untyped, blk: T.untyped).returns(PrivateRelation) }
     def held(*args, &blk); end
+
+    sig { params(args: T.untyped, blk: T.untyped).returns(PrivateRelation) }
+    def held_before(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(PrivateRelation) }
     def in_order_of(*args, &blk); end

@@ -34,6 +34,9 @@ module GeneratedUrlHelpersModule
   def handover_pdf_manifests_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def health_ready_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -149,9 +152,6 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def rails_storage_redirect_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def regenerate_api_key_settings_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def returns_dashboard_url(*args); end

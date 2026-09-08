@@ -9,7 +9,37 @@
 #     priority: 2
 #     schedule: at 5am every day
 
+# ⚠ NOTHING READS THIS FILE IN THE CURRENT DEPLOYMENT.
+#
+# config/environments/production.rb sets solid_queue as the ActiveJob adapter, but recurring
+# entries are executed by a solid_queue SUPERVISOR process, and kinetix-infrastructure's
+# compose.yaml deploys only kinetix-warehouse-service (Dockerfile CMD is
+# `./bin/thrust ./bin/rails server`) and kinetix-warehouse-grpc. No supervisor runs anywhere, so
+# every schedule below is inert:
+#
+#   * stock_operations retention is currently INFINITE, not seven days.
+#   * abandoned holds are not reported unless something else runs the task.
+#
+# Both have a hand-runnable equivalent in the meantime, and cron can drive either:
+#
+#     bin/rails runner 'PruneStockOperationsJob.perform_now'
+#     bin/rails stock:abandoned_holds
+#
+# Wiring a `bin/rails solid_queue:start` container into compose.yaml and the production manifest is
+# the real fix, and it lives in kinetix-infrastructure rather than in this repository. Until it
+# lands, docs/stock_idempotency_runbook.md says so where an operator will read it, rather than
+# leaving the retention story in this file describing something that does not happen.
+
+# Only a production block, so these run in production alone. Development and test accumulate
+# stock_operations rows; harmless at their volume, but worth saying rather than letting someone
+# discover it.
 production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  prune_stock_operations:
+    class: PruneStockOperationsJob
+    schedule: every day at 3:20am
+  report_abandoned_holds:
+    class: ReportAbandonedHoldsJob
+    schedule: every day at 6:40am
