@@ -26,6 +26,14 @@ RSpec.describe GrpcServer do
   end
 
   describe ".run" do
+    around do |example|
+      previous = ENV.fetch("KINETIX_GRPC_ALLOWED_PEERS", nil)
+      ENV["KINETIX_GRPC_ALLOWED_PEERS"] = "catalog,order"
+      example.run
+    ensure
+      previous.nil? ? ENV.delete("KINETIX_GRPC_ALLOWED_PEERS") : ENV["KINETIX_GRPC_ALLOWED_PEERS"] = previous
+    end
+
     let(:rpc_server) do
       instance_double(
         GRPC::RpcServer,

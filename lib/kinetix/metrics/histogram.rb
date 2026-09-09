@@ -65,6 +65,17 @@ module Kinetix
         end
       end
 
+      sig { params(labels: T::Hash[String, String]).void }
+      def initialize_series(labels)
+        key = key_for(labels)
+
+        @mutex.synchronize do
+          @bucket_counts[key] ||= Array.new(@buckets.size, 0.0)
+          @sums[key] ||= 0.0
+          @counts[key] ||= 0.0
+        end
+      end
+
       sig { override.returns(T::Array[Sample]) }
       def samples
         bucket_counts, sums, counts = @mutex.synchronize do

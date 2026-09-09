@@ -48,4 +48,29 @@ RSpec.describe Kinetix::Metrics::Histogram do
   it "refuses a label set that is not the one it declared" do
     expect { histogram.observe({ "method" => "GET" }, 0.1) }.to raise_error(ArgumentError, /route/)
   end
+
+  describe "#initialize_series" do
+    it "brings a series into existence at zero, so the family is present before the first request" do
+      histogram.initialize_series(labels)
+
+      expect(histogram.samples).not_to be_empty
+      expect(value_of("kinetix_http_request_duration_seconds_bucket", "le" => "0.1")).to eq(0.0)
+      expect(value_of("kinetix_http_request_duration_seconds_bucket", "le" => "+Inf")).to eq(0.0)
+      expect(value_of("kinetix_http_request_duration_seconds_sum")).to eq(0.0)
+      expect(value_of("kinetix_http_request_duration_seconds_count")).to eq(0.0)
+    end
+
+    it "is a floor: it never resets a series that has already observed something" do
+      histogram.observe(labels, 0.5)
+      histogram.initialize_series(labels)
+
+      expect(value_of("kinetix_http_request_duration_seconds_count")).to eq(1.0)
+      expect(value_of("kinetix_http_request_duration_seconds_sum")).to eq(0.5)
+      expect(value_of("kinetix_http_request_duration_seconds_bucket", "le" => "1.0")).to eq(1.0)
+    end
+
+    it "refuses a label set that is not the one it declared" do
+      expect { histogram.initialize_series("method" => "GET") }.to raise_error(ArgumentError, /route/)
+    end
+  end
 end

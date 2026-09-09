@@ -7,6 +7,40 @@ RSpec.describe Kinetix::Metrics::Collection do
   let(:mirror) { Kinetix::Metrics::Mirror.new(redis: store) }
   let(:collection) { described_class.new(mirror: mirror, version: "1.2.3") }
 
+  describe "a process that has served nothing yet" do
+    it "already names the metrics the contract requires of every service" do
+      body = scrape_with(nil)
+
+      expect(body).to match(/^kinetix_http_requests_total/)
+      expect(body).to match(/^kinetix_http_request_duration_seconds/)
+      expect(body).to match(/^kinetix_build_info/)
+    end
+
+    it "reports the scrape route it really serves, at the zero it has really counted" do
+      body = scrape_with(nil)
+
+      expect(body).to include('kinetix_http_requests_total{method="GET",route="/metrics",status="200"} 0')
+      expect(body).to include('kinetix_http_request_duration_seconds_count{method="GET",route="/metrics"} 0')
+      expect(body).to include('kinetix_http_request_duration_seconds_sum{method="GET",route="/metrics"} 0')
+    end
+
+    it "seeds a floor, not a reset: a request already counted survives" do
+      collection.http_requests.increment("method" => "GET", "route" => "/metrics", "status" => "200")
+      collection.http_request_duration.observe({ "method" => "GET", "route" => "/metrics" }, 0.01)
+
+      body = scrape_with(nil)
+
+      expect(body).to include('kinetix_http_requests_total{method="GET",route="/metrics",status="200"} 1')
+      expect(body).to include('kinetix_http_request_duration_seconds_count{method="GET",route="/metrics"} 1')
+    end
+
+    it "seeds nothing but the scrape, so no route it has not served is claimed" do
+      routes = scrape_with(nil).scan(/^kinetix_http_requests_total\{[^}]*route="([^"]*)"/).flatten
+
+      expect(routes).to eq([ "/metrics" ])
+    end
+  end
+
   it "names itself and its version on kinetix_build_info, and nowhere else" do
     body = scrape_with(nil)
 

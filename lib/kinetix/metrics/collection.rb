@@ -20,6 +20,10 @@ module Kinetix
       MIRROR_UP = "kinetix_metrics_mirror_up"
       UNKNOWN_VERSION = "unknown"
 
+      SCRAPE_ROUTE = "/metrics"
+      SCRAPE_METHOD = "GET"
+      SCRAPE_STATUS = "200"
+
       sig { returns(Registry) }
       attr_reader :registry
 
@@ -102,6 +106,7 @@ module Kinetix
         @registry.register(@build_info)
 
         @build_info.set({ "service" => service, "version" => version }, 1.0)
+        initialize_scrape_series
       end
 
       sig { returns(Counter) }
@@ -139,6 +144,16 @@ module Kinetix
       end
 
       private
+
+      sig { void }
+      def initialize_scrape_series
+        @http_requests.initialize_series(
+          "method" => SCRAPE_METHOD, "route" => SCRAPE_ROUTE, "status" => SCRAPE_STATUS
+        )
+        @http_request_duration.initialize_series(
+          "method" => SCRAPE_METHOD, "route" => SCRAPE_ROUTE
+        )
+      end
 
       sig { void }
       def refresh_mirror

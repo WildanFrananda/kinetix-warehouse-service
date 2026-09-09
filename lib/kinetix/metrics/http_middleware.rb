@@ -15,6 +15,8 @@ module Kinetix
         T::Array[String]
       )
       OTHER_METHOD = "OTHER"
+      SERVER_ERROR_STATUS = "500"
+      UNKNOWN_STATUS = "(unknown)"
 
       sig do
         params(
@@ -32,24 +34,33 @@ module Kinetix
       sig { params(env: T::Hash[String, T.untyped]).returns(T.untyped) }
       def call(env)
         started = monotonic
+
         begin
           response = @app.call(env)
-          record(env, Integer(response[0]), started)
-          response
         rescue StandardError
-          record(env, 500, started)
+          record(env, SERVER_ERROR_STATUS, started)
           raise
         end
+
+        record(env, status_of(response), started)
+        response
       end
 
       private
+
+      sig { params(response: T.untyped).returns(String) }
+      def status_of(response)
+        Integer(response[0]).to_s
+      rescue StandardError
+        UNKNOWN_STATUS
+      end
 
       sig { returns(Float) }
       def monotonic
         Float(Process.clock_gettime(Process::CLOCK_MONOTONIC))
       end
 
-      sig { params(env: T::Hash[String, T.untyped], status: Integer, started: Float).void }
+      sig { params(env: T::Hash[String, T.untyped], status: String, started: Float).void }
       def record(env, status, started)
         elapsed = monotonic - started
         http_method = method_label(env)
@@ -57,9 +68,18 @@ module Kinetix
 
         metrics = @collection || Kinetix::Metrics.collection
         metrics.http_requests.increment(
-          "method" => http_method, "route" => route, "status" => status.to_s
+          "method" => http_method, "route" => route, "status" => status
         )
         metrics.http_request_duration.observe({ "method" => http_method, "route" => route }, elapsed)
+      rescue StandardError => e
+        log_dropped_sample(e)
+      end
+
+      sig { params(error: StandardError).void }
+      def log_dropped_sample(error)
+        Rails.logger&.warn("dropped an HTTP metric sample: #{error.class}: #{error.message}")
+      rescue StandardError
+        nil
       end
 
       sig { params(env: T::Hash[String, T.untyped]).returns(String) }
