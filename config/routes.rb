@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       end
     end
   end
+  get "/metrics", to: "metrics#show"
   get "/health", to: "health#show"
   get "/health/ready", to: "health#ready"
   get "/login", to: "sessions#new", as: "login"

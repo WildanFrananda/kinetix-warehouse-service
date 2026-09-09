@@ -4,10 +4,17 @@
 require "fleet/v1/fleet_services_pb"
 require Rails.root.join("lib/kinetix/request_id").to_s
 require Rails.root.join("lib/kinetix/service_identity").to_s
+require Rails.root.join("lib/kinetix/metrics/grpc_client_recorder").to_s
 
 module FleetPulse
   class GrpcClient
     extend T::Sig
+
+    PEER = "matching"
+    GRPC_METHOD = T.let(
+      "/#{Fleet::V1::CourierTelemetryService::Service.service_name}/DispatchCourier",
+      String
+    )
 
     sig { returns(String) }
     attr_reader :host
@@ -40,7 +47,9 @@ module FleetPulse
         delivery_address: Common::V1::Address.new(street_address: delivery_address)
       )
 
-      res = stub.dispatch_courier(req, metadata: Kinetix::RequestId.metadata)
+      res = Kinetix::Metrics::GrpcClientRecorder.call(peer: PEER, grpc_method: GRPC_METHOD) do
+        stub.dispatch_courier(req, metadata: Kinetix::RequestId.metadata)
+      end
 
       {
         success: res.success,

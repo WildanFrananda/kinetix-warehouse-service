@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../../lib/kinetix/json_log_formatter"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -40,8 +41,11 @@ Rails.application.configure do
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
-  config.log_tags = [ :request_id ]
-  config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
+  $stdout.sync = true
+  config.log_tags = []
+  config.logger = ActiveSupport::TaggedLogging.new(
+    ActiveSupport::Logger.new($stdout).tap { |logger| logger.formatter = Kinetix::JsonLogFormatter.new }
+  )
 
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "debug")
 

@@ -5,10 +5,17 @@ require "grpc"
 require "identity/v1/identity_services_pb"
 require Rails.root.join("lib/kinetix/request_id").to_s
 require Rails.root.join("lib/kinetix/service_identity").to_s
+require Rails.root.join("lib/kinetix/metrics/grpc_client_recorder").to_s
 
 module Identity
   class GrpcClient
     extend T::Sig
+
+    PEER = "identity"
+    GRPC_METHOD = T.let(
+      "/#{Identity::V1::IdentityService::Service.service_name}/GetUserProfile",
+      String
+    )
 
     sig { returns(String) }
     attr_reader :host
@@ -27,7 +34,9 @@ module Identity
       )
 
       req = Identity::V1::GetUserProfileRequest.new(principal_id: principal_id)
-      res = stub.get_user_profile(req, metadata: Kinetix::RequestId.metadata)
+      res = Kinetix::Metrics::GrpcClientRecorder.call(peer: PEER, grpc_method: GRPC_METHOD) do
+        stub.get_user_profile(req, metadata: Kinetix::RequestId.metadata)
+      end
 
       return nil unless res.found
 
