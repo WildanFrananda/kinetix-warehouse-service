@@ -97,11 +97,11 @@ RSpec.describe "GET /metrics", type: :request do
   end
 
   describe "the gRPC calls this process does not serve" do
-    it "withholds the counter rather than reporting zero of them" do
+    it "says nothing about them at all" do
       body = scrape
 
       expect(body).not_to include("kinetix_grpc_server_calls_total")
-      expect(body).to include("kinetix_metrics_mirror_up 0")
+      expect(body).not_to include("kinetix_metrics_mirror_up")
     end
   end
 end

@@ -45,19 +45,12 @@ class GrpcServer
       metrics_interceptor.declare(handler)
     end
 
-    publisher = Kinetix::Metrics::MirrorPublisher.new(
-      mirror: Kinetix::Metrics::Mirror.new,
-      counter: grpc_calls
-    )
-    publisher.start
-
     metrics_endpoint = Kinetix::Metrics::HttpServer.new(collection: metrics)
     metrics_endpoint.start
 
     Rails.logger.info("gRPC server listening on 0.0.0.0:#{port} (mTLS)")
     server.run_till_terminated_or_interrupted([ "INT", "TERM" ])
   ensure
-    publisher&.stop
     metrics_endpoint&.stop
     Rails.logger.info("gRPC server stopped")
   end

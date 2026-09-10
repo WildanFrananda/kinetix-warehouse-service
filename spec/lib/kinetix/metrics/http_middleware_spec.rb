@@ -7,8 +7,7 @@ RSpec.describe Kinetix::Metrics::HttpMiddleware do
     described_class.new(app, known_paths: [ "/probe" ], collection: collection)
   end
 
-  let(:collection) { Kinetix::Metrics::Collection.new(mirror: silent_mirror) }
-  let(:silent_mirror) { Kinetix::Metrics::Mirror.new(redis: Class.new { def get(_key) = nil }.new) }
+  let(:collection) { Kinetix::Metrics::Collection.new }
   let(:env) { { "REQUEST_METHOD" => "GET", "PATH_INFO" => "/probe" } }
   let(:app) { ->(_env) { [ 200, {}, [ "ok" ] ] } }
 

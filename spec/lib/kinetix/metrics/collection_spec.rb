@@ -3,9 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Kinetix::Metrics::Collection do
-  let(:store) { Class.new { def get(_key) = nil }.new }
-  let(:mirror) { Kinetix::Metrics::Mirror.new(redis: store) }
-  let(:collection) { described_class.new(mirror: mirror, version: "1.2.3") }
+  let(:collection) { described_class.new(version: "1.2.3") }
 
   describe "a process that has served nothing yet" do
     it "already names the metrics the contract requires of every service" do
@@ -48,52 +46,25 @@ RSpec.describe Kinetix::Metrics::Collection do
     expect(body.scan(/^kinetix_(?!build_info)\w+\{[^}]*service=/)).to be_empty
   end
 
-  describe "the gRPC calls it did not serve itself" do
-    let(:published) do
-      [
-        Kinetix::Metrics::Sample.new(
-          name: "",
-          labels: { "grpc_method" => "/grpc.health.v1.Health/Check", "grpc_code" => "OK" },
-          value: 41.0
-        )
-      ]
+  describe "the gRPC counter, which belongs to the process that answers gRPC" do
+    it "is absent from a process that answers no gRPC call" do
+      expect(scrape_with(nil)).not_to include("kinetix_grpc_server_calls_total")
     end
 
-    it "renders what the gRPC process published" do
-      body = scrape_with(published)
-
-      expect(body).to include(
-        'kinetix_grpc_server_calls_total{grpc_method="/grpc.health.v1.Health/Check",grpc_code="OK"} 41'
-      )
-      expect(body).to include("kinetix_metrics_mirror_up 1")
-    end
-
-    it "withholds the counter entirely when the publication cannot be read" do
-      body = scrape_with(nil)
-
-      expect(body).not_to include("kinetix_grpc_server_calls_total")
-      expect(body).to include("kinetix_metrics_mirror_up 0")
-    end
-
-    it "withholds it when the store itself fails, and does not let the scrape fail with it" do
-      allow(mirror).to receive(:read).and_raise(RuntimeError, "connection refused")
-
-      body = collection.scrape
-
-      expect(body).not_to include("kinetix_grpc_server_calls_total")
-      expect(body).to include("kinetix_metrics_mirror_up 0")
-    end
-
-    it "stops mirroring once this process is the one serving gRPC" do
+    it "is served, and counted, by the process that declares itself the gRPC server" do
       counter = collection.serve_grpc_server_calls
       counter.increment("grpc_method" => "/grpc.health.v1.Health/Check", "grpc_code" => "OK")
 
-      body = collection.scrape
-
-      expect(body).to include(
+      expect(collection.scrape).to include(
         'kinetix_grpc_server_calls_total{grpc_method="/grpc.health.v1.Health/Check",grpc_code="OK"} 1'
       )
-      expect(body).not_to include("kinetix_metrics_mirror_up")
+    end
+
+    it "carries no mirror gauge: nothing is mirrored any more" do
+      collection.serve_grpc_server_calls
+
+      expect(collection.scrape).not_to include("kinetix_metrics_mirror_up")
+      expect(scrape_with(nil)).not_to include("kinetix_metrics_mirror_up")
     end
   end
 
@@ -107,8 +78,7 @@ RSpec.describe Kinetix::Metrics::Collection do
     expect(body).to match(/^kinetix_http_request_duration_seconds_count\{/)
   end
 
-  def scrape_with(samples)
-    allow(mirror).to receive(:read).and_return(samples)
+  def scrape_with(_unused)
     collection.scrape
   end
 end

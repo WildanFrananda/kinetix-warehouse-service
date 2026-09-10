@@ -42,13 +42,11 @@ RSpec.describe GrpcServer do
         run_till_terminated_or_interrupted: nil
       )
     end
-    let(:publisher) { instance_double(Kinetix::Metrics::MirrorPublisher, start: nil, stop: nil) }
     let(:metrics_endpoint) { instance_double(Kinetix::Metrics::HttpServer, start: true, stop: nil) }
 
     before do
       allow(Kinetix::Metrics).to receive(:collection).and_return(Kinetix::Metrics::Collection.new)
       allow(GRPC::RpcServer).to receive(:new).and_return(rpc_server)
-      allow(Kinetix::Metrics::MirrorPublisher).to receive(:new).and_return(publisher)
       allow(Kinetix::Metrics::HttpServer).to receive(:new).and_return(metrics_endpoint)
     end
 
@@ -72,17 +70,15 @@ RSpec.describe GrpcServer do
       expect(interceptors.map(&:class)).to include(Kinetix::PeerAuthorizationInterceptor)
     end
 
-    it "publishes its counters and serves its own /metrics while it runs" do
+    it "serves its own /metrics while it runs, which is how Prometheus reaches this process" do
       described_class.run(port: 50_051)
 
-      expect(publisher).to have_received(:start)
       expect(metrics_endpoint).to have_received(:start)
     end
 
-    it "publishes once more on the way out, so the drain is not lost" do
+    it "closes that listener on the way out" do
       described_class.run(port: 50_051)
 
-      expect(publisher).to have_received(:stop)
       expect(metrics_endpoint).to have_received(:stop)
     end
 
@@ -90,7 +86,6 @@ RSpec.describe GrpcServer do
       allow(rpc_server).to receive(:run_till_terminated_or_interrupted).and_raise("listener died")
 
       expect { described_class.run(port: 50_051) }.to raise_error("listener died")
-      expect(publisher).to have_received(:stop)
       expect(metrics_endpoint).to have_received(:stop)
     end
   end

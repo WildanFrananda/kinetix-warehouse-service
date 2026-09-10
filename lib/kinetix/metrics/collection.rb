@@ -5,8 +5,6 @@ require "sorbet-runtime"
 require_relative "counter"
 require_relative "gauge"
 require_relative "histogram"
-require_relative "mirror"
-require_relative "mirrored_counter"
 require_relative "registry"
 require_relative "sample"
 
@@ -17,7 +15,6 @@ module Kinetix
 
       SERVICE = "kinetix-warehouse-service"
       GRPC_SERVER_CALLS = "kinetix_grpc_server_calls_total"
-      MIRROR_UP = "kinetix_metrics_mirror_up"
       UNKNOWN_VERSION = "unknown"
 
       SCRAPE_ROUTE = "/metrics"
@@ -36,11 +33,9 @@ module Kinetix
       sig { returns(Counter) }
       attr_reader :grpc_client_calls
 
-      sig { params(mirror: Mirror, service: String, version: String).void }
-      def initialize(mirror: Mirror.new, service: SERVICE, version: Collection.version)
-        @mirror = T.let(mirror, T.nilable(Mirror))
+      sig { params(service: String, version: String).void }
+      def initialize(service: SERVICE, version: Collection.version)
         @registry = T.let(Registry.new, Registry)
-        @mirror_reachable = T.let(nil, T.nilable(T::Boolean))
 
         @http_requests = T.let(
           Counter.new(
@@ -78,31 +73,9 @@ module Kinetix
           Gauge
         )
 
-        @grpc_server_calls_mirror = T.let(
-          MirroredCounter.new(
-            name: GRPC_SERVER_CALLS,
-            help: "gRPC calls this service served, by method and status code, as last published " \
-                  "by its gRPC process.",
-            label_names: %w[grpc_method grpc_code]
-          ),
-          MirroredCounter
-        )
-
-        @mirror_up = T.let(
-          Gauge.new(
-            name: MIRROR_UP,
-            help: "1 when the gRPC process's published counters were readable and fresh on this " \
-                  "scrape, 0 when they were not. At 0 the gRPC counters are absent rather than zero.",
-            label_names: []
-          ),
-          Gauge
-        )
-
         @registry.register(@http_requests)
         @registry.register(@http_request_duration)
         @registry.register(@grpc_client_calls)
-        @registry.register(@grpc_server_calls_mirror)
-        @registry.register(@mirror_up)
         @registry.register(@build_info)
 
         @build_info.set({ "service" => service, "version" => version }, 1.0)
@@ -117,15 +90,12 @@ module Kinetix
           label_names: %w[grpc_method grpc_code]
         )
 
-        @registry.replace(counter)
-        @registry.unregister(MIRROR_UP)
-        @mirror = nil
+        @registry.register(counter)
         counter
       end
 
       sig { returns(String) }
       def scrape
-        refresh_mirror
         @registry.render
       end
 
@@ -153,44 +123,6 @@ module Kinetix
         @http_request_duration.initialize_series(
           "method" => SCRAPE_METHOD, "route" => SCRAPE_ROUTE
         )
-      end
-
-      sig { void }
-      def refresh_mirror
-        mirror = @mirror
-        return if mirror.nil?
-
-        samples = T.let(nil, T.nilable(T::Array[Sample]))
-        reason = T.let(nil, T.nilable(String))
-
-        begin
-          samples = mirror.read(%w[grpc_method grpc_code])
-          reason = "no fresh publication at #{Mirror::KEY}" if samples.nil?
-        rescue StandardError => e
-          reason = "#{e.class}: #{e.message}"
-        end
-
-        if samples.nil?
-          @grpc_server_calls_mirror.unknown
-          @mirror_up.set({}, 0.0)
-        else
-          @grpc_server_calls_mirror.replace(samples)
-          @mirror_up.set({}, 1.0)
-        end
-
-        log_mirror_state(!samples.nil?, reason)
-      end
-
-      sig { params(reachable: T::Boolean, reason: T.nilable(String)).void }
-      def log_mirror_state(reachable, reason)
-        return if @mirror_reachable == reachable
-
-        @mirror_reachable = reachable
-        if reachable
-          Rails.logger.info("gRPC server metrics mirror is readable again")
-        else
-          Rails.logger.warn("gRPC server metrics mirror unreadable, #{GRPC_SERVER_CALLS} withheld: #{reason}")
-        end
       end
     end
   end
