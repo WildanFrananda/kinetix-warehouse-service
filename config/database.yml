@@ -59,15 +59,19 @@ production:
     password: <%= ENV.fetch("DB_PASSWORD") %>
     host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
     port: <%= ENV.fetch("DB_PORT") { 5432 } %>
+  # Solid Cache, Solid Queue and Solid Cable each keep a database, named after the primary so that one
+  # DB_NAME decides all four. They were literals, so setting DB_NAME renamed the primary and left these
+  # three behind under names nothing had created. In production the role has no CREATEDB, which turns
+  # that mismatch into a boot failure: kinetix-infrastructure's db-init-prod/ creates all four up front.
   cache:
     <<: *primary_production
-    database: kinetix_warehouse_production_cache
+    database: <%= ENV.fetch("DB_NAME") { "kinetix_warehouse_production" } %>_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: kinetix_warehouse_production_queue
+    database: <%= ENV.fetch("DB_NAME") { "kinetix_warehouse_production" } %>_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: kinetix_warehouse_production_cable
+    database: <%= ENV.fetch("DB_NAME") { "kinetix_warehouse_production" } %>_cable
     migrations_paths: db/cable_migrate
