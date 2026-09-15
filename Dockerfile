@@ -6,7 +6,12 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim@sha256:58479f164d5947f852da27a443
 
 WORKDIR /rails
 
+# `upgrade` as well as `install`: the base image is pinned by digest for reproducibility, and a pinned
+# digest by definition stops receiving Debian's security updates. The image scan in CI fails the build on a
+# CRITICAL that has a fix available, and this is where that fix is applied — the pin still decides which
+# Ruby ships, the upgrade only patches what Debian has already fixed.
 RUN apt-get update -qq && \
+    apt-get upgrade -qq --no-install-recommends -y && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
