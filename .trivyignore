@@ -1,0 +1,13 @@
+# Findings the image scan may report that this service is not exposed to. Each line states why, and nothing
+# goes in here without one.
+
+# CVE-2026-33210 — ruby/json denial of service, fixed in json 2.19.2.
+#
+# Trivy sees json 2.18.0 because that is the DEFAULT gem shipped inside ruby:4.0.6-slim, and 4.0.6 is the
+# newest patch Ruby publishes — there is no base image to upgrade to. The application never loads it: the
+# Gemfile.lock pins json 2.21.2 and the image runs under bundler with BUNDLE_DEPLOYMENT=1, so the bundled
+# copy is the one on the load path.
+#
+# Revisit when Ruby ships a patch whose default gem is 2.19.2 or newer; then this line goes away rather than
+# being renewed.
+CVE-2026-33210
