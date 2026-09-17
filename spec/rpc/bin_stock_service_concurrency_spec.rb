@@ -38,7 +38,8 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
     )
     @bin = WarehouseBin.create!(bin_code: "C-01", zone: "C", shelf_level: 1)
     @inventory = BinInventory.create!(
-      warehouse_bin: @bin, sku: "SKU-C", quantity: 10, reserved_quantity: 0
+      warehouse_bin: @bin, sku: "SKU-C", quantity: 10, reserved_quantity: 0,
+      merchant_principal_id: principal
     )
   end
 

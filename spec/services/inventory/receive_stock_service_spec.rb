@@ -6,13 +6,16 @@ require "rails_helper"
 RSpec.describe Inventory::ReceiveStockService do
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01-1", zone: "A", shelf_level: 1) }
 
-  def receive(quantity: 5, key: "RCV-1", sku: "SKU-1", bin_code: "A-01-1")
+  let(:owner) { "22222222-3333-4444-5555-666666666666" }
+
+  def receive(quantity: 5, key: "RCV-1", sku: "SKU-1", bin_code: "A-01-1", merchant: nil)
     described_class.new(
       bin_code: bin_code,
       sku: sku,
       quantity: quantity,
       idempotency_key: key,
-      received_by_principal_id: "11111111-2222-3333-4444-555555555555"
+      received_by_principal_id: "11111111-2222-3333-4444-555555555555",
+      merchant_principal_id: merchant || owner
     ).call
   end
 

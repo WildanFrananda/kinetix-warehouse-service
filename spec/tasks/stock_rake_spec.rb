@@ -15,7 +15,8 @@ RSpec.describe "stock rake tasks" do
   end
   let!(:bin) { WarehouseBin.create!(bin_code: "R-01", zone: "R", shelf_level: 1) }
   let!(:inventory) do
-    BinInventory.create!(warehouse_bin: bin, sku: "SKU-R", quantity: 10, reserved_quantity: 0)
+    BinInventory.create!(warehouse_bin: bin, sku: "SKU-R", quantity: 10, reserved_quantity: 0,
+                         merchant_principal_id: principal)
   end
 
   before do
