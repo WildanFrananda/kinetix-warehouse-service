@@ -7,11 +7,13 @@ RSpec.describe "Api::V1::StockReceipts", type: :request do
   include_context "identity issues tokens"
 
   let(:principal) { "aaaaaaaa-1111-2222-3333-444444444444" }
+  let(:owner) { "bbbbbbbb-1111-2222-3333-444444444444" }
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01-1", zone: "A", shelf_level: 1) }
 
   def post_receipt(headers:, key: "RCV-1", quantity: 5)
     post "/api/v1/stock_receipts",
-         params: { bin_code: "A-01-1", sku: "SKU-1", quantity: quantity, idempotency_key: key },
+         params: { bin_code: "A-01-1", sku: "SKU-1", quantity: quantity, idempotency_key: key,
+                   merchant_principal_id: owner },
          headers: headers
   end
 
@@ -65,7 +67,7 @@ RSpec.describe "Api::V1::StockReceipts", type: :request do
 
     it "requires an idempotency key rather than inventing one" do
       post "/api/v1/stock_receipts",
-           params: { bin_code: "A-01-1", sku: "SKU-1", quantity: 5 },
+           params: { bin_code: "A-01-1", sku: "SKU-1", quantity: 5, merchant_principal_id: owner },
            headers: admin
 
       expect(response).to have_http_status(:bad_request)
@@ -74,7 +76,8 @@ RSpec.describe "Api::V1::StockReceipts", type: :request do
 
     it "refuses a bin that does not exist" do
       post "/api/v1/stock_receipts",
-           params: { bin_code: "NO-SUCH", sku: "SKU-1", quantity: 5, idempotency_key: "K" },
+           params: { bin_code: "NO-SUCH", sku: "SKU-1", quantity: 5, idempotency_key: "K",
+                     merchant_principal_id: owner },
            headers: admin
 
       expect(response).to have_http_status(:unprocessable_entity)
@@ -85,11 +88,30 @@ RSpec.describe "Api::V1::StockReceipts", type: :request do
       post "/api/v1/stock_receipts",
            params: {
              bin_code: "A-01-1", sku: "SKU-1", quantity: 5, idempotency_key: "K",
+             merchant_principal_id: owner,
              received_by_principal_id: "99999999-9999-9999-9999-999999999999"
            },
            headers: admin
 
       expect(StockReceipt.last.received_by_principal_id).to eq(principal)
+    end
+
+    it "records whose goods they are, which is not the person booking them in" do
+      post_receipt(headers: admin)
+
+      receipt = StockReceipt.last
+      expect(receipt.merchant_principal_id).to eq(owner)
+      expect(receipt.received_by_principal_id).to eq(principal)
+      expect(BinInventory.find_by(sku: "SKU-1").merchant_principal_id).to eq(owner)
+    end
+
+    it "refuses a delivery that does not say whose goods it is" do
+      post "/api/v1/stock_receipts",
+           params: { bin_code: "A-01-1", sku: "SKU-1", quantity: 5, idempotency_key: "K" },
+           headers: admin
+
+      expect(response).to have_http_status(:bad_request)
+      expect(StockReceipt.count).to eq(0)
     end
   end
 end

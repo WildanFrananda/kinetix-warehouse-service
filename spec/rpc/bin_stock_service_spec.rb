@@ -15,7 +15,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01", zone: "A", shelf_level: 1) }
   let!(:inventory) do
-    BinInventory.create!(warehouse_bin: bin, sku: "SKU-1", quantity: 10, reserved_quantity: 0)
+    BinInventory.create!(warehouse_bin: bin, sku: "SKU-1", quantity: 10, reserved_quantity: 0, merchant_principal_id: principal)
   end
 
   def reserve(quantity: 2, order_number: "ORD-1", sku: "SKU-1", key: nil, principal_id: principal)
@@ -172,7 +172,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
     it "accepts identifiers exactly at the limit" do
       order_number = "O" * StockOperation::MAX_ORDER_NUMBER_LENGTH
       sku = "S" * StockOperation::MAX_SKU_LENGTH
-      BinInventory.create!(warehouse_bin: bin, sku: sku, quantity: 5, reserved_quantity: 0)
+      BinInventory.create!(warehouse_bin: bin, sku: sku, quantity: 5, reserved_quantity: 0, merchant_principal_id: principal)
 
       res = reserve(quantity: 1, order_number: order_number, sku: sku)
 
@@ -244,9 +244,9 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
     it "refuses with the largest single bin, not the sku total the caller cannot order" do
       second = WarehouseBin.create!(bin_code: "A-02", zone: "A", shelf_level: 1)
-      BinInventory.create!(warehouse_bin: second, sku: "SKU-SPLIT", quantity: 4, reserved_quantity: 0)
+      BinInventory.create!(warehouse_bin: second, sku: "SKU-SPLIT", quantity: 4, reserved_quantity: 0, merchant_principal_id: principal)
       third = WarehouseBin.create!(bin_code: "A-03", zone: "A", shelf_level: 1)
-      BinInventory.create!(warehouse_bin: third, sku: "SKU-SPLIT", quantity: 4, reserved_quantity: 0)
+      BinInventory.create!(warehouse_bin: third, sku: "SKU-SPLIT", quantity: 4, reserved_quantity: 0, merchant_principal_id: principal)
 
       res = reserve(quantity: 5, sku: "SKU-SPLIT")
 
@@ -260,10 +260,11 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
     it "fills from a bin that can cover the order rather than the first one it finds" do
       empty = WarehouseBin.create!(bin_code: "A-00", zone: "A", shelf_level: 1)
-      BinInventory.create!(warehouse_bin: empty, sku: "SKU-2", quantity: 0, reserved_quantity: 0)
+      BinInventory.create!(warehouse_bin: empty, sku: "SKU-2", quantity: 0, reserved_quantity: 0, merchant_principal_id: principal)
       stocked = WarehouseBin.create!(bin_code: "Z-99", zone: "Z", shelf_level: 1)
       full = BinInventory.create!(
-        warehouse_bin: stocked, sku: "SKU-2", quantity: 50, reserved_quantity: 0
+        warehouse_bin: stocked, sku: "SKU-2", quantity: 50, reserved_quantity: 0,
+        merchant_principal_id: principal
       )
 
       res = reserve(quantity: 5, sku: "SKU-2")
@@ -273,18 +274,47 @@ RSpec.describe Rpc::BinStockServiceHandler do
       expect(full.reload.reserved_quantity).to eq(5)
     end
 
+    it "refuses a merchant asking for stock that is not theirs" do
+      thief = Merchant.create!(
+        name: "Thief", code: "BIN-T", cutoff_hour: 14,
+        principal_id: "dddddddd-0000-0000-0000-000000000000"
+      )
+
+      res = reserve(quantity: 2, principal_id: thief.principal_id)
+
+      expect(res.success).to be(false)
+      expect(res.error.error_code).to eq("NOT_THIS_MERCHANTS_STOCK")
+      expect(inventory.reload.reserved_quantity).to eq(0)
+      expect(StockReservation.count).to eq(0)
+    end
+
+    it "refuses stock whose owner was never recorded, rather than assuming it" do
+      inventory.update!(merchant_principal_id: nil)
+
+      res = reserve(quantity: 2)
+
+      expect(res.success).to be(false)
+      expect(res.error.error_code).to eq("STOCK_HAS_NO_OWNER")
+      expect(inventory.reload.reserved_quantity).to eq(0)
+    end
+
     it "gives each merchant its own row for the same order number, and never shares a hold" do
       other = Merchant.create!(
         name: "Other", code: "BIN-2", cutoff_hour: 14,
         principal_id: "cccccccc-0000-0000-0000-000000000000"
       )
-      reserve(quantity: 3, key: "K-A")
+      theirs = BinInventory.create!(
+        warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
+        merchant_principal_id: other.principal_id
+      )
 
-      res = reserve(quantity: 3, key: "K-B", principal_id: other.principal_id)
+      reserve(quantity: 3, key: "K-A")
+      res = reserve(quantity: 3, key: "K-B", sku: "SKU-OTHER", principal_id: other.principal_id)
 
       expect(res.success).to be(true)
-      expect(inventory.reload.reserved_quantity).to eq(6)
-      expect(StockReservation.where(order_number: "ORD-1", sku: "SKU-1").count).to eq(2)
+      expect(inventory.reload.reserved_quantity).to eq(3)
+      expect(theirs.reload.reserved_quantity).to eq(3)
+      expect(StockReservation.where(order_number: "ORD-1").count).to eq(2)
       expect(StockReservation.where(merchant_id: merchant.id).pluck(:quantity)).to eq([ 3 ])
       expect(StockReservation.where(merchant_id: other.id).pluck(:quantity)).to eq([ 3 ])
     end
@@ -309,13 +339,19 @@ RSpec.describe Rpc::BinStockServiceHandler do
         name: "Other", code: "BIN-2", cutoff_hour: 14,
         principal_id: "cccccccc-0000-0000-0000-000000000000"
       )
-      reserve(quantity: 3)
+      theirs = BinInventory.create!(
+        warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
+        merchant_principal_id: other.principal_id
+      )
 
-      res = reserve(quantity: 3, principal_id: other.principal_id)
+      reserve(quantity: 3)
+      res = reserve(quantity: 3, sku: "SKU-OTHER", principal_id: other.principal_id)
 
       expect(res.success).to be(true)
-      expect(inventory.reload.reserved_quantity).to eq(6)
-      expect(StockOperation.pluck(:idempotency_key)).to eq([ "reserve:ORD-1:SKU-1" ] * 2)
+      expect(inventory.reload.reserved_quantity).to eq(3)
+      expect(theirs.reload.reserved_quantity).to eq(3)
+      expect(StockOperation.pluck(:idempotency_key))
+        .to contain_exactly("reserve:ORD-1:SKU-1", "reserve:ORD-1:SKU-OTHER")
       expect(StockOperation.pluck(:merchant_id)).to contain_exactly(merchant.id, other.id)
     end
 
@@ -345,11 +381,13 @@ RSpec.describe Rpc::BinStockServiceHandler do
     it "never credits a guessed bin at a live hold's expense" do
       low = WarehouseBin.create!(bin_code: "B-01", zone: "B", shelf_level: 1)
       first = BinInventory.create!(
-        warehouse_bin: low, sku: "SKU-LEGACY", quantity: 10, reserved_quantity: 0
+        warehouse_bin: low, sku: "SKU-LEGACY", quantity: 10, reserved_quantity: 0,
+        merchant_principal_id: principal
       )
       high = WarehouseBin.create!(bin_code: "B-02", zone: "B", shelf_level: 1)
       second = BinInventory.create!(
-        warehouse_bin: high, sku: "SKU-LEGACY", quantity: 10, reserved_quantity: 0
+        warehouse_bin: high, sku: "SKU-LEGACY", quantity: 10, reserved_quantity: 0,
+        merchant_principal_id: principal
       )
 
       live = reserve(quantity: 6, sku: "SKU-LEGACY", order_number: "ORD-LIVE")
@@ -392,7 +430,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
       )
       stocked = WarehouseBin.create!(bin_code: "Z-99", zone: "Z", shelf_level: 1)
       full = BinInventory.create!(
-        warehouse_bin: stocked, sku: "SKU-2", quantity: 50, reserved_quantity: 0
+        warehouse_bin: stocked, sku: "SKU-2", quantity: 50, reserved_quantity: 0,
+        merchant_principal_id: principal
       )
 
       reserve(quantity: 5, sku: "SKU-2")

@@ -775,6 +775,51 @@ class StockReceipt
     def idempotency_key_will_change!; end
 
     sig { returns(T.nilable(::String)) }
+    def merchant_principal_id; end
+
+    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
+    def merchant_principal_id=(value); end
+
+    sig { returns(T::Boolean) }
+    def merchant_principal_id?; end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_before_last_save; end
+
+    sig { returns(T.untyped) }
+    def merchant_principal_id_before_type_cast; end
+
+    sig { returns(T::Boolean) }
+    def merchant_principal_id_came_from_user?; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def merchant_principal_id_change; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def merchant_principal_id_change_to_be_saved; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def merchant_principal_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_in_database; end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def merchant_principal_id_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def merchant_principal_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_previously_was; end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_was; end
+
+    sig { void }
+    def merchant_principal_id_will_change!; end
+
+    sig { returns(T.nilable(::String)) }
     def note; end
 
     sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
@@ -922,6 +967,9 @@ class StockReceipt
     def restore_idempotency_key!; end
 
     sig { void }
+    def restore_merchant_principal_id!; end
+
+    sig { void }
     def restore_note!; end
 
     sig { void }
@@ -962,6 +1010,12 @@ class StockReceipt
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_idempotency_key?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
+    def saved_change_to_merchant_principal_id; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def saved_change_to_merchant_principal_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def saved_change_to_note; end
@@ -1145,6 +1199,9 @@ class StockReceipt
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_idempotency_key?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def will_save_change_to_merchant_principal_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_note?(from: T.unsafe(nil), to: T.unsafe(nil)); end

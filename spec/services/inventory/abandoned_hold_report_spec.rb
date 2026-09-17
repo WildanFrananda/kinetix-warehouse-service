@@ -13,7 +13,8 @@ RSpec.describe Inventory::AbandonedHoldReport do
 
   let!(:bin) { WarehouseBin.create!(bin_code: "H-01", zone: "H", shelf_level: 1) }
   let!(:inventory) do
-    BinInventory.create!(warehouse_bin: bin, sku: "SKU-H", quantity: 20, reserved_quantity: 0)
+    BinInventory.create!(warehouse_bin: bin, sku: "SKU-H", quantity: 20, reserved_quantity: 0,
+                         merchant_principal_id: merchant.principal_id)
   end
 
   def hold(order_number:, age_hours:, quantity: 3, released_at: nil)

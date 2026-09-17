@@ -8,6 +8,8 @@ module Inventory
     extend T::Sig
 
     SKU_NOT_STOCKED = "SKU_NOT_STOCKED"
+    NOT_THIS_MERCHANTS_STOCK = "NOT_THIS_MERCHANTS_STOCK"
+    STOCK_HAS_NO_OWNER = "STOCK_HAS_NO_OWNER"
     INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK"
     RESERVATION_RELEASED = "STOCK_RESERVATION_RELEASED"
     QUANTITY_MISMATCH = "RESERVATION_QUANTITY_MISMATCH"
@@ -83,6 +85,24 @@ module Inventory
     def apply(reservation)
       bins = BinInventory.where(sku: @sku).order(:id).lock("FOR UPDATE").to_a
       return refuse(SKU_NOT_STOCKED, "no bin in this warehouse carries #{@sku}") if bins.empty?
+
+      owned = bins.select { |b| b.merchant_principal_id == @merchant.principal_id }
+      if owned.empty?
+        unowned = bins.any? { |b| b.merchant_principal_id.blank? }
+        if unowned
+          return refuse(
+            STOCK_HAS_NO_OWNER,
+            "#{@sku} is on a shelf with no recorded owner, so it cannot be sold on anyone's behalf; " \
+            "book it in again naming the merchant it belongs to"
+          )
+        end
+
+        return refuse(
+          NOT_THIS_MERCHANTS_STOCK,
+          "#{@sku} in this warehouse does not belong to that merchant"
+        )
+      end
+      bins = owned
 
       bin = bins.find { |candidate| candidate.available_quantity >= @quantity }
       if bin.nil?
