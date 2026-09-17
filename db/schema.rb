@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -99,6 +99,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000002) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "stock_adjustments", force: :cascade do |t|
+    t.uuid "adjusted_by_principal_id", null: false
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", limit: 255, null: false
+    t.uuid "merchant_principal_id", null: false
+    t.string "note"
+    t.integer "quantity_after", null: false
+    t.integer "quantity_before", null: false
+    t.integer "quantity_delta", null: false
+    t.string "reason", limit: 32, null: false
+    t.string "sku", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "warehouse_bin_id", null: false
+    t.index ["idempotency_key"], name: "index_stock_adjustments_on_idempotency_key", unique: true
+    t.index ["sku", "created_at"], name: "index_stock_adjustments_on_sku_and_created_at"
+    t.index ["warehouse_bin_id"], name: "index_stock_adjustments_on_warehouse_bin_id"
+    t.check_constraint "quantity_delta <> 0", name: "stock_adjustments_delta_not_zero"
+    t.check_constraint "reason::text = ANY (ARRAY['DAMAGE'::character varying, 'SHRINKAGE'::character varying, 'MISCOUNT'::character varying, 'RETURN_TO_SUPPLIER'::character varying, 'EXPIRY'::character varying]::text[])", name: "stock_adjustments_reason_known"
+  end
+
   create_table "stock_operations", force: :cascade do |t|
     t.boolean "applied", default: false, null: false
     t.integer "conflict_count", default: 0, null: false
@@ -162,6 +182,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000002) do
     t.index ["bin_code"], name: "index_warehouse_bins_on_bin_code", unique: true
   end
 
+  add_foreign_key "stock_adjustments", "warehouse_bins"
   add_foreign_key "stock_operations", "merchants"
   add_foreign_key "stock_receipts", "warehouse_bins"
   add_foreign_key "stock_reservations", "merchants"

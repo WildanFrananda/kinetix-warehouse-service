@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       resources :merchants, only: [ :create ]
       resources :bins, only: [ :create ]
       resources :stock_receipts, only: [ :create ]
+      resources :stock_adjustments, only: [ :create ]
     end
   end
   get "/metrics", to: "metrics#show"
