@@ -94,28 +94,6 @@ class OrdersDashboardController < ApplicationController
   end
 
   sig { void }
-  def dispatch_fleet_pulse
-    order_id = params[:id].to_i
-    merchant_id_param = params[:merchant_id]
-    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
-
-    service = T.let(Container[:dispatch_fleet_pulse_service], Couriers::DispatchFleetPulseService)
-    result = service.call(merchant_id: merchant_id, order_id: order_id)
-
-    if result.success?
-      update_service = T.let(Container[:update_order_status_service], Orders::UpdateOrderStatusService)
-      update_service.call(merchant_id: merchant_id, order_id: order_id, new_status: "dispatched")
-
-      dispatch_data = T.cast(result.data, Couriers::DispatchFleetPulseService::ResultData)
-      flash[:notice] = "🛵 Courier Dispatch Requested to FleetPulse! Dispatch Ref: #{dispatch_data.dispatch_ref}"
-    else
-      flash[:alert] = "⚠️ Failed to dispatch to FleetPulse: #{result.error}"
-    end
-
-    redirect_to orders_path(merchant_id: merchant_id)
-  end
-
-  sig { void }
   def update_status
     order_id = params[:id].to_i
     merchant_id_param = params[:merchant_id]

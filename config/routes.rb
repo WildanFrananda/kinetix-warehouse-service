@@ -53,7 +53,6 @@ Rails.application.routes.draw do
 
   post "/orders/:id/print_label", to: "orders_dashboard#print_label", as: "print_label_dashboard"
   get "/orders/:id/label_view", to: "orders_dashboard#label_view", as: "label_view_dashboard"
-  post "/orders/:id/dispatch_fleet_pulse", to: "orders_dashboard#dispatch_fleet_pulse", as: "dispatch_fleet_pulse_dashboard"
   get "/tracking/:order_number/stream", to: "tracking_stream#stream", as: "tracking_stream"
   patch "/orders/:id/update_status", to: "orders_dashboard#update_status", as: "update_status_dashboard"
 end
