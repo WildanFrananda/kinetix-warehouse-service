@@ -45,12 +45,6 @@ Container.register(:fleet_pulse_websocket_client) do
   )
 end
 
-Container.register(:dispatch_fleet_pulse_service) do
-  Couriers::DispatchFleetPulseService.new(
-    order_repository: Container[:order_repository]
-  )
-end
-
 Container.register(:verify_scan_barcode_service) do
   Orders::VerifyScanBarcodeService.new(
     order_repository: Container[:order_repository]

@@ -218,15 +218,10 @@ module Views
               end
             elsif card.status == "packed"
               div(class: "flex items-center gap-2") do
-                form(action: dispatch_fleet_pulse_dashboard_path(card.id, merchant_id: m_id), method: "post", class: "flex-1") do
-                  input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-                  render Components::UI::Button.new(variant: "primary", type: "submit", custom_class: "w-full") { "🛵 Request Pickup" }
-                end
-
                 a(
                   href: label_view_dashboard_path(card.id, merchant_id: m_id),
                   target: "_blank",
-                  class: "inline-flex items-center justify-center p-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                  class: "flex-1 inline-flex items-center justify-center p-2 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
                 ) do
                   "🖨️"
                 end
