@@ -29,10 +29,12 @@ module FleetPulse
         order_id: Integer,
         order_number: String,
         pickup_address: String,
-        delivery_address: String
+        delivery_address: String,
+        merchant_principal_id: String
       ).returns(T::Hash[Symbol, T.untyped])
     end
-    def dispatch_courier(order_id:, order_number:, pickup_address:, delivery_address:)
+    def dispatch_courier(order_id:, order_number:, pickup_address:, delivery_address:,
+                         merchant_principal_id:)
       stub = Fleet::V1::CourierTelemetryService::Stub.new(
         @host,
         Kinetix::ServiceIdentity.new.channel_credentials,
@@ -40,7 +42,7 @@ module FleetPulse
       )
 
       req = Fleet::V1::DispatchCourierRequest.new(
-        merchant_principal_id: "",
+        merchant_principal_id: merchant_principal_id,
         order_id: order_id.to_s,
         order_number: order_number,
         pickup_address: Common::V1::Address.new(street_address: pickup_address),
@@ -54,16 +56,19 @@ module FleetPulse
       {
         success: res.success,
         dispatch_ref: res.dispatch_ref,
+        driver_principal_id: res.assigned_driver_principal_id,
         driver_name: res.assigned_driver_name,
         driver_phone: res.assigned_driver_phone,
         vehicle: res.vehicle,
-        eta_minutes: res.eta_minutes
+        eta_minutes: res.eta_minutes,
+        error: res.error&.message
       }
     rescue StandardError => e
       Rails.logger.error("[FleetPulse::GrpcClient] Dispatch failed: #{e.message}")
       {
         success: false,
         dispatch_ref: "",
+        driver_principal_id: "",
         driver_name: "",
         driver_phone: "",
         vehicle: "",
