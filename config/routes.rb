@@ -17,6 +17,10 @@ Rails.application.routes.draw do
           patch :status, to: "returns#update_status"
         end
       end
+
+      resources :merchants, only: [ :create ]
+      resources :bins, only: [ :create ]
+      resources :stock_receipts, only: [ :create ]
     end
   end
   get "/metrics", to: "metrics#show"

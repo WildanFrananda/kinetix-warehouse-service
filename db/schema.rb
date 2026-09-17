@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_08_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_000006) do
     t.index ["order_number"], name: "index_stock_operations_on_order_number"
   end
 
+  create_table "stock_receipts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", limit: 255, null: false
+    t.string "note"
+    t.integer "quantity", null: false
+    t.uuid "received_by_principal_id", null: false
+    t.string "sku", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "warehouse_bin_id", null: false
+    t.index ["idempotency_key"], name: "index_stock_receipts_on_idempotency_key", unique: true
+    t.index ["sku"], name: "index_stock_receipts_on_sku"
+    t.index ["warehouse_bin_id"], name: "index_stock_receipts_on_warehouse_bin_id"
+    t.check_constraint "quantity > 0", name: "stock_receipts_quantity_positive"
+  end
+
   create_table "stock_reservations", force: :cascade do |t|
     t.bigint "bin_inventory_id"
     t.datetime "created_at", null: false
@@ -145,5 +160,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_000006) do
   end
 
   add_foreign_key "stock_operations", "merchants"
+  add_foreign_key "stock_receipts", "warehouse_bins"
   add_foreign_key "stock_reservations", "merchants"
 end
