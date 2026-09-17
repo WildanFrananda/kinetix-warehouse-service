@@ -15,9 +15,18 @@ Container.register(:get_order_queue_service) do
     order_repository: Container[:order_repository]
   )
 end
+Container.register(:fleet_pulse_grpc_client) { FleetPulse::GrpcClient.new }
+
+Container.register(:request_pickup_service) do
+  Couriers::RequestPickupService.new(
+    fleet_client: Container[:fleet_pulse_grpc_client]
+  )
+end
+
 Container.register(:update_order_status_service) do
   Orders::UpdateOrderStatusService.new(
-    order_repository: Container[:order_repository]
+    order_repository: Container[:order_repository],
+    request_pickup_service: Container[:request_pickup_service]
   )
 end
 
