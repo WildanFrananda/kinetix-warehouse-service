@@ -13,7 +13,7 @@ module Api
         return if merchant.nil?
 
         form = Returns::InitiateReturnForm.new(
-          order_id: params[:order_id].to_i,
+          fulfillment_task_id: params[:fulfillment_task_id].to_i,
           reason: params[:reason].to_s
         )
 

@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
 
   sig { void }
   def authenticate_user!
-    return if controller_name == "sessions" || controller_name == "health" || controller_name == "tracking_stream" || request.path.start_with?("/api")
+    return if controller_name == "sessions" || controller_name == "health" || request.path.start_with?("/api")
 
 
     merchant_id_session = session[:merchant_id]

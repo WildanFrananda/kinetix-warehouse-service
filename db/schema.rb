@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_19_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,76 +27,74 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000003) do
     t.index ["warehouse_bin_id"], name: "index_bin_inventories_on_warehouse_bin_id"
   end
 
-  create_table "merchants", force: :cascade do |t|
-    t.string "code", null: false
-    t.datetime "created_at", null: false
-    t.integer "cutoff_hour", default: 14
-    t.decimal "latitude", precision: 10, scale: 6, default: "-6.2088"
-    t.decimal "longitude", precision: 10, scale: 6, default: "106.8456"
-    t.string "name", null: false
-    t.uuid "principal_id"
-    t.datetime "updated_at", null: false
-    t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
-  end
-
-  create_table "order_items", force: :cascade do |t|
+  create_table "fulfillment_task_lines", force: :cascade do |t|
     t.string "bin_location"
     t.datetime "created_at", null: false
-    t.bigint "order_id", null: false
-    t.decimal "price"
-    t.string "product_name"
+    t.bigint "fulfillment_task_id", null: false
     t.integer "quantity"
     t.string "sku"
     t.datetime "updated_at", null: false
-    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["fulfillment_task_id"], name: "index_fulfillment_task_lines_on_fulfillment_task_id"
   end
 
-  create_table "orders", force: :cascade do |t|
-    t.string "buyer_name"
-    t.string "buyer_phone"
+  create_table "fulfillment_tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "merchant_id", null: false
     t.string "order_number"
     t.datetime "same_day_cutoff_at"
-    t.text "shipping_address"
-    t.string "status"
-    t.decimal "total_amount"
+    t.string "status", null: false
     t.datetime "updated_at", null: false
-    t.index ["merchant_id"], name: "index_orders_on_merchant_id"
+    t.index ["merchant_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_id_and_order_number", unique: true
+    t.index ["merchant_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_id_and_same_day_cutoff_at"
+    t.index ["merchant_id"], name: "index_fulfillment_tasks_on_merchant_id"
+    t.check_constraint "status::text = ANY (ARRAY['received'::character varying, 'packing'::character varying, 'packed'::character varying, 'cancelled'::character varying]::text[])", name: "fulfillment_tasks_status_is_a_packing_state"
+  end
+
+  create_table "merchants", force: :cascade do |t|
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.integer "cutoff_hour"
+    t.decimal "latitude", precision: 10, scale: 6, default: "-6.2088", null: false
+    t.decimal "longitude", precision: 10, scale: 6, default: "106.8456", null: false
+    t.string "name"
+    t.uuid "principal_id"
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_merchants_on_code", unique: true
+    t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
   end
 
   create_table "returns", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "fulfillment_task_id", null: false
     t.bigint "merchant_id", null: false
-    t.bigint "order_id", null: false
     t.string "reason"
     t.datetime "resolved_at"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["fulfillment_task_id"], name: "index_returns_on_fulfillment_task_id"
     t.index ["merchant_id"], name: "index_returns_on_merchant_id"
-    t.index ["order_id"], name: "index_returns_on_order_id"
   end
 
   create_table "shipping_labels", force: :cascade do |t|
     t.string "awb_number"
     t.datetime "created_at", null: false
-    t.bigint "order_id", null: false
+    t.bigint "fulfillment_task_id", null: false
     t.string "pdf_url"
-    t.datetime "printed_at"
-    t.integer "reprint_count", default: 0
-    t.string "tracking_number"
+    t.integer "reprint_count"
     t.datetime "updated_at", null: false
-    t.index ["order_id"], name: "index_shipping_labels_on_order_id"
+    t.index ["awb_number"], name: "index_shipping_labels_on_awb_number", unique: true
+    t.index ["fulfillment_task_id"], name: "index_shipping_labels_on_fulfillment_task_id"
   end
 
   create_table "staff_users", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "email", null: false
+    t.string "email"
     t.bigint "merchant_id", null: false
-    t.string "name", null: false
+    t.string "name"
     t.string "password_digest"
-    t.string "role", null: false
+    t.string "role"
     t.datetime "updated_at", null: false
+    t.index ["merchant_id"], name: "index_staff_users_on_merchant_id"
   end
 
   create_table "stock_adjustments", force: :cascade do |t|
@@ -182,6 +180,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000003) do
     t.index ["bin_code"], name: "index_warehouse_bins_on_bin_code", unique: true
   end
 
+  add_foreign_key "bin_inventories", "warehouse_bins"
+  add_foreign_key "fulfillment_task_lines", "fulfillment_tasks"
+  add_foreign_key "fulfillment_tasks", "merchants"
+  add_foreign_key "returns", "fulfillment_tasks"
+  add_foreign_key "returns", "merchants"
+  add_foreign_key "shipping_labels", "fulfillment_tasks"
+  add_foreign_key "staff_users", "merchants"
   add_foreign_key "stock_adjustments", "warehouse_bins"
   add_foreign_key "stock_operations", "merchants"
   add_foreign_key "stock_receipts", "warehouse_bins"

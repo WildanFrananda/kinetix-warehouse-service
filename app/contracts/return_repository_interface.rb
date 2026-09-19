@@ -12,8 +12,8 @@ module ReturnRepositoryInterface
   def find_by_merchant(merchant_id:); end
 
 
-  sig { abstract.params(merchant_id: Integer, order_id: Integer).returns(T.nilable(Return)) }
-  def find_by_order_id(merchant_id:, order_id:); end
+  sig { abstract.params(merchant_id: Integer, fulfillment_task_id: Integer).returns(T.nilable(Return)) }
+  def find_by_fulfillment_task_id(merchant_id:, fulfillment_task_id:); end
 
   sig { abstract.params(merchant_id: Integer, attributes: T::Hash[Symbol, T.anything]).returns(Return) }
   def create(merchant_id:, attributes:); end

@@ -4,7 +4,7 @@ class Merchant < ApplicationRecord
   extend T::Sig
 
   has_many :staff_users, dependent: :destroy
-  has_many :orders, dependent: :destroy
+  has_many :fulfillment_tasks, dependent: :destroy
   has_many :returns, dependent: :destroy
 
   validates :name, presence: true

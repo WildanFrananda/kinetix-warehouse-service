@@ -6,40 +6,40 @@ module Labels
 
     class ResultData < T::Struct
       const :id, Integer
-      const :order_id, Integer
+      const :fulfillment_task_id, Integer
       const :awb_number, String
       const :pdf_url, String
       const :reprint_count, Integer
     end
 
-    sig { returns(OrderRepositoryInterface) }
-    attr_reader :order_repository
+    sig { returns(FulfillmentTaskRepositoryInterface) }
+    attr_reader :task_repository
 
-    sig { params(order_repository: OrderRepositoryInterface).void }
+    sig { params(task_repository: FulfillmentTaskRepositoryInterface).void }
     def initialize(
-      order_repository: T.let(Container[:order_repository], OrderRepositoryInterface)
+      task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
     )
       super()
-      @order_repository = order_repository
+      @task_repository = task_repository
     end
 
     sig do
       params(
         merchant_id: Integer,
-        order_id: Integer
+        fulfillment_task_id: Integer
       ).returns(BaseService::Result)
     end
-    def call(merchant_id:, order_id:)
-      order = order_repository.find_by_id(merchant_id: merchant_id, id: order_id)
-      return failure("Order not found") unless order
+    def call(merchant_id:, fulfillment_task_id:)
+      task = task_repository.find_by_id(merchant_id: merchant_id, id: fulfillment_task_id)
+      return failure("Fulfillment task not found") unless task
 
-      label = order.shipping_label
+      label = task.shipping_label
       if label
         label.increment!(:reprint_count)
       else
-        awb = "AWB-#{merchant_id}-#{order.order_number}-#{Time.current.to_i}"
+        awb = "AWB-#{merchant_id}-#{task.order_number}-#{Time.current.to_i}"
         pdf = "/labels/#{awb}.pdf"
-        label = order.create_shipping_label!(
+        label = task.create_shipping_label!(
           awb_number: awb,
           pdf_url: pdf,
           reprint_count: 1
@@ -49,7 +49,7 @@ module Labels
       success(
         ResultData.new(
           id: label.id,
-          order_id: order_id,
+          fulfillment_task_id: fulfillment_task_id,
           awb_number: T.must(label.awb_number),
           pdf_url: T.must(label.pdf_url),
           reprint_count: T.must(label.reprint_count)

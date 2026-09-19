@@ -7,7 +7,7 @@ module Returns
     class ResultData < T::Struct
       const :id, Integer
       const :merchant_id, Integer
-      const :order_id, Integer
+      const :fulfillment_task_id, Integer
       const :status, String
       const :resolved_at, T.nilable(T.any(Time, ActiveSupport::TimeWithZone))
     end
@@ -48,7 +48,7 @@ module Returns
         ResultData.new(
           id: updated_return.id,
           merchant_id: merchant_id,
-          order_id: updated_return.order_id,
+          fulfillment_task_id: updated_return.fulfillment_task_id,
           status: T.must(updated_return.status),
           resolved_at: updated_return.resolved_at
         )

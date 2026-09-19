@@ -3,59 +3,49 @@
 require_relative "../../app/core/container"
 
 Container.register(:merchant_repository) { MerchantRepository.new }
-Container.register(:order_repository) { OrderRepository.new }
-Container.register(:create_order_service) do
-  Orders::CreateOrderService.new(
+Container.register(:fulfillment_task_repository) { FulfillmentTaskRepository.new }
+
+Container.register(:create_task_service) do
+  Fulfillment::CreateTaskService.new(
     merchant_repository: Container[:merchant_repository],
-    order_repository: Container[:order_repository]
+    task_repository: Container[:fulfillment_task_repository]
   )
 end
-Container.register(:get_order_queue_service) do
-  Orders::GetOrderQueueService.new(
-    order_repository: Container[:order_repository]
-  )
-end
-Container.register(:fleet_pulse_grpc_client) { FleetPulse::GrpcClient.new }
-
-Container.register(:request_pickup_service) do
-  Couriers::RequestPickupService.new(
-    fleet_client: Container[:fleet_pulse_grpc_client]
+Container.register(:task_queue_service) do
+  Fulfillment::TaskQueueService.new(
+    task_repository: Container[:fulfillment_task_repository]
   )
 end
 
-Container.register(:update_order_status_service) do
-  Orders::UpdateOrderStatusService.new(
-    order_repository: Container[:order_repository],
-    request_pickup_service: Container[:request_pickup_service]
+Container.register(:order_grpc_client) { Order::GrpcClient.new }
+
+Container.register(:advance_task_service) do
+  Fulfillment::AdvanceTaskService.new(
+    task_repository: Container[:fulfillment_task_repository],
+    order_client: Container[:order_grpc_client]
+  )
+end
+Container.register(:verify_scan_service) do
+  Fulfillment::VerifyScanService.new(
+    task_repository: Container[:fulfillment_task_repository]
   )
 end
 
 Container.register(:generate_shipping_label_service) do
   Labels::GenerateShippingLabelService.new(
-    order_repository: Container[:order_repository]
+    task_repository: Container[:fulfillment_task_repository]
   )
 end
+
 Container.register(:return_repository) { ReturnRepository.new }
 Container.register(:initiate_return_service) do
   Returns::InitiateReturnService.new(
-    order_repository: Container[:order_repository],
+    task_repository: Container[:fulfillment_task_repository],
     return_repository: Container[:return_repository]
   )
 end
 Container.register(:update_return_status_service) do
   Returns::UpdateReturnStatusService.new(
     return_repository: Container[:return_repository]
-  )
-end
-Container.register(:fleet_pulse_websocket_client) do
-  Couriers::FleetPulseWebSocketClient.new(
-    order_repository: Container[:order_repository],
-    update_order_status_service: Container[:update_order_status_service]
-  )
-end
-
-Container.register(:verify_scan_barcode_service) do
-  Orders::VerifyScanBarcodeService.new(
-    order_repository: Container[:order_repository]
   )
 end

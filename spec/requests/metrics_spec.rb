@@ -43,7 +43,7 @@ RSpec.describe "GET /metrics", type: :request do
       'kinetix_grpc_client_calls_total{peer="identity",' \
       'grpc_method="/identity.v1.IdentityService/GetUserProfile",grpc_code="OK"}'
     )
-    expect(body).to include('peer="matching"')
+    expect(body).to include('peer="order"')
   end
 
   it "names itself and its version on kinetix_build_info" do

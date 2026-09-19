@@ -116,9 +116,9 @@
       </div>
       <div>
         <div class="address-title">SHIP TO (PENERIMA):</div>
-        <strong><%= @order ? @order.buyer_name : 'Customer' %></strong><br>
-        📞 <%= @order ? @order.buyer_phone : '-' %><br>
-        📍 <%= @order ? @order.shipping_address : '-' %>
+        <strong><%= @task ? @task.order_number : '-' %></strong><br>
+        
+        <em>recipient details are held by order-service</em>
       </div>
     </div>
 
@@ -133,11 +133,11 @@
           </tr>
         </thead>
         <tbody>
-          <% if @order && @order.order_items.any? %>
-            <% @order.order_items.each do |item| %>
+          <% if @task && @task.fulfillment_task_lines.any? %>
+            <% @task.fulfillment_task_lines.each do |item| %>
               <tr>
                 <td><%= item.sku %></td>
-                <td><%= item.product_name %></td>
+                <td><%= item.sku %></td>
                 <td><%= item.quantity %></td>
               </tr>
             <% end %>

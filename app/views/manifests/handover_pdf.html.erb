@@ -120,8 +120,6 @@
       <tr>
         <th style="width: 30px;">No</th>
         <th>Order Number</th>
-        <th>Nama Penerima (Customer)</th>
-        <th>Alamat Tujuan</th>
         <th>Jumlah Item</th>
         <th>Status Gudang</th>
       </tr>
@@ -136,9 +134,7 @@
           <tr>
             <td style="text-align: center;"><%= idx + 1 %></td>
             <td><strong>#<%= ord.order_number %></strong></td>
-            <td><%= ord.buyer_name %> (<%= ord.buyer_phone %>)</td>
-            <td><%= ord.shipping_address %></td>
-            <td style="text-align: center;"><%= ord.order_items.sum(:quantity) %> pcs</td>
+                                    <td style="text-align: center;"><%= ord.fulfillment_task_lines.sum(:quantity) %> pcs</td>
             <td><%= ord.status.tr('_', ' ').capitalize %></td>
           </tr>
         <% end %>

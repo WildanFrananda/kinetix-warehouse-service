@@ -84,11 +84,6 @@ module Views
               span(class: "text-xl") { "📡" }
               h3(class: "text-lg font-bold text-white font-sans") { "Integration Endpoints" }
             end
-
-            form(action: test_ping_settings_path(merchant_id: m_id), method: "post", class: "inline-block") do
-              input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-              render Components::UI::Button.new(variant: "secondary", type: "submit", custom_class: "text-xs py-1.5") { "⚡ Test Ping Latency" }
-            end
           end
 
           p(class: "text-xs text-slate-400 mb-4") do
