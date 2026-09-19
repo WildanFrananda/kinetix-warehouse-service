@@ -153,15 +153,6 @@ module Views
               "."
             end
           end
-
-          div(class: "flex items-center gap-4 flex-wrap") do
-            render Components::UI::Button.new(variant: "primary", data_toggle: "ticket-modal") { "🎫 Open Support Ticket" }
-
-            form(action: start_chat_support_path(merchant_id: m_id), method: "post", class: "inline-block") do
-              input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-              render Components::UI::Button.new(variant: "secondary") { "💬 Start Live Chat" }
-            end
-          end
         end
       end
 
@@ -202,30 +193,6 @@ module Views
           p do
             strong(class: "text-white") { "2. Manual Escalation: " }
             "Contact Level 3 Command Center via Live Chat immediately."
-          end
-        end
-
-        # Ticket Modal
-        div(id: "ticket-modal", class: "modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md") do
-          div(class: "modal-card w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl") do
-            div(class: "flex items-center justify-between mb-4 pb-3 border-b border-slate-800") do
-              h3(class: "text-lg font-bold text-white font-sans") { "🎫 Escalate Support Ticket" }
-              button(type: "button", class: "text-slate-400 hover:text-white text-xl font-bold", data_close: "ticket-modal") { "×" }
-            end
-
-            form(action: create_ticket_support_path(merchant_id: m_id), method: "post", class: "space-y-4") do
-              input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-
-              div do
-                label(class: "block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1") { "Ticket Subject / Anomaly Title" }
-                input(type: "text", name: "subject", placeholder: "e.g. Courier Dispatch Delay / Picking Discrepancy", required: true, class: "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500")
-              end
-
-              div(class: "flex items-center justify-end gap-3 pt-4 border-t border-slate-800") do
-                button(type: "button", class: "px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white border border-slate-800 rounded-lg", data_close: "ticket-modal") { "Cancel" }
-                render Components::UI::Button.new(variant: "primary", type: "submit") { "Submit Ticket Escalation" }
-              end
-            end
           end
         end
       end

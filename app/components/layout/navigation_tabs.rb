@@ -23,9 +23,7 @@ module Components
 
         tabs = [
           { name: "📦 Warehouse Order Queue", path: orders_path(merchant_id: m_id) },
-          { name: "⚡ FleetPulse Driver Radar", path: fleet_radar_path(merchant_id: m_id) },
           { name: "🔄 Returns & Exchange Hub", path: returns_dashboard_path(merchant_id: m_id) },
-          { name: "🏭 Inventory & Bins", path: inventory_dashboard_path(merchant_id: m_id) },
           { name: "📊 SLA Analytics", path: analytics_dashboard_path(merchant_id: m_id) },
           { name: "📄 Driver Manifests", path: manifests_dashboard_path(merchant_id: m_id) },
           { name: "⚙️ Settings & API", path: settings_path(merchant_id: m_id) },

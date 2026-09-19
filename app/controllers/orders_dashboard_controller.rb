@@ -159,13 +159,4 @@ class OrdersDashboardController < ApplicationController
 
     redirect_to orders_path(merchant_id: merchant_id)
   end
-
-  sig { void }
-  def emergency_halt
-    merchant_id_param = params[:merchant_id]
-    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
-
-    flash[:alert] = "🚨 WAREHOUSE EMERGENCY HALT ACTIVATED! All automated courier dispatches & picking processes temporarily paused."
-    redirect_to orders_path(merchant_id: merchant_id)
-  end
 end

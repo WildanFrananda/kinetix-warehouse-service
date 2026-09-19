@@ -42,14 +42,4 @@ class SettingsController < ApplicationController
 
     redirect_to settings_path(merchant_id: merchant_id)
   end
-
-
-  sig { void }
-  def test_ping
-    merchant_id_param = params[:merchant_id]
-    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
-
-    flash[:notice] = "⚡ FleetPulse Elixir Phoenix Cluster Ping: 12ms Latency (Status: 100% Operational)"
-    redirect_to settings_path(merchant_id: merchant_id)
-  end
 end

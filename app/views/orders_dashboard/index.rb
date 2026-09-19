@@ -49,12 +49,6 @@ module Views
                 variant: "primary",
                 data_toggle: "manual-order-modal"
               ) { "+ New Manual Order" }
-
-              form(action: emergency_halt_orders_path, method: "post", class: "inline-block") do
-                input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-                input(type: "hidden", name: "merchant_id", value: @current_merchant ? @current_merchant.id.to_s : "1")
-                render Components::UI::Button.new(variant: "danger", type: "submit") { "🚨 Emergency Halt" }
-              end
             end
           end
 
@@ -225,13 +219,6 @@ module Views
                 ) do
                   "🖨️"
                 end
-              end
-            else
-              a(
-                href: fleet_radar_path(merchant_id: m_id),
-                class: "w-full inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 transition-all"
-              ) do
-                "👁️ Track Driver"
               end
             end
           end
