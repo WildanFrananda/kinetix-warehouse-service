@@ -85,9 +85,8 @@ module Views
 
             div(class: "text-xs text-slate-400 mb-4") do
               "👤 Customer: "
-              strong(class: "text-slate-200") { ord ? ord.buyer_name : "-" }
-              span(class: "text-slate-500 ml-1") { "(📞 #{ord ? ord.buyer_phone : '-'})" }
-            end
+              strong(class: "text-slate-200") { ord ? ord.order_number : "-" }
+                          end
 
             div(class: "p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 mb-4") do
               div(class: "text-[11px] font-bold text-rose-400 uppercase tracking-wider mb-1") { "Customer Return Reason:" }

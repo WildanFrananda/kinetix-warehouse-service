@@ -73,8 +73,6 @@ module Views
             thead do
               tr(class: "border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider") do
                 th(class: "p-3") { "Order #" }
-                th(class: "p-3") { "Buyer Name" }
-                th(class: "p-3") { "Shipping Address" }
                 th(class: "p-3") { "Items Qty" }
                 th(class: "p-3") { "Pipeline Status" }
                 th(class: "p-3 text-right") { "Action" }
@@ -83,12 +81,10 @@ module Views
 
             tbody do
               @dispatched_orders.each do |ord|
-                items_qty = ord.order_items.sum(&:quantity)
+                items_qty = ord.fulfillment_task_lines.sum(&:quantity)
 
                 tr(class: "border-b border-slate-800/60 hover:bg-slate-800/40 transition-all duration-150") do
                   td(class: "p-3 font-bold text-indigo-400 font-mono") { "##{ord.order_number}" }
-                  td(class: "p-3 font-semibold text-white") { ord.buyer_name }
-                  td(class: "p-3 text-slate-400") { ord.shipping_address }
                   td(class: "p-3 font-mono") { "#{items_qty} pcs" }
                   td(class: "p-3") do
                     render Components::UI::Badge.new(status: ord.status)

@@ -20,9 +20,9 @@ class ReturnRepository < BaseRepository
   end
 
 
-  sig { override.params(merchant_id: Integer, order_id: Integer).returns(T.nilable(Return)) }
-  def find_by_order_id(merchant_id:, order_id:)
-    T.cast(model.find_by(merchant_id: merchant_id, order_id: order_id), T.nilable(Return))
+  sig { override.params(merchant_id: Integer, fulfillment_task_id: Integer).returns(T.nilable(Return)) }
+  def find_by_fulfillment_task_id(merchant_id:, fulfillment_task_id:)
+    T.cast(model.find_by(merchant_id: merchant_id, fulfillment_task_id: fulfillment_task_id), T.nilable(Return))
   end
 
   sig { override.params(merchant_id: Integer, attributes: T::Hash[Symbol, T.anything]).returns(Return) }

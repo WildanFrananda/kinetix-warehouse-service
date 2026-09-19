@@ -34,7 +34,7 @@ class GrpcServer
     server.add_http2_port("0.0.0.0:#{port}", identity.server_credentials)
 
     handlers = [
-      Rpc::FulfillmentServiceHandler.new,
+      Rpc::FulfillmentTaskServiceHandler.new,
       Rpc::BinStockServiceHandler.new,
       Rpc::HealthHandler.new,
       GrpcReflection::Server,

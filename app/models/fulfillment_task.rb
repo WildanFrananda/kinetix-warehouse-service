@@ -3,7 +3,7 @@
 class FulfillmentTask < ApplicationRecord
   extend T::Sig
 
-  STATUSES = T.let(%w[received picking packed cancelled].freeze, T::Array[String])
+  STATUSES = T.let(%w[received packing packed cancelled].freeze, T::Array[String])
 
   belongs_to :merchant
   has_many :fulfillment_task_lines, dependent: :destroy

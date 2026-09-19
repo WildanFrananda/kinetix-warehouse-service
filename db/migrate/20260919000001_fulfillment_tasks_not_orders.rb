@@ -1,6 +1,6 @@
 # foreign keys are worth keeping, and `returns` / `shipping_labels` already point here.
 class FulfillmentTasksNotOrders < ActiveRecord::Migration[8.0]
-  TASK_STATUSES = %w[received picking packed cancelled].freeze
+  TASK_STATUSES = %w[received packing packed cancelled].freeze
 
   def up
     rename_table :orders, :fulfillment_tasks
@@ -24,7 +24,7 @@ class FulfillmentTasksNotOrders < ActiveRecord::Migration[8.0]
     change_column_null :fulfillment_tasks, :status, false
     add_check_constraint :fulfillment_tasks,
       "status IN (#{TASK_STATUSES.map { |s| "'#{s}'" }.join(', ')})",
-      name: "fulfillment_tasks_status_is_a_picking_state"
+      name: "fulfillment_tasks_status_is_a_packing_state"
 
     remove_column :fulfillment_tasks, :buyer_name
     remove_column :fulfillment_tasks, :buyer_phone
@@ -43,7 +43,7 @@ class FulfillmentTasksNotOrders < ActiveRecord::Migration[8.0]
     add_column :fulfillment_tasks, :buyer_phone, :string
     add_column :fulfillment_tasks, :buyer_name, :string
 
-    remove_check_constraint :fulfillment_tasks, name: "fulfillment_tasks_status_is_a_picking_state"
+    remove_check_constraint :fulfillment_tasks, name: "fulfillment_tasks_status_is_a_packing_state"
     change_column_null :fulfillment_tasks, :status, true
 
     rename_column :shipping_labels, :fulfillment_task_id, :order_id

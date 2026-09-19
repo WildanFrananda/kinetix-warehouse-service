@@ -1745,6 +1745,9 @@ Google::Protobuf::SymbolVisibility::VISIBILITY_LOCAL = T.let(T.unsafe(nil), Inte
 # pkg:gem/google-protobuf#lib/google/protobuf/descriptor_pb.rb:70
 Google::Protobuf::SymbolVisibility::VISIBILITY_UNSET = T.let(T.unsafe(nil), Integer)
 
+# pkg:gem/google-protobuf#lib/google/protobuf/timestamp_pb.rb:15
+class Google::Protobuf::Timestamp < ::Google::Protobuf::AbstractMessage; end
+
 # pkg:gem/google-protobuf#lib/google/protobuf.rb:18
 class Google::Protobuf::TypeError < ::TypeError; end
 

@@ -1,13 +1,13 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
-      resources :orders, only: [ :create ] do
+      resources :fulfillment_tasks, only: [] do
         collection do
           get :queue
         end
         member do
-          patch :status, to: "orders#update_status"
-          post :label, to: "orders#generate_label"
+          patch :status, to: "fulfillment_tasks#update_status"
+          post :label, to: "fulfillment_tasks#generate_label"
         end
         resource :returns, only: [ :create ], controller: "returns"
       end
@@ -34,7 +34,6 @@ Rails.application.routes.draw do
   post "/scan/verify", to: "scanner#verify", as: "verify_scan"
   get "/orders", to: "orders_dashboard#index"
 
-  post "/orders/manual_create", to: "orders_dashboard#create_manual_order", as: "manual_create_orders"
   get "/returns", to: "returns_dashboard#index", as: "returns_dashboard"
   post "/returns/:id/update_status", to: "returns_dashboard#update_status", as: "update_status_returns_dashboard"
 

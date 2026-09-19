@@ -18,8 +18,8 @@ class ManifestsController < ApplicationController
     current = @current_merchant
     merchant_id = current ? current.id : 1
 
-    order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
-    orders = order_repo.due_today(merchant_id: merchant_id)
+    task_repo = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
+    orders = task_repo.due_today(merchant_id: merchant_id)
 
     render Views::Manifests::Index.new(
       dispatched_orders: orders,
@@ -45,8 +45,8 @@ class ManifestsController < ApplicationController
     current = @current_merchant
     merchant_id = current ? current.id : 1
 
-    order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
-    orders = order_repo.due_today(merchant_id: merchant_id)
+    task_repo = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
+    orders = task_repo.due_today(merchant_id: merchant_id)
 
     @dispatched_orders = T.let(orders, T.nilable(T::Array[Order]))
     render layout: false

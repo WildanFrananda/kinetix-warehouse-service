@@ -11,18 +11,16 @@ module Views
           sla_compliance_rate: Float,
           total_orders: Integer,
           overdue_orders_count: Integer,
-          total_revenue: BigDecimal,
-          top_products: T.nilable(T::Array[AnalyticsController::TopProductData]),
+          top_skus: T.nilable(T::Array[AnalyticsController::TopSkuData]),
           current_merchant: T.nilable(Merchant),
           merchants: T.nilable(T::Array[Merchant])
         ).void
       end
-      def initialize(sla_compliance_rate:, total_orders:, overdue_orders_count:, total_revenue:, top_products:, current_merchant:, merchants:)
+      def initialize(sla_compliance_rate:, total_orders:, overdue_orders_count:, top_skus:, current_merchant:, merchants:)
         @sla_compliance_rate = T.let(sla_compliance_rate, Float)
         @total_orders = T.let(total_orders, Integer)
         @overdue_orders_count = T.let(overdue_orders_count, Integer)
-        @total_revenue = T.let(total_revenue, BigDecimal)
-        @top_products = T.let(top_products || [], T::Array[AnalyticsController::TopProductData])
+        @top_skus = T.let(top_skus || [], T::Array[AnalyticsController::TopSkuData])
         @current_merchant = T.let(current_merchant, T.nilable(Merchant))
         @merchants = T.let(merchants || [], T::Array[Merchant])
       end
@@ -42,17 +40,16 @@ module Views
             render_kpi_card("🎯 SLA ON-TIME RATE", "#{@sla_compliance_rate}%", "Same-Day Cutoff Compliance Target: > 95%", "text-indigo-400", "border-indigo-500/30")
             render_kpi_card("📦 TOTAL ACTIVE ORDERS", @total_orders.to_s, "Open Fulfillment Pipeline", "text-emerald-400", "border-emerald-500/30")
             render_kpi_card("🚨 OVERDUE SLA VIOLATIONS", @overdue_orders_count.to_s, "Requires Immediate Warehouse Dispatch", "text-rose-400", "border-rose-500/30")
-            render_kpi_card("💰 TOTAL MERCHANT REVENUE", "Rp #{format_number(@total_revenue.to_i)}", "Processed Pipeline GMV", "text-amber-400", "border-amber-500/30")
           end
 
           # Top Products Ranking
           h3(class: "text-lg font-bold text-white mb-4 font-sans tracking-tight") { "🏆 Top Selling Fashion Products Ranking" }
 
           render Components::UI::Card.new do
-            if @top_products.empty?
+            if @top_skus.empty?
               div(class: "p-8 text-center text-slate-400 text-xs font-medium") { "No sales data recorded yet." }
             else
-              render_top_products_table
+              render_top_skus_table
             end
           end
         end
@@ -70,27 +67,23 @@ module Views
       end
 
       sig { void }
-      def render_top_products_table
+      def render_top_skus_table
         div(class: "overflow-x-auto") do
           table(class: "w-full text-left text-xs text-slate-200 border-collapse") do
             thead do
               tr(class: "border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider") do
                 th(class: "p-3") { "Rank" }
                 th(class: "p-3") { "SKU" }
-                th(class: "p-3") { "Product Name" }
-                th(class: "p-3 text-center") { "Units Sold" }
-                th(class: "p-3 text-right") { "Revenue (GMV)" }
+                th(class: "p-3 text-center") { "Units Picked" }
               end
             end
 
             tbody do
-              @top_products.each_with_index do |prod, idx|
+              @top_skus.each_with_index do |prod, idx|
                 tr(class: "border-b border-slate-800/60 hover:bg-slate-800/40 transition-all duration-150") do
                   td(class: "p-3 font-bold text-amber-400 font-mono") { "##{idx + 1}" }
                   td(class: "p-3 font-mono text-slate-300") { prod.sku }
-                  td(class: "p-3 font-semibold text-white") { prod.product_name }
-                  td(class: "p-3 text-center font-bold text-emerald-400") { "#{prod.total_units_sold} pcs" }
-                  td(class: "p-3 text-right font-bold text-indigo-400 font-mono") { "Rp #{format_number(prod.total_revenue.to_i)}" }
+                  td(class: "p-3 text-center font-bold text-emerald-400") { "#{prod.total_units_picked} pcs" }
                 end
               end
             end

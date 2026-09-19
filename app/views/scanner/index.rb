@@ -93,12 +93,11 @@ module Views
 
             div(class: "p-3 rounded-lg bg-slate-950 border border-slate-800 mb-3 font-mono") do
               div(class: "text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1") { "📍 TARGET RACK BIN" }
-              div(class: "text-lg font-bold text-emerald-400") { "📍 #{target.bin_location}" }
+              div(class: "text-lg font-bold text-emerald-400") { target.bin_location.present? ? "📍 #{target.bin_location}" : "📍 no bin recorded" }
             end
 
             div(class: "flex items-center justify-between") do
               div do
-                div(class: "text-sm font-bold text-white font-sans") { target.product_name }
                 div(class: "text-xs font-mono text-slate-400 mt-0.5") do
                   "SKU: "
                   span(class: "text-indigo-400 font-bold") { target.sku }
@@ -159,7 +158,7 @@ module Views
 
         form(action: verify_scan_path(merchant_id: m_id), method: "post", id: "scan-form", class: "space-y-4 mb-6") do
           input(type: "hidden", name: "authenticity_token", value: form_authenticity_token)
-          input(type: "hidden", name: "order_id", value: target.id.to_s)
+          input(type: "hidden", name: "fulfillment_task_id", value: target.id.to_s)
 
           input(
             type: "text",
