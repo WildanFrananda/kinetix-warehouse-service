@@ -29,8 +29,6 @@ module Api
           name: params[:name].to_s,
           code: params[:code].to_s
         )
-        merchant.latitude = params[:latitude] if params[:latitude].present?
-        merchant.longitude = params[:longitude] if params[:longitude].present?
 
         if merchant.save
           render json: { id: merchant.id, code: merchant.code, name: merchant.name, replayed: false },
