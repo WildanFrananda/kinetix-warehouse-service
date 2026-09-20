@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_19_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_20_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,17 +84,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_000001) do
     t.datetime "updated_at", null: false
     t.index ["awb_number"], name: "index_shipping_labels_on_awb_number", unique: true
     t.index ["fulfillment_task_id"], name: "index_shipping_labels_on_fulfillment_task_id"
-  end
-
-  create_table "staff_users", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "email"
-    t.bigint "merchant_id", null: false
-    t.string "name"
-    t.string "password_digest"
-    t.string "role"
-    t.datetime "updated_at", null: false
-    t.index ["merchant_id"], name: "index_staff_users_on_merchant_id"
   end
 
   create_table "stock_adjustments", force: :cascade do |t|
@@ -186,7 +175,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_000001) do
   add_foreign_key "returns", "fulfillment_tasks"
   add_foreign_key "returns", "merchants"
   add_foreign_key "shipping_labels", "fulfillment_tasks"
-  add_foreign_key "staff_users", "merchants"
   add_foreign_key "stock_adjustments", "warehouse_bins"
   add_foreign_key "stock_operations", "merchants"
   add_foreign_key "stock_receipts", "warehouse_bins"

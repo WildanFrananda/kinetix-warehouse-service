@@ -14516,9 +14516,6 @@ class ActionView::TestCase::TestController < ::ActionController::Base
   # pkg:gem/actionview#lib/action_view/test_case.rb:16
   def _layout(lookup_context, formats, keys); end
 
-  # pkg:gem/actionview#lib/action_view/test_case.rb:16
-  def _layout_from_proc; end
-
   class << self
     # pkg:gem/actionview#lib/action_view/test_case.rb:30
     def controller_name; end

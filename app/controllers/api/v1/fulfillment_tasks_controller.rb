@@ -44,6 +44,21 @@ module Api
         render_result(result)
       end
 
+      sig { void }
+      def verify_scan
+        merchant = require_api_merchant!
+        return if merchant.nil?
+
+        service = T.let(Container[:verify_scan_service], Fulfillment::VerifyScanService)
+        result = service.call(
+          merchant_id: merchant.id,
+          task_id: params[:id].to_i,
+          scanned_code: params[:scanned_code].to_s
+        )
+
+        render_result(result)
+      end
+
       private
 
       sig { params(result: BaseService::Result).void }

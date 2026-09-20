@@ -40,10 +40,9 @@ COPY . .
 
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-RUN SECRET_KEY_BASE_DUMMY=1 \
-    DB_USERNAME=build-time-placeholder \
-    DB_PASSWORD=build-time-placeholder \
-    ./bin/rails assets:precompile
+# No assets:precompile: this service renders no pages, ships no JavaScript and carries no stylesheet,
+# so propshaft is not installed and the task does not exist. It used to run here because the service
+# served its own admin dashboard.
 
 FROM base
 

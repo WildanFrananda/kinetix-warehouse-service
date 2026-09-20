@@ -4,8 +4,8 @@ require "rails/all"
 
 Bundler.require(*Rails.groups)
 
-module Components; end
-module Views; end
+# Components and Views were the namespaces of the admin dashboard's Phlex classes. Both directories
+# are gone; this service renders nothing.
 module Rpc; end
 
 module FashionFulfillmentOms
@@ -20,11 +20,7 @@ module FashionFulfillmentOms
     require_relative "../lib/kinetix/metrics/http_middleware"
     config.middleware.unshift Kinetix::Metrics::HttpMiddleware
 
-    Rails.autoloaders.main.inflector.inflect("ui" => "UI")
-
     app_root = File.expand_path("..", __dir__)
-    Rails.autoloaders.main.push_dir("#{app_root}/app/components", namespace: Components)
-    Rails.autoloaders.main.push_dir("#{app_root}/app/views", namespace: Views)
     Rails.autoloaders.main.push_dir("#{app_root}/app/rpc", namespace: Rpc)
   end
 end

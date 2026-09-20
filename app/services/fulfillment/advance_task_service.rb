@@ -54,8 +54,6 @@ module Fulfillment
       updated_at = Time.current
       notified = new_status == PACKED ? notify_order(updated) : nil
 
-      broadcast(merchant_id: merchant_id, task: updated, status: new_status, updated_at: updated_at)
-
       success(
         ResultData.new(
           id: updated.id,
@@ -92,26 +90,6 @@ module Fulfillment
     rescue StandardError => e
       Rails.logger.error("[Order] task #{task.id} is packed but telling order-service raised #{e.class}: #{e.message}")
       { success: false, error: e.message, dispatch_ref: "" }
-    end
-
-    sig do
-      params(
-        merchant_id: Integer,
-        task: FulfillmentTask,
-        status: String,
-        updated_at: T.any(Time, ActiveSupport::TimeWithZone)
-      ).void
-    end
-    def broadcast(merchant_id:, task:, status:, updated_at:)
-      ActionCable.server.broadcast(
-        "merchant:fulfillment_tasks:#{merchant_id}",
-        {
-          fulfillment_task_id: task.id,
-          order_number: task.order_number,
-          status: status,
-          updated_at: updated_at.iso8601
-        }
-      )
     end
   end
 end

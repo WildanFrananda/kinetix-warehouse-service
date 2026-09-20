@@ -10,28 +10,22 @@ module GeneratedPathHelpersModule
   include ::ActionDispatch::Routing::PolymorphicRoutes
 
   sig { params(args: T.untyped).returns(String) }
-  def analytics_dashboard_path(*args); end
+  def api_v1_bins_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_order_returns_path(*args); end
+  def api_v1_fulfillment_task_returns_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_orders_path(*args); end
+  def api_v1_merchant_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def create_ticket_support_path(*args); end
+  def api_v1_merchants_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def dispatch_fleet_pulse_dashboard_path(*args); end
+  def api_v1_stock_adjustments_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def emergency_halt_orders_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def fleet_radar_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def handover_pdf_manifests_path(*args); end
+  def api_v1_stock_receipts_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def health_path(*args); end
@@ -40,25 +34,10 @@ module GeneratedPathHelpersModule
   def health_ready_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def inventory_dashboard_path(*args); end
+  def label_api_v1_fulfillment_task_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def label_api_v1_order_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def label_view_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def login_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def logout_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def manifests_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def manual_create_orders_path(*args); end
+  def metrics_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_path(*args); end
@@ -67,13 +46,7 @@ module GeneratedPathHelpersModule
   def new_rails_conductor_inbound_email_source_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def orders_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def print_label_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def queue_api_v1_orders_path(*args); end
+  def queue_api_v1_fulfillment_tasks_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def rails_blob_path(*args); end
@@ -154,53 +127,14 @@ module GeneratedPathHelpersModule
   def rails_storage_redirect_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def returns_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def scanner_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def settings_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def start_chat_support_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_order_path(*args); end
+  def status_api_v1_fulfillment_task_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_return_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def support_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def test_ping_settings_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def tracking_stream_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_recede_historical_location_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_refresh_historical_location_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_resume_historical_location_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def update_cutoff_settings_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def update_status_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def update_status_returns_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def verify_scan_path(*args); end
+  def verify_scan_api_v1_fulfillment_task_path(*args); end
 end

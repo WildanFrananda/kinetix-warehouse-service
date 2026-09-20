@@ -10,28 +10,22 @@ module GeneratedUrlHelpersModule
   include ::ActionDispatch::Routing::PolymorphicRoutes
 
   sig { params(args: T.untyped).returns(String) }
-  def analytics_dashboard_url(*args); end
+  def api_v1_bins_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_order_returns_url(*args); end
+  def api_v1_fulfillment_task_returns_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_orders_url(*args); end
+  def api_v1_merchant_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def create_ticket_support_url(*args); end
+  def api_v1_merchants_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def dispatch_fleet_pulse_dashboard_url(*args); end
+  def api_v1_stock_adjustments_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def emergency_halt_orders_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def fleet_radar_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def handover_pdf_manifests_url(*args); end
+  def api_v1_stock_receipts_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def health_ready_url(*args); end
@@ -40,25 +34,10 @@ module GeneratedUrlHelpersModule
   def health_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def inventory_dashboard_url(*args); end
+  def label_api_v1_fulfillment_task_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def label_api_v1_order_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def label_view_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def login_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def logout_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def manifests_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def manual_create_orders_url(*args); end
+  def metrics_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_source_url(*args); end
@@ -67,13 +46,7 @@ module GeneratedUrlHelpersModule
   def new_rails_conductor_inbound_email_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def orders_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def print_label_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def queue_api_v1_orders_url(*args); end
+  def queue_api_v1_fulfillment_tasks_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def rails_blob_representation_proxy_url(*args); end
@@ -154,53 +127,14 @@ module GeneratedUrlHelpersModule
   def rails_storage_redirect_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def returns_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def scanner_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def settings_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def start_chat_support_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_order_url(*args); end
+  def status_api_v1_fulfillment_task_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_return_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def support_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def test_ping_settings_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def tracking_stream_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_recede_historical_location_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_refresh_historical_location_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def turbo_resume_historical_location_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def update_cutoff_settings_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def update_status_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def update_status_returns_dashboard_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def verify_scan_url(*args); end
+  def verify_scan_api_v1_fulfillment_task_url(*args); end
 end
