@@ -55,11 +55,11 @@ RSpec.describe "GET /metrics", type: :request do
 
   describe "the route label" do
     it "is the template the router matched, not the path the client sent" do
-      get "/orders/42/label_view"
+      patch "/api/v1/returns/42/status"
       body = scrape
 
-      expect(body).to include('route="/orders/{id}/label_view"')
-      expect(body).not_to include("/orders/42/label_view")
+      expect(body).to include('route="/api/v1/returns/{id}/status"')
+      expect(body).not_to include("/api/v1/returns/42/status")
     end
 
     it "is one bounded value for everything that matched no route" do
@@ -71,8 +71,8 @@ RSpec.describe "GET /metrics", type: :request do
     end
 
     it "never carries a number where a template belongs" do
-      get "/orders/42/label_view"
-      get "/api/v1/orders/7/status"
+      patch "/api/v1/returns/42/status"
+      post "/api/v1/fulfillment_tasks/7/verify_scan"
 
       expect(scrape.scan(UNTEMPLATED_ROUTE)).to be_empty
     end
@@ -87,7 +87,7 @@ RSpec.describe "GET /metrics", type: :request do
     end
 
     it "carries no identifier in any label value" do
-      get "/orders/8f3a2b1cd4e56f70b1c2d3e4f5a6b7c8/label_view"
+      patch "/api/v1/returns/8f3a2b1cd4e56f70b1c2d3e4f5a6b7c8/status"
       get "/tracking/ORD-9F2A1B/stream"
 
       leaked = scrape.scan(LABEL_VALUES).grep(LEAKED_IDENTIFIER)

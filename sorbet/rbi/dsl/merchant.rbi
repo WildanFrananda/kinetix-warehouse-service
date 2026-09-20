@@ -362,18 +362,18 @@ class Merchant
 
   module GeneratedAssociationMethods
     sig { returns(T::Array[T.untyped]) }
-    def order_ids; end
+    def fulfillment_task_ids; end
 
     sig { params(ids: T::Array[T.untyped]).returns(T::Array[T.untyped]) }
-    def order_ids=(ids); end
+    def fulfillment_task_ids=(ids); end
 
-    # This method is created by ActiveRecord on the `Merchant` class because it declared `has_many :orders`.
+    # This method is created by ActiveRecord on the `Merchant` class because it declared `has_many :fulfillment_tasks`.
     # 🔗 [Rails guide for `has_many` association](https://guides.rubyonrails.org/association_basics.html#the-has-many-association)
-    sig { returns(::Order::PrivateCollectionProxy) }
-    def orders; end
+    sig { returns(::FulfillmentTask::PrivateCollectionProxy) }
+    def fulfillment_tasks; end
 
-    sig { params(value: T::Enumerable[::Order]).void }
-    def orders=(value); end
+    sig { params(value: T::Enumerable[::FulfillmentTask]).void }
+    def fulfillment_tasks=(value); end
 
     sig { returns(T::Array[T.untyped]) }
     def return_ids; end
@@ -388,20 +388,6 @@ class Merchant
 
     sig { params(value: T::Enumerable[::Return]).void }
     def returns=(value); end
-
-    sig { returns(T::Array[T.untyped]) }
-    def staff_user_ids; end
-
-    sig { params(ids: T::Array[T.untyped]).returns(T::Array[T.untyped]) }
-    def staff_user_ids=(ids); end
-
-    # This method is created by ActiveRecord on the `Merchant` class because it declared `has_many :staff_users`.
-    # 🔗 [Rails guide for `has_many` association](https://guides.rubyonrails.org/association_basics.html#the-has-many-association)
-    sig { returns(::StaffUser::PrivateCollectionProxy) }
-    def staff_users; end
-
-    sig { params(value: T::Enumerable[::StaffUser]).void }
-    def staff_users=(value); end
   end
 
   module GeneratedAssociationRelationMethods
@@ -554,10 +540,10 @@ class Merchant
   end
 
   module GeneratedAttributeMethods
-    sig { returns(::String) }
+    sig { returns(T.nilable(::String)) }
     def code; end
 
-    sig { params(value: ::String).returns(::String) }
+    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
     def code=(value); end
 
     sig { returns(T::Boolean) }
@@ -572,10 +558,10 @@ class Merchant
     sig { returns(T::Boolean) }
     def code_came_from_user?; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def code_change; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def code_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -584,7 +570,7 @@ class Merchant
     sig { returns(T.nilable(::String)) }
     def code_in_database; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def code_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -779,10 +765,10 @@ class Merchant
     sig { void }
     def id_will_change!; end
 
-    sig { returns(T.nilable(::BigDecimal)) }
+    sig { returns(::BigDecimal) }
     def latitude; end
 
-    sig { params(value: T.nilable(::BigDecimal)).returns(T.nilable(::BigDecimal)) }
+    sig { params(value: ::BigDecimal).returns(::BigDecimal) }
     def latitude=(value); end
 
     sig { returns(T::Boolean) }
@@ -797,10 +783,10 @@ class Merchant
     sig { returns(T::Boolean) }
     def latitude_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def latitude_change; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def latitude_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -809,7 +795,7 @@ class Merchant
     sig { returns(T.nilable(::BigDecimal)) }
     def latitude_in_database; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def latitude_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -824,10 +810,10 @@ class Merchant
     sig { void }
     def latitude_will_change!; end
 
-    sig { returns(T.nilable(::BigDecimal)) }
+    sig { returns(::BigDecimal) }
     def longitude; end
 
-    sig { params(value: T.nilable(::BigDecimal)).returns(T.nilable(::BigDecimal)) }
+    sig { params(value: ::BigDecimal).returns(::BigDecimal) }
     def longitude=(value); end
 
     sig { returns(T::Boolean) }
@@ -842,10 +828,10 @@ class Merchant
     sig { returns(T::Boolean) }
     def longitude_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def longitude_change; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def longitude_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -854,7 +840,7 @@ class Merchant
     sig { returns(T.nilable(::BigDecimal)) }
     def longitude_in_database; end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def longitude_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -869,10 +855,10 @@ class Merchant
     sig { void }
     def longitude_will_change!; end
 
-    sig { returns(::String) }
+    sig { returns(T.nilable(::String)) }
     def name; end
 
-    sig { params(value: ::String).returns(::String) }
+    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
     def name=(value); end
 
     sig { returns(T::Boolean) }
@@ -887,10 +873,10 @@ class Merchant
     sig { returns(T::Boolean) }
     def name_came_from_user?; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def name_change; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def name_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -899,7 +885,7 @@ class Merchant
     sig { returns(T.nilable(::String)) }
     def name_in_database; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def name_previous_change; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -989,7 +975,7 @@ class Merchant
     sig { void }
     def restore_updated_at!; end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def saved_change_to_code; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -1019,19 +1005,19 @@ class Merchant
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def saved_change_to_latitude; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_latitude?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::BigDecimal), T.nilable(::BigDecimal)])) }
+    sig { returns(T.nilable([::BigDecimal, ::BigDecimal])) }
     def saved_change_to_longitude; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_longitude?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([::String, ::String])) }
+    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def saved_change_to_name; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }

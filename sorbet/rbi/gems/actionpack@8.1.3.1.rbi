@@ -699,9 +699,6 @@ module AbstractController::Collector
   def ttf(*_arg0, **_arg1, &_arg2); end
 
   # pkg:gem/actionpack#lib/abstract_controller/collector.rb:11
-  def turbo_stream(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/actionpack#lib/abstract_controller/collector.rb:11
   def url_encoded_form(*_arg0, **_arg1, &_arg2); end
 
   # pkg:gem/actionpack#lib/abstract_controller/collector.rb:11
@@ -1253,7 +1250,6 @@ class ActionController::API < ::ActionController::Metal
   include ::ActionController::Rescue
   include ::ActionController::Instrumentation
   include ::ActionController::ParamsWrapper
-  include ::Turbo::RequestIdTracking
   extend ::ActionView::ViewPaths::ClassMethods
   extend ::AbstractController::UrlFor::ClassMethods
   extend ::ActionController::Redirecting::ClassMethods
@@ -1290,7 +1286,7 @@ class ActionController::API < ::ActionController::Metal
   def _renderers?; end
 
   # pkg:gem/actionpack#lib/action_controller/api.rb:150
-  def _run_process_action_callbacks(&block); end
+  def _run_process_action_callbacks; end
 
   # pkg:gem/actionpack#lib/action_controller/api.rb:150
   def _run_process_action_callbacks!(&block); end
@@ -2030,10 +2026,6 @@ class ActionController::Base < ::ActionController::Metal
   include ::ActionController::Rescue
   include ::ActionController::Instrumentation
   include ::ActionController::ParamsWrapper
-  include ::Turbo::Native::Navigation
-  include ::Turbo::Frames::FrameRequest
-  include ::Turbo::Streams::TurboStreamsTagBuilder
-  include ::Turbo::RequestIdTracking
   extend ::ActionView::ViewPaths::ClassMethods
   extend ::AbstractController::Helpers::Resolution
   extend ::AbstractController::Helpers::ClassMethods
@@ -2065,7 +2057,6 @@ class ActionController::Base < ::ActionController::Metal
   extend ::ActionController::Rescue::ClassMethods
   extend ::ActionController::Instrumentation::ClassMethods
   extend ::ActionController::ParamsWrapper::ClassMethods
-  extend ::Importmap::Freshness
   extend ::ActionController::Renderers::DeprecatedEscapeJsonResponses
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:292
@@ -2318,9 +2309,6 @@ class ActionController::Base < ::ActionController::Metal
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:278
   def _layout(lookup_context, formats, keys); end
-
-  # pkg:gem/actionpack#lib/action_controller/base.rb:330
-  def _layout_from_proc; end
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:325
   def _protected_ivars; end
@@ -2782,15 +2770,6 @@ end
 module ActionController::Base::HelperMethods
   include ::ActionText::ContentHelper
   include ::ActionText::TagHelper
-  include ::Importmap::ImportmapTagsHelper
-  include ::Turbo::DriveHelper
-  include ::Turbo::FramesHelper
-  include ::Turbo::IncludesHelper
-  include ::Turbo::StreamsHelper
-  include ::ActionView::Helpers::CaptureHelper
-  include ::ActionView::Helpers::OutputSafetyHelper
-  include ::ActionView::Helpers::TagHelper
-  include ::Turbo::Streams::ActionHelper
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:290
   def alert(*_arg0, **_arg1, &_arg2); end
@@ -2810,23 +2789,11 @@ module ActionController::Base::HelperMethods
   # pkg:gem/actionpack#lib/action_controller/base.rb:292
   def form_authenticity_token(*_arg0, **_arg1, &_arg2); end
 
-  # pkg:gem/actionpack#lib/action_controller/base.rb:330
-  def hotwire_native_app?(*_arg0, **_arg1, &_arg2); end
-
   # pkg:gem/actionpack#lib/action_controller/base.rb:290
   def notice(*_arg0, **_arg1, &_arg2); end
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:292
   def protect_against_forgery?(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/actionpack#lib/action_controller/base.rb:330
-  def turbo_frame_request?(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/actionpack#lib/action_controller/base.rb:330
-  def turbo_frame_request_id(*_arg0, **_arg1, &_arg2); end
-
-  # pkg:gem/actionpack#lib/action_controller/base.rb:330
-  def turbo_native_app?(*_arg0, **_arg1, &_arg2); end
 
   # pkg:gem/actionpack#lib/action_controller/base.rb:284
   def view_cache_dependencies(*_arg0, **_arg1, &_arg2); end
@@ -13002,7 +12969,6 @@ class ActionDispatch::IntegrationTest < ::ActiveSupport::TestCase
   include ::ActionDispatch::Routing::UrlFor
   include ::ActionDispatch::IntegrationTest::UrlOptions
   include ::ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting
-  include ::Turbo::TestAssertions::IntegrationTestAssertions
   extend ::ActionDispatch::IntegrationTest::Behavior::ClassMethods
   extend ::ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting::ClassMethods
 end
@@ -13022,7 +12988,6 @@ module ActionDispatch::IntegrationTest::Behavior
   include ::ActionDispatch::Routing::UrlFor
   include ::ActionDispatch::IntegrationTest::UrlOptions
   include ::ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting
-  include ::Turbo::TestAssertions::IntegrationTestAssertions
 
   mixes_in_class_methods ::ActionDispatch::IntegrationTest::Behavior::ClassMethods
   mixes_in_class_methods ::ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting::ClassMethods
@@ -15926,12 +15891,6 @@ class ActionDispatch::RequestEncoder::IdentityEncoder
 
   # pkg:gem/actionpack#lib/action_dispatch/testing/request_encoder.rb:14
   def response_parser; end
-end
-
-# pkg:gem/actionpack#lib/action_dispatch/testing/integration.rb:671
-class ActionDispatch::RequestEncoder::TurboStreamEncoder < ::ActionDispatch::RequestEncoder::IdentityEncoder
-  # pkg:gem/actionpack#lib/action_dispatch/testing/integration.rb:671
-  def accept_header; end
 end
 
 # # Action Dispatch RequestId
@@ -20136,7 +20095,6 @@ class ActionDispatch::SystemTestCase < ::ActiveSupport::TestCase
   include ::ActionDispatch::SystemTesting::TestHelpers::SetupAndTeardown
   include ::ActionDispatch::SystemTesting::TestHelpers::ScreenshotHelper
   include ::ActionText::SystemTestHelper
-  include ::Turbo::SystemTestHelper
 
   # pkg:gem/actionpack#lib/action_dispatch/system_test_case.rb:122
   def initialize(*_arg0); end

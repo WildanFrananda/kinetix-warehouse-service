@@ -416,32 +416,32 @@ class ShippingLabel
   end
 
   module GeneratedAssociationMethods
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Order) }
-    def build_order(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentTask) }
+    def build_fulfillment_task(*args, &blk); end
 
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Order) }
-    def create_order(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentTask) }
+    def create_fulfillment_task(*args, &blk); end
 
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Order) }
-    def create_order!(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentTask) }
+    def create_fulfillment_task!(*args, &blk); end
 
-    sig { returns(T.nilable(::Order)) }
-    def order; end
+    sig { returns(T.nilable(::FulfillmentTask)) }
+    def fulfillment_task; end
 
-    sig { params(value: T.nilable(::Order)).void }
-    def order=(value); end
-
-    sig { returns(T::Boolean) }
-    def order_changed?; end
+    sig { params(value: T.nilable(::FulfillmentTask)).void }
+    def fulfillment_task=(value); end
 
     sig { returns(T::Boolean) }
-    def order_previously_changed?; end
+    def fulfillment_task_changed?; end
 
-    sig { returns(T.nilable(::Order)) }
-    def reload_order; end
+    sig { returns(T::Boolean) }
+    def fulfillment_task_previously_changed?; end
+
+    sig { returns(T.nilable(::FulfillmentTask)) }
+    def reload_fulfillment_task; end
 
     sig { void }
-    def reset_order; end
+    def reset_fulfillment_task; end
   end
 
   module GeneratedAssociationRelationMethods
@@ -685,6 +685,51 @@ class ShippingLabel
     def created_at_will_change!; end
 
     sig { returns(::Integer) }
+    def fulfillment_task_id; end
+
+    sig { params(value: ::Integer).returns(::Integer) }
+    def fulfillment_task_id=(value); end
+
+    sig { returns(T::Boolean) }
+    def fulfillment_task_id?; end
+
+    sig { returns(T.nilable(::Integer)) }
+    def fulfillment_task_id_before_last_save; end
+
+    sig { returns(T.untyped) }
+    def fulfillment_task_id_before_type_cast; end
+
+    sig { returns(T::Boolean) }
+    def fulfillment_task_id_came_from_user?; end
+
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def fulfillment_task_id_change; end
+
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def fulfillment_task_id_change_to_be_saved; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def fulfillment_task_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::Integer)) }
+    def fulfillment_task_id_in_database; end
+
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def fulfillment_task_id_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def fulfillment_task_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::Integer)) }
+    def fulfillment_task_id_previously_was; end
+
+    sig { returns(T.nilable(::Integer)) }
+    def fulfillment_task_id_was; end
+
+    sig { void }
+    def fulfillment_task_id_will_change!; end
+
+    sig { returns(::Integer) }
     def id; end
 
     sig { params(value: ::Integer).returns(::Integer) }
@@ -774,51 +819,6 @@ class ShippingLabel
     sig { void }
     def id_will_change!; end
 
-    sig { returns(::Integer) }
-    def order_id; end
-
-    sig { params(value: ::Integer).returns(::Integer) }
-    def order_id=(value); end
-
-    sig { returns(T::Boolean) }
-    def order_id?; end
-
-    sig { returns(T.nilable(::Integer)) }
-    def order_id_before_last_save; end
-
-    sig { returns(T.untyped) }
-    def order_id_before_type_cast; end
-
-    sig { returns(T::Boolean) }
-    def order_id_came_from_user?; end
-
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def order_id_change; end
-
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def order_id_change_to_be_saved; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def order_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::Integer)) }
-    def order_id_in_database; end
-
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def order_id_previous_change; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def order_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::Integer)) }
-    def order_id_previously_was; end
-
-    sig { returns(T.nilable(::Integer)) }
-    def order_id_was; end
-
-    sig { void }
-    def order_id_will_change!; end
-
     sig { returns(T.nilable(::String)) }
     def pdf_url; end
 
@@ -863,51 +863,6 @@ class ShippingLabel
 
     sig { void }
     def pdf_url_will_change!; end
-
-    sig { returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at; end
-
-    sig { params(value: T.nilable(::ActiveSupport::TimeWithZone)).returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at=(value); end
-
-    sig { returns(T::Boolean) }
-    def printed_at?; end
-
-    sig { returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at_before_last_save; end
-
-    sig { returns(T.untyped) }
-    def printed_at_before_type_cast; end
-
-    sig { returns(T::Boolean) }
-    def printed_at_came_from_user?; end
-
-    sig { returns(T.nilable([T.nilable(::ActiveSupport::TimeWithZone), T.nilable(::ActiveSupport::TimeWithZone)])) }
-    def printed_at_change; end
-
-    sig { returns(T.nilable([T.nilable(::ActiveSupport::TimeWithZone), T.nilable(::ActiveSupport::TimeWithZone)])) }
-    def printed_at_change_to_be_saved; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def printed_at_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at_in_database; end
-
-    sig { returns(T.nilable([T.nilable(::ActiveSupport::TimeWithZone), T.nilable(::ActiveSupport::TimeWithZone)])) }
-    def printed_at_previous_change; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def printed_at_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at_previously_was; end
-
-    sig { returns(T.nilable(::ActiveSupport::TimeWithZone)) }
-    def printed_at_was; end
-
-    sig { void }
-    def printed_at_will_change!; end
 
     sig { returns(T.nilable(::Integer)) }
     def reprint_count; end
@@ -961,25 +916,19 @@ class ShippingLabel
     def restore_created_at!; end
 
     sig { void }
+    def restore_fulfillment_task_id!; end
+
+    sig { void }
     def restore_id!; end
 
     sig { void }
     def restore_id_value!; end
 
     sig { void }
-    def restore_order_id!; end
-
-    sig { void }
     def restore_pdf_url!; end
 
     sig { void }
-    def restore_printed_at!; end
-
-    sig { void }
     def restore_reprint_count!; end
-
-    sig { void }
-    def restore_tracking_number!; end
 
     sig { void }
     def restore_updated_at!; end
@@ -997,6 +946,12 @@ class ShippingLabel
     def saved_change_to_created_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([::Integer, ::Integer])) }
+    def saved_change_to_fulfillment_task_id; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def saved_change_to_fulfillment_task_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable([::Integer, ::Integer])) }
     def saved_change_to_id; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
@@ -1008,23 +963,11 @@ class ShippingLabel
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def saved_change_to_order_id; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def saved_change_to_order_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
     sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def saved_change_to_pdf_url; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_pdf_url?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable([T.nilable(::ActiveSupport::TimeWithZone), T.nilable(::ActiveSupport::TimeWithZone)])) }
-    def saved_change_to_printed_at; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def saved_change_to_printed_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
     def saved_change_to_reprint_count; end
@@ -1032,62 +975,11 @@ class ShippingLabel
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_reprint_count?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def saved_change_to_tracking_number; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def saved_change_to_tracking_number?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
     sig { returns(T.nilable([::ActiveSupport::TimeWithZone, ::ActiveSupport::TimeWithZone])) }
     def saved_change_to_updated_at; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_updated_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::String)) }
-    def tracking_number; end
-
-    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
-    def tracking_number=(value); end
-
-    sig { returns(T::Boolean) }
-    def tracking_number?; end
-
-    sig { returns(T.nilable(::String)) }
-    def tracking_number_before_last_save; end
-
-    sig { returns(T.untyped) }
-    def tracking_number_before_type_cast; end
-
-    sig { returns(T::Boolean) }
-    def tracking_number_came_from_user?; end
-
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def tracking_number_change; end
-
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def tracking_number_change_to_be_saved; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def tracking_number_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::String)) }
-    def tracking_number_in_database; end
-
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def tracking_number_previous_change; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def tracking_number_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::String)) }
-    def tracking_number_previously_was; end
-
-    sig { returns(T.nilable(::String)) }
-    def tracking_number_was; end
-
-    sig { void }
-    def tracking_number_will_change!; end
 
     sig { returns(::ActiveSupport::TimeWithZone) }
     def updated_at; end
@@ -1141,25 +1033,19 @@ class ShippingLabel
     def will_save_change_to_created_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def will_save_change_to_fulfillment_task_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def will_save_change_to_order_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_pdf_url?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def will_save_change_to_printed_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_reprint_count?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def will_save_change_to_tracking_number?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_updated_at?(from: T.unsafe(nil), to: T.unsafe(nil)); end

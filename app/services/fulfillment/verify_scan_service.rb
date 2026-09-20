@@ -58,18 +58,6 @@ module Fulfillment
 
       matched_sku = matched_line ? T.must(matched_line.sku) : T.must(task.order_number)
 
-      ActionCable.server.broadcast(
-        "merchant:fulfillment_tasks:#{merchant_id}",
-        {
-          event: "fulfillment_task_advanced",
-          fulfillment_task_id: task.id,
-          order_number: task.order_number,
-          status: new_status,
-          scanned_sku: matched_sku,
-          updated_at: Time.current.iso8601
-        }
-      )
-
       success(
         ResultData.new(
           fulfillment_task_id: task.id,

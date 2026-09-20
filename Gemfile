@@ -2,24 +2,13 @@ source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3", ">= 8.1.3.1"
-# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
-gem "propshaft"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-# Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
-gem "importmap-rails"
-# Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
-gem "turbo-rails"
-# Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
-gem "stimulus-rails"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
 
 gem "faye-websocket"
 gem "barby"
-gem "phlex-rails"
 gem "grpc"
 # Server reflection, so grpcurl and the platform gates can list and call this service
 # without a local copy of the .proto files. Ruby's grpc gem does not ship it.
@@ -38,8 +27,6 @@ gem "dry-auto_inject"
 gem "sorbet", group: :development
 gem "sorbet-runtime"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-gem "bcrypt", "~> 3.1.7"
 
 # Loads .env so credentials reach the app from the environment rather than from a
 # committed default (S1 / P0-SEC-03). config/database.yml now uses ENV.fetch with no
