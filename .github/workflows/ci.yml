@@ -33,15 +33,8 @@ jobs:
       - name: Scan for known vulnerabilities in gems
         run: bin/bundler-audit check --update
 
-  scan-js:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-      - name: Scan JavaScript dependencies
-        run: bin/importmap audit
+  # No scan-js job: this service ships no JavaScript. It ran `bin/importmap audit`, and importmap-rails
+  # went with the admin dashboard. There is nothing left to audit.
 
   lint:
     runs-on: ubuntu-latest
