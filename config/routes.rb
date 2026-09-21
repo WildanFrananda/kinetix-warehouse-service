@@ -1,8 +1,4 @@
 Rails.application.routes.draw do
-  # This service has no pages. It had eight controllers rendering HTML — a sign-in form, a scanner,
-  # an orders board, returns, analytics, manifests, settings and a support console — and none of them
-  # was ever routed through the gateway, so none was reachable. Every admin screen belongs to the
-  # backoffice, which talks to the API below. (docs/BOUNDARY-DEBT.md W12, W1, W9)
   namespace :api do
     namespace :v1 do
       resources :fulfillment_tasks, only: [] do
@@ -17,11 +13,8 @@ Rails.application.routes.draw do
         resource :returns, only: [ :create ], controller: "returns"
       end
 
-      resources :returns, only: [] do
-        member do
-          patch :status, to: "returns#update_status"
-        end
-      end
+      post "/returns/:return_number/received", to: "returns#received"
+
 
       resources :merchants, only: [ :update ]
       resources :bins, only: [ :create ]

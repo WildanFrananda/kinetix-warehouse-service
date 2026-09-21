@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_21_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,18 +56,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_140000) do
     t.uuid "principal_id"
     t.datetime "updated_at", null: false
     t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
-  end
-
-  create_table "returns", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "fulfillment_task_id", null: false
-    t.bigint "merchant_id", null: false
-    t.string "reason"
-    t.datetime "resolved_at"
-    t.string "status"
-    t.datetime "updated_at", null: false
-    t.index ["fulfillment_task_id"], name: "index_returns_on_fulfillment_task_id"
-    t.index ["merchant_id"], name: "index_returns_on_merchant_id"
   end
 
   create_table "shipping_labels", force: :cascade do |t|
@@ -166,8 +154,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_140000) do
   add_foreign_key "bin_inventories", "warehouse_bins"
   add_foreign_key "fulfillment_task_lines", "fulfillment_tasks"
   add_foreign_key "fulfillment_tasks", "merchants"
-  add_foreign_key "returns", "fulfillment_tasks"
-  add_foreign_key "returns", "merchants"
   add_foreign_key "shipping_labels", "fulfillment_tasks"
   add_foreign_key "stock_adjustments", "warehouse_bins"
   add_foreign_key "stock_operations", "merchants"
