@@ -24,7 +24,6 @@ end
 puts "🌱 Clearing old records and seeding the warehouse..."
 
 ShippingLabel.destroy_all
-Return.destroy_all
 FulfillmentTaskLine.destroy_all
 FulfillmentTask.destroy_all
 Merchant.destroy_all
@@ -91,15 +90,6 @@ created_merchants.each_with_index do |merchant, m_idx|
         fulfillment_task: task,
         awb_number: "TRK-#{task.id}-#{SecureRandom.hex(3).upcase}",
         reprint_count: 0
-      )
-    end
-
-    if status == "cancelled"
-      Return.create!(
-        merchant: merchant,
-        fulfillment_task: task,
-        reason: "Cancelled before dispatch",
-        status: "requested"
       )
     end
   end

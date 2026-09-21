@@ -52,11 +52,11 @@ RSpec.describe "GET /metrics", type: :request do
 
   describe "the route label" do
     it "is the template the router matched, not the path the client sent" do
-      patch "/api/v1/returns/42/status"
+      post "/api/v1/returns/RMA-20260921-ABCD1234/received"
       body = scrape
 
-      expect(body).to include('route="/api/v1/returns/{id}/status"')
-      expect(body).not_to include("/api/v1/returns/42/status")
+      expect(body).to include('route="/api/v1/returns/{return_number}/received"')
+      expect(body).not_to include("RMA-20260921-ABCD1234")
     end
 
     it "is one bounded value for everything that matched no route" do

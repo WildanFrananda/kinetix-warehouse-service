@@ -44,16 +44,3 @@ Container.register(:generate_shipping_label_service) do
     task_repository: Container[:fulfillment_task_repository]
   )
 end
-
-Container.register(:return_repository) { ReturnRepository.new }
-Container.register(:initiate_return_service) do
-  Returns::InitiateReturnService.new(
-    task_repository: Container[:fulfillment_task_repository],
-    return_repository: Container[:return_repository]
-  )
-end
-Container.register(:update_return_status_service) do
-  Returns::UpdateReturnStatusService.new(
-    return_repository: Container[:return_repository]
-  )
-end
