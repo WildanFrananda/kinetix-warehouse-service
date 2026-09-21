@@ -33,15 +33,14 @@ module Labels
       return failure("Fulfillment task not found") unless task
 
       label = task.shipping_label
-      if label
-        label.increment!(:reprint_count)
-      else
-        awb = "AWB-#{merchant_id}-#{task.order_number}-#{Time.current.to_i}"
-        label = task.create_shipping_label!(
-          awb_number: awb,
-          reprint_count: 1
+
+      unless label&.awb_number
+        return failure(
+          "No courier has been assigned to this task yet, so it has no tracking number to print"
         )
       end
+
+      label.increment!(:reprint_count)
 
       success(
         ResultData.new(

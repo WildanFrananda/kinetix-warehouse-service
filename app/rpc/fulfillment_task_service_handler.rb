@@ -65,6 +65,42 @@ module Rpc
       Fulfillment::V1::CancelFulfillmentTaskResponse.new(success: true, already_cancelled: false)
     end
 
+    sig do
+      params(
+        req: Fulfillment::V1::RecordCourierAwbRequest,
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
+      ).returns(Fulfillment::V1::RecordCourierAwbResponse)
+    end
+    def record_courier_awb(req, _call)
+      merchant = merchant_for(req.merchant_principal_id)
+      return refuse_awb("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
+
+      return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing") if req.awb_number.strip.empty?
+
+      task_id = Integer(req.fulfillment_task_id, exception: false)
+      return refuse_awb("UNKNOWN_TASK", "fulfillment_task_id is not a number this warehouse could have issued") unless task_id
+
+      repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
+      task = repository.find_by_id(merchant_id: T.must(merchant.id), id: task_id)
+      return refuse_awb("UNKNOWN_TASK", "no task with that id belongs to this merchant") unless task
+
+      existing = task.shipping_label
+
+      if existing&.awb_number == req.awb_number
+        return Fulfillment::V1::RecordCourierAwbResponse.new(accepted: true, already_recorded: true)
+      end
+
+      if existing
+        existing.update!(awb_number: req.awb_number)
+      else
+        task.create_shipping_label!(awb_number: req.awb_number, reprint_count: 0)
+      end
+
+      Fulfillment::V1::RecordCourierAwbResponse.new(accepted: true, already_recorded: false)
+    rescue ActiveRecord::RecordInvalid => e
+      refuse_awb("AWB_REFUSED", e.message)
+    end
+
     private
 
     sig { params(principal_id: String).returns(T.nilable(Merchant)) }
@@ -85,6 +121,15 @@ module Rpc
         success: false,
         task_id: "",
         already_created: false,
+        error: Common::V1::ErrorDetail.new(error_code: code, message: message)
+      )
+    end
+
+    sig { params(code: String, message: String).returns(Fulfillment::V1::RecordCourierAwbResponse) }
+    def refuse_awb(code, message)
+      Fulfillment::V1::RecordCourierAwbResponse.new(
+        accepted: false,
+        already_recorded: false,
         error: Common::V1::ErrorDetail.new(error_code: code, message: message)
       )
     end
