@@ -2,11 +2,9 @@
 
 require "rails_helper"
 
-# The packer's barcode scan. Fulfillment::VerifyScanService has always done this work; its only
-# caller used to be a page this service rendered itself, so deleting the dashboard would have taken
-# the capability with it. These assert the endpoint that replaced the page.
 RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
   include_context "identity issues tokens"
+  include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
   let!(:merchant) { create(:merchant, principal_id: principal_id) }
@@ -26,18 +24,60 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "refuses a token whose principal owns no merchant here" do
-      other = bearer(access_token(principal_id: "99999999-9999-9999-9999-999999999999"))
-      scan("GAMIS-RED-M", with: other)
+    context "a principal this service has no merchant row for" do
+      let(:other) { bearer(access_token(principal_id: "99999999-9999-9999-9999-999999999999")) }
 
-      expect(response).to have_http_status(:forbidden)
+      context "and identity knows no merchant for it" do
+        let(:identity_client) { FakeIdentityClient.new(known: false) }
+
+        it "refuses" do
+          scan("GAMIS-RED-M", with: other)
+
+          expect(response).to have_http_status(:forbidden)
+          expect(identity_client.asked).to eq([ "99999999-9999-9999-9999-999999999999" ])
+        end
+      end
+
+      context "and identity says that merchant may not trade" do
+        let(:identity_client) { FakeIdentityClient.new(may_sell: false, status: "MERCHANT_STATUS_SUSPENDED") }
+
+        it "refuses" do
+          scan("GAMIS-RED-M", with: other)
+
+          expect(response).to have_http_status(:forbidden)
+        end
+      end
+
+      context "and identity could not be asked" do
+        let(:identity_client) { FakeIdentityClient.new(unavailable: true) }
+
+        it "says so, and does not decide" do
+          scan("GAMIS-RED-M", with: other)
+
+          expect(response).to have_http_status(:service_unavailable)
+          expect(JSON.parse(response.body)["error"]).to eq("IDENTITY_UNAVAILABLE")
+          expect(response.headers["Retry-After"]).to eq("15")
+        end
+      end
+
+      context "and identity vouches for it" do
+        it "projects the merchant and lets the scan through" do
+          other_principal = "99999999-9999-9999-9999-999999999999"
+          expect(Merchant.find_by(principal_id: other_principal)).to be_nil
+
+          scan("GAMIS-RED-M", with: other)
+
+          expect(Merchant.find_by(principal_id: other_principal)).not_to be_nil
+        end
+      end
     end
 
-    it "refuses a customer, who has no business on the packing floor" do
+    it "does not read the role claim" do
       customer = bearer(access_token(principal_id: principal_id, role: "customer"))
       scan("GAMIS-RED-M", with: customer)
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(identity_client.asked).to be_empty
     end
   end
 

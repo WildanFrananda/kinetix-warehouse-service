@@ -10,4 +10,7 @@ module MerchantRepositoryInterface
 
   sig { abstract.params(principal_id: String).returns(T.nilable(Merchant)) }
   def find_by_principal_id(principal_id); end
+
+  sig { abstract.params(principal_id: String).returns(Merchant) }
+  def project(principal_id); end
 end

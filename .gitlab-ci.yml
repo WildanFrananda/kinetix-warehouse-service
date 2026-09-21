@@ -110,6 +110,14 @@ rspec:
     JWT_ISSUER: https://identity.kinetix.local
     JWT_AUDIENCE: kinetix
     IDENTITY_JWKS_URL: http://127.0.0.1:1/.well-known/jwks.json
+
+    # The two gRPC clients this service constructs. Both hosts are an `ENV.fetch` with no default,
+    # so a spec that resolves that branch of the container fails with a bare KeyError without them.
+    # Port 1 listens nowhere: a spec that makes a real call fails on a refused connection rather
+    # than reaching a service. For identity a refused connection is `Identity::Unavailable`, which
+    # is 503 — never a decision about the account.
+    ORDER_GRPC_HOST: 127.0.0.1:1
+    IDENTITY_GRPC_HOST: 127.0.0.1:1
   script:
     - |
       # A shape check, not just a presence check. Rails' master key is 32 hex characters that

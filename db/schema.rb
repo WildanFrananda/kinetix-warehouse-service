@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_20_180001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,17 +47,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_180001) do
     t.index ["merchant_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_id_and_order_number", unique: true
     t.index ["merchant_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_id_and_same_day_cutoff_at"
     t.index ["merchant_id"], name: "index_fulfillment_tasks_on_merchant_id"
-    t.check_constraint "status::text = ANY (ARRAY['received'::character varying, 'packing'::character varying, 'packed'::character varying, 'cancelled'::character varying]::text[])", name: "fulfillment_tasks_status_is_a_packing_state"
+    t.check_constraint "status::text = ANY (ARRAY['received'::character varying::text, 'packing'::character varying::text, 'packed'::character varying::text, 'cancelled'::character varying::text])", name: "fulfillment_tasks_status_is_a_packing_state"
   end
 
   create_table "merchants", force: :cascade do |t|
-    t.string "code"
     t.datetime "created_at", null: false
     t.integer "cutoff_hour"
-    t.string "name"
     t.uuid "principal_id"
     t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_merchants_on_code", unique: true
     t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
   end
 
@@ -77,7 +74,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_180001) do
     t.string "awb_number"
     t.datetime "created_at", null: false
     t.bigint "fulfillment_task_id", null: false
-    t.string "pdf_url"
     t.integer "reprint_count"
     t.datetime "updated_at", null: false
     t.index ["awb_number"], name: "index_shipping_labels_on_awb_number", unique: true
@@ -101,7 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_180001) do
     t.index ["sku", "created_at"], name: "index_stock_adjustments_on_sku_and_created_at"
     t.index ["warehouse_bin_id"], name: "index_stock_adjustments_on_warehouse_bin_id"
     t.check_constraint "quantity_delta <> 0", name: "stock_adjustments_delta_not_zero"
-    t.check_constraint "reason::text = ANY (ARRAY['DAMAGE'::character varying, 'SHRINKAGE'::character varying, 'MISCOUNT'::character varying, 'RETURN_TO_SUPPLIER'::character varying, 'EXPIRY'::character varying]::text[])", name: "stock_adjustments_reason_known"
+    t.check_constraint "reason::text = ANY (ARRAY['DAMAGE'::character varying::text, 'SHRINKAGE'::character varying::text, 'MISCOUNT'::character varying::text, 'RETURN_TO_SUPPLIER'::character varying::text, 'EXPIRY'::character varying::text])", name: "stock_adjustments_reason_known"
   end
 
   create_table "stock_operations", force: :cascade do |t|

@@ -87,4 +87,7 @@ group :test do
 end
 
 gem "jwt", "~> 2.9"
-gem "kinetix-contracts", "~> 1.0"
+# 1.0.14 or later: `identity.v1.GetMerchantInfoResponse.may_sell` arrived there, and this service
+# now asks identity whether a principal may trade instead of reading a role claim and guessing.
+# An older gem resolves, installs and then raises NoMethodError on the first merchant lookup.
+gem "kinetix-contracts", "~> 1.0", ">= 1.0.14"

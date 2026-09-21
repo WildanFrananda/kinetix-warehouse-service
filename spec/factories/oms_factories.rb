@@ -2,8 +2,7 @@
 
 FactoryBot.define do
   factory :merchant do
-    sequence(:name) { |n| "Boutique #{n}" }
-    sequence(:code) { |n| "BTQ#{n}" }
+    principal_id { SecureRandom.uuid }
     cutoff_hour { 14 }
   end
 
@@ -23,7 +22,6 @@ FactoryBot.define do
   factory :shipping_label do
     fulfillment_task
     sequence(:awb_number) { |n| "AWB-100#{n}" }
-    pdf_url { "/labels/test.pdf" }
     reprint_count { 1 }
   end
 

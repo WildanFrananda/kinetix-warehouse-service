@@ -20,4 +20,14 @@ class MerchantRepository < BaseRepository
 
     T.cast(model.find_by(principal_id: principal_id), T.nilable(Merchant))
   end
+
+  sig { override.params(principal_id: String).returns(Merchant) }
+  def project(principal_id)
+    T.cast(model.create!(principal_id: principal_id), Merchant)
+  rescue ActiveRecord::RecordNotUnique
+    found = find_by_principal_id(principal_id)
+    raise if found.nil?
+
+    found
+  end
 end

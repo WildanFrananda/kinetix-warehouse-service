@@ -5,10 +5,8 @@ require "rails_helper"
 
 RSpec.describe PruneStockOperationsJob do
   let(:merchant) do
-    Merchant.create!(
-      name: "Prune Merchant", code: "PRUNE-1", cutoff_hour: 14,
-      principal_id: "eeeeeeee-1111-2222-3333-444444444444"
-    )
+    Merchant.create!(cutoff_hour: 14,
+      principal_id: "eeeeeeee-1111-2222-3333-444444444444")
   end
 
   def operation(created_at:, conflict_count: 0, key:)

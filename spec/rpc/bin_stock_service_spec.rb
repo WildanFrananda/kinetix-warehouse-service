@@ -10,7 +10,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
   let(:principal) { "aaaaaaaa-1111-2222-3333-444444444444" }
 
   let!(:merchant) do
-    Merchant.create!(name: "Bin Merchant", code: "BIN-1", cutoff_hour: 14, principal_id: principal)
+    Merchant.create!(cutoff_hour: 14, principal_id: principal)
   end
 
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01", zone: "A", shelf_level: 1) }
@@ -275,10 +275,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "refuses a merchant asking for stock that is not theirs" do
-      thief = Merchant.create!(
-        name: "Thief", code: "BIN-T", cutoff_hour: 14,
-        principal_id: "dddddddd-0000-0000-0000-000000000000"
-      )
+      thief = Merchant.create!(cutoff_hour: 14,
+        principal_id: "dddddddd-0000-0000-0000-000000000000")
 
       res = reserve(quantity: 2, principal_id: thief.principal_id)
 
@@ -299,10 +297,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "gives each merchant its own row for the same order number, and never shares a hold" do
-      other = Merchant.create!(
-        name: "Other", code: "BIN-2", cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000"
-      )
+      other = Merchant.create!(cutoff_hour: 14,
+        principal_id: "cccccccc-0000-0000-0000-000000000000")
       theirs = BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
         merchant_principal_id: other.principal_id
@@ -335,10 +331,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "gives each merchant its own replay row when both derive the same key" do
-      other = Merchant.create!(
-        name: "Other", code: "BIN-2", cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000"
-      )
+      other = Merchant.create!(cutoff_hour: 14,
+        principal_id: "cccccccc-0000-0000-0000-000000000000")
       theirs = BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
         merchant_principal_id: other.principal_id
@@ -483,10 +477,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "cannot release, and cannot poison, another merchant's pair" do
-      other = Merchant.create!(
-        name: "Other", code: "BIN-2", cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000"
-      )
+      other = Merchant.create!(cutoff_hour: 14,
+        principal_id: "cccccccc-0000-0000-0000-000000000000")
       reserve(quantity: 3)
 
       res = release(principal_id: other.principal_id)
@@ -510,10 +502,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "still lets a merchant reserve a pair another merchant has already tombstoned" do
-      other = Merchant.create!(
-        name: "Other", code: "BIN-2", cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000"
-      )
+      other = Merchant.create!(cutoff_hour: 14,
+        principal_id: "cccccccc-0000-0000-0000-000000000000")
       release(order_number: "ORD-CROSS", principal_id: other.principal_id)
 
       res = reserve(quantity: 3, order_number: "ORD-CROSS")

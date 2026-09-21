@@ -305,28 +305,28 @@ class Fulfillment::V1::ReserveStockRequest < ::Google::Protobuf::AbstractMessage
 # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:21
 class Fulfillment::V1::ReserveStockResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:13
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:15
 module Identity; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:14
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:16
 module Identity::V1; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:22
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:24
 class Identity::V1::GetMerchantInfoRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:23
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:25
 class Identity::V1::GetMerchantInfoResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:18
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:20
 class Identity::V1::GetPrincipalRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:19
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:21
 class Identity::V1::GetPrincipalResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:20
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:22
 class Identity::V1::GetUserProfileRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:21
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:23
 class Identity::V1::GetUserProfileResponse < ::Google::Protobuf::AbstractMessage; end
 
 # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:9
@@ -374,78 +374,78 @@ class Identity::V1::IdentityService::Stub < ::GRPC::ClientStub
   def validate_token(req, metadata = T.unsafe(nil)); end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 module Identity::V1::MerchantStatus
   class << self
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
     def descriptor; end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
     def lookup(_arg0); end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 Identity::V1::MerchantStatus::MERCHANT_STATUS_CLOSED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 Identity::V1::MerchantStatus::MERCHANT_STATUS_PENDING = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 Identity::V1::MerchantStatus::MERCHANT_STATUS_SUSPENDED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 Identity::V1::MerchantStatus::MERCHANT_STATUS_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
 Identity::V1::MerchantStatus::MERCHANT_STATUS_VERIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 module Identity::V1::PrincipalKind
   class << self
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
     def descriptor; end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
     def lookup(_arg0); end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_CUSTOMER = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_DRIVER = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_MERCHANT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_SERVICE = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_STAFF = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:16
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:18
 class Identity::V1::ResolvePrincipalRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:17
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:19
 class Identity::V1::ResolvePrincipalResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:15
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:17
 class Identity::V1::ServiceLocalId < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:24
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
 class Identity::V1::ValidateTokenRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:25
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
 class Identity::V1::ValidateTokenResponse < ::Google::Protobuf::AbstractMessage; end

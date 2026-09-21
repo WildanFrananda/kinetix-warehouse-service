@@ -23,7 +23,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :merchants, only: [ :create, :update ]
+      resources :merchants, only: [ :update ]
       resources :bins, only: [ :create ]
       resources :stock_receipts, only: [ :create ]
       resources :stock_adjustments, only: [ :create ]
