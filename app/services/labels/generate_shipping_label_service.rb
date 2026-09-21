@@ -8,7 +8,6 @@ module Labels
       const :id, Integer
       const :fulfillment_task_id, Integer
       const :awb_number, String
-      const :pdf_url, String
       const :reprint_count, Integer
     end
 
@@ -38,10 +37,8 @@ module Labels
         label.increment!(:reprint_count)
       else
         awb = "AWB-#{merchant_id}-#{task.order_number}-#{Time.current.to_i}"
-        pdf = "/labels/#{awb}.pdf"
         label = task.create_shipping_label!(
           awb_number: awb,
-          pdf_url: pdf,
           reprint_count: 1
         )
       end
@@ -51,7 +48,6 @@ module Labels
           id: label.id,
           fulfillment_task_id: fulfillment_task_id,
           awb_number: T.must(label.awb_number),
-          pdf_url: T.must(label.pdf_url),
           reprint_count: T.must(label.reprint_count)
         )
       )

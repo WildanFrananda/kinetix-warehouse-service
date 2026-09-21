@@ -92,21 +92,17 @@ jobs:
       JWT_AUDIENCE: kinetix
       IDENTITY_JWKS_URL: http://127.0.0.1:1/.well-known/jwks.json
 
-      # Same reasoning as the three above, for the fleet client. Packing an order now asks the
-      # fleet for a courier, so `Container[:update_order_status_service]` resolves the gRPC client,
-      # whose host is an `ENV.fetch` with no default — deliberately, because a guessed address
-      # dispatches couriers into silence that reads as "no drivers online". Any spec that touches
-      # that branch of the container therefore needs a value, including specs about something else
-      # entirely: `fleet_pulse_web_socket_client_spec` went red with `KeyError: key not found:
-      # "MATCHING_GRPC_HOST"` while testing JSON frame parsing.
+      # Same reasoning as the three above, for the two gRPC clients this service constructs. Each
+      # host is an `ENV.fetch` with no default — deliberately, because a guessed address fails in
+      # silence that reads like an answer — so any spec that resolves that branch of the container
+      # needs a value, including specs about something else entirely.
       #
       # Port 1 for the same reason as the JWKS URL: nothing listens there, so a spec that ever
       # tries to make a real call fails on a refused connection rather than reaching a service.
-      MATCHING_GRPC_HOST: 127.0.0.1:1
-
-      # Where couriers collect. Only `Couriers::RequestPickupService` reads it, and its spec sets
-      # its own value — this is here so a spec that reaches the service without setting it fails on
-      # an address that geocodes to nothing, rather than on a missing key.
+      # For identity that is exactly right: a refused connection is `Identity::Unavailable`, which
+      # is 503 — never a decision about the account.
+      ORDER_GRPC_HOST: 127.0.0.1:1
+      IDENTITY_GRPC_HOST: 127.0.0.1:1
 
     steps:
       - name: Install system packages

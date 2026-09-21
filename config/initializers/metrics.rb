@@ -4,7 +4,7 @@ require_relative "../../lib/kinetix/metrics"
 require_relative "../../lib/kinetix/metrics/grpc_client_recorder"
 
 Rails.application.config.to_prepare do
-  [ Order::GrpcClient ].each do |client|
+  [ Order::GrpcClient, Identity::GrpcClient ].each do |client|
     Kinetix::Metrics::GrpcClientRecorder.declare(
       peer: client::PEER,
       grpc_method: client::GRPC_METHOD

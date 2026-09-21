@@ -30,8 +30,8 @@ FulfillmentTask.destroy_all
 Merchant.destroy_all
 
 MERCHANTS_DATA = [
-  { code: "BH-001", name: "Boutique Hijab Premium", cutoff_hour: 14 },
-  { code: "GES-002", name: "Gamis Elegant Style", cutoff_hour: 15 }
+  { principal_id: "11111111-1111-4111-8111-111111111111", cutoff_hour: 14 },
+  { principal_id: "22222222-2222-4222-8222-222222222222", cutoff_hour: 15 }
 ].freeze
 
 # SKUs only. The product behind a SKU — its name, its price, whether it still exists — is catalog's
@@ -52,7 +52,7 @@ SKUS = [
 STATUSES = FulfillmentTask::STATUSES.freeze
 
 created_merchants = MERCHANTS_DATA.map do |data|
-  Merchant.create!(code: data[:code], name: data[:name], cutoff_hour: data[:cutoff_hour])
+  Merchant.create!(principal_id: data[:principal_id], cutoff_hour: data[:cutoff_hour])
 end
 
 puts "✅ #{created_merchants.size} merchants seeded."
@@ -71,7 +71,7 @@ created_merchants.each_with_index do |merchant, m_idx|
 
     task = FulfillmentTask.create!(
       merchant: merchant,
-      order_number: "ORD-#{merchant.code}-#{1000 + t_idx + (m_idx * 100)}",
+      order_number: "ORD-#{merchant.id}-#{1000 + t_idx + (m_idx * 100)}",
       status: status,
       same_day_cutoff_at: now + sla_cutoff_offsets[t_idx % sla_cutoff_offsets.size]
     )
@@ -110,4 +110,4 @@ puts
 puts "There is no sign-in here: this service has no pages and no accounts. The JSON API takes an"
 puts "identity access token, and a merchant is reachable only once its principal_id is linked to the"
 puts "identity principal that owns it:"
-puts %q(  bin/rails runner 'Merchant.pluck(:code, :principal_id).each { |c, p| puts format("%s %s", c, p || "(unlinked)") }')
+puts %q(  bin/rails runner 'Merchant.pluck(:id, :principal_id).each { |i, p| puts format("%s %s", i, p || "(unlinked)") }')

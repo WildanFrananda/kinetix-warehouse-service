@@ -49,11 +49,8 @@ module ApiAuthentication
 
   sig { returns(T.nilable(Merchant)) }
   def current_api_merchant
-    role = api_claims.role
-    return nil unless role == "seller" || role == "admin"
-
-    repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
-    repo.find_by_principal_id(api_claims.principal_id)
+    service = T.let(Container[:resolve_merchant_service], Merchants::ResolveService)
+    service.call(principal_id: api_claims.principal_id)
   end
 
   sig { returns(T.nilable(Merchant)) }

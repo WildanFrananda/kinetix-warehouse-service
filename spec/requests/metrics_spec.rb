@@ -40,7 +40,7 @@ RSpec.describe "GET /metrics", type: :request do
 
     expect(body).to match(/^kinetix_grpc_client_calls_total/)
     expect(body).to include('peer="order"')
-    expect(body).not_to include('peer="identity"')
+    expect(body).to include('peer="identity"')
   end
 
   it "names itself and its version on kinetix_build_info" do

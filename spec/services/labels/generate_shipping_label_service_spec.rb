@@ -16,4 +16,18 @@ RSpec.describe Labels::GenerateShippingLabelService, type: :service do
     expect(result2.success?).to be true
     expect(result2.data.reprint_count).to eq(2)
   end
+
+  it "does not name a document it has not produced" do
+    result = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
+
+    expect(result.data).not_to respond_to(:pdf_url)
+    expect(ShippingLabel.column_names).not_to include("pdf_url")
+  end
+
+  it "still carries the number the packer scans" do
+    result = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
+
+    expect(result.data.awb_number).to be_present
+    expect(task.reload.shipping_label.awb_number).to eq(result.data.awb_number)
+  end
 end

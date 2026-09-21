@@ -21,7 +21,7 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
       StockReservation.delete_all
       BinInventory.delete_all
       WarehouseBin.delete_all
-      Merchant.where(code: [ "BIN-CONC", "BIN-CONC2" ]).delete_all
+      Merchant.where(principal_id: [ principal, other_principal ]).delete_all
     end
   end
 
@@ -29,13 +29,9 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
     @threads = []
     @gates = []
     wipe
-    @merchant = Merchant.create!(
-      name: "Concurrency Merchant", code: "BIN-CONC", cutoff_hour: 14, principal_id: principal
-    )
-    @other_merchant = Merchant.create!(
-      name: "Other Concurrency Merchant", code: "BIN-CONC2", cutoff_hour: 14,
-      principal_id: other_principal
-    )
+    @merchant = Merchant.create!(cutoff_hour: 14, principal_id: principal)
+    @other_merchant = Merchant.create!(cutoff_hour: 14,
+      principal_id: other_principal)
     @bin = WarehouseBin.create!(bin_code: "C-01", zone: "C", shelf_level: 1)
     @inventory = BinInventory.create!(
       warehouse_bin: @bin, sku: "SKU-C", quantity: 10, reserved_quantity: 0,

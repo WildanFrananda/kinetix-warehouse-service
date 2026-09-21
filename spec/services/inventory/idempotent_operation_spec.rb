@@ -5,10 +5,8 @@ require "rails_helper"
 
 RSpec.describe Inventory::IdempotentOperation do
   let!(:merchant) do
-    Merchant.create!(
-      name: "Gate Merchant", code: "GATE-1", cutoff_hour: 14,
-      principal_id: "eeeeeeee-1111-2222-3333-444444444444"
-    )
+    Merchant.create!(cutoff_hour: 14,
+      principal_id: "eeeeeeee-1111-2222-3333-444444444444")
   end
 
   def gate(operation: StockOperation::RESERVE, key: "K-1")

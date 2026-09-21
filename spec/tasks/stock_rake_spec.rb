@@ -11,7 +11,7 @@ RSpec.describe "stock rake tasks" do
   let(:principal) { "abababab-1111-2222-3333-444444444444" }
 
   let!(:merchant) do
-    Merchant.create!(name: "Rake Merchant", code: "RAKE-1", cutoff_hour: 14, principal_id: principal)
+    Merchant.create!(cutoff_hour: 14, principal_id: principal)
   end
   let!(:bin) { WarehouseBin.create!(bin_code: "R-01", zone: "R", shelf_level: 1) }
   let!(:inventory) do

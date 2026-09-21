@@ -14,6 +14,7 @@ module ApiErrorHandling
     rescue_from StandardError, with: :render_internal_error
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from ActionController::ParameterMissing, with: :render_bad_request
+    rescue_from Identity::Unavailable, with: :render_identity_unavailable
   end
 
   private
@@ -48,6 +49,22 @@ module ApiErrorHandling
       message: "no record of this service matches that request.",
       traceId: trace_id
     }, status: :not_found
+  end
+
+  sig { params(exception: Identity::Unavailable).void }
+  def render_identity_unavailable(exception)
+    Rails.logger.warn(
+      "identity could not be asked about #{exception.principal_id} " \
+      "(request_id=#{trace_id}): #{exception.message}"
+    )
+
+    response.headers["Retry-After"] = "15"
+    render json: {
+      error: "IDENTITY_UNAVAILABLE",
+      message: "we could not check this account with identity, so the request was not applied. " \
+               "No stock was moved or reserved.",
+      traceId: trace_id
+    }, status: :service_unavailable
   end
 
   sig { params(exception: ActionController::ParameterMissing).void }
