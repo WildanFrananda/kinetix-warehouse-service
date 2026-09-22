@@ -179,7 +179,7 @@ GEM
     grpc (1.84.0-x86_64-linux-musl)
       google-protobuf (>= 3.25, < 5.0)
       googleapis-common-protos-types (~> 1.0)
-    grpc-tools (1.83.0)
+    grpc-tools (1.84.0)
     grpc_reflection (0.4.0)
       google-protobuf (>= 4.31.0)
       grpc
@@ -585,7 +585,7 @@ CHECKSUMS
   grpc (1.84.0-arm64-darwin) sha256=aee56ed688f44750832fbc50c17eb1c75ce1c0d38693dc08d4f37560e1646277
   grpc (1.84.0-x86_64-linux-gnu) sha256=3e9be3e4c4734a2a4977aa34446c604b1542a21fe67e4b7772be01602eac6bb3
   grpc (1.84.0-x86_64-linux-musl) sha256=1ded8b5df0fafb16b195bf559470bf38b9a22bf74a820b892ebb931ca9f2d8ee
-  grpc-tools (1.83.0) sha256=d73ad7d181f32aa0bc53b797b55fa9eaca1c3f391bb624ac3d11f4069ce5ee9a
+  grpc-tools (1.84.0) sha256=f54767ec65e22553768d38a20d021ca2241c33ae2e96d51336152bbcc62578a8
   grpc_reflection (0.4.0) sha256=72d3e743f049821f976a4280b3d1b1a3369775121d75d35954f0e139e4e3f0cf
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   image_processing (1.14.0) sha256=754cc169c9c262980889bec6bfd325ed1dafad34f85242b5a07b60af004742fb
