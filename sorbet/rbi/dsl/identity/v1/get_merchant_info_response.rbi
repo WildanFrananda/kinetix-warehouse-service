@@ -10,13 +10,16 @@ class Identity::V1::GetMerchantInfoResponse < Google::Protobuf::AbstractMessage
     params(
       business_registration_number: T.nilable(String),
       found: T.nilable(T::Boolean),
+      location: T.nilable(Common::V1::GeoPoint),
+      may_sell: T.nilable(T::Boolean),
       merchant_principal_id: T.nilable(String),
+      pickup_address: T.nilable(Common::V1::Address),
       status: T.nilable(T.any(Symbol, Integer)),
       store_name: T.nilable(String),
       tax_id: T.nilable(String)
     ).void
   end
-  def initialize(business_registration_number: nil, found: nil, merchant_principal_id: nil, status: nil, store_name: nil, tax_id: nil); end
+  def initialize(business_registration_number: nil, found: nil, location: nil, may_sell: nil, merchant_principal_id: nil, pickup_address: nil, status: nil, store_name: nil, tax_id: nil); end
 
   sig { returns(String) }
   def business_registration_number; end
@@ -31,7 +34,16 @@ class Identity::V1::GetMerchantInfoResponse < Google::Protobuf::AbstractMessage
   def clear_found; end
 
   sig { void }
+  def clear_location; end
+
+  sig { void }
+  def clear_may_sell; end
+
+  sig { void }
   def clear_merchant_principal_id; end
+
+  sig { void }
+  def clear_pickup_address; end
 
   sig { void }
   def clear_status; end
@@ -48,11 +60,35 @@ class Identity::V1::GetMerchantInfoResponse < Google::Protobuf::AbstractMessage
   sig { params(value: T::Boolean).void }
   def found=(value); end
 
+  sig { returns(Object) }
+  def has_location?; end
+
+  sig { returns(Object) }
+  def has_pickup_address?; end
+
+  sig { returns(T.nilable(Common::V1::GeoPoint)) }
+  def location; end
+
+  sig { params(value: T.nilable(Common::V1::GeoPoint)).void }
+  def location=(value); end
+
+  sig { returns(T::Boolean) }
+  def may_sell; end
+
+  sig { params(value: T::Boolean).void }
+  def may_sell=(value); end
+
   sig { returns(String) }
   def merchant_principal_id; end
 
   sig { params(value: String).void }
   def merchant_principal_id=(value); end
+
+  sig { returns(T.nilable(Common::V1::Address)) }
+  def pickup_address; end
+
+  sig { params(value: T.nilable(Common::V1::Address)).void }
+  def pickup_address=(value); end
 
   sig { returns(T.any(Symbol, Integer)) }
   def status; end
