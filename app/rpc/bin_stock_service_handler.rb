@@ -12,6 +12,8 @@ module Rpc
       Fulfillment::V1::CheckBinStockResponse
     )
 
+    MAX_BATCH_SKUS = 200
+
     UNKNOWN_MERCHANT = "UNKNOWN_MERCHANT"
     INVALID_ARGUMENT = "INVALID_ARGUMENT"
 
@@ -35,18 +37,34 @@ module Rpc
 
       return NOT_FOUND_STOCK if inventory.nil?
 
-      available = inventory.available_quantity
-      reserved = inventory.reserved_quantity
+      stock_of(sku, inventory)
+    end
 
-      Fulfillment::V1::CheckBinStockResponse.new(
-        found: true,
-        sku: sku,
-        product_name: "Physical Inventory SKU #{sku}",
-        physical_stock: inventory.quantity,
-        allocated_stock: reserved,
-        available_stock: available,
-        bin_location: inventory.warehouse_bin&.bin_code.to_s,
-        low_stock_warning: available < 5
+    sig do
+      params(
+        req: Fulfillment::V1::CheckBinStockBatchRequest,
+        _call: T.nilable(GRPC::ActiveCall::SingleReqView)
+      ).returns(Fulfillment::V1::CheckBinStockBatchResponse)
+    end
+    def check_bin_stock_batch(req, _call)
+      skus = req.skus.to_a.uniq
+
+      if skus.length > MAX_BATCH_SKUS
+        raise GRPC::InvalidArgument,
+              "asked about #{skus.length} skus; this call answers at most #{MAX_BATCH_SKUS}"
+      end
+
+      merchant = merchant_for(req.merchant_principal_id)
+
+      return not_found_batch(skus) if merchant.nil?
+
+      held = BinInventory
+        .joins(:warehouse_bin)
+        .where(merchant_principal_id: merchant.principal_id, sku: skus)
+        .index_by(&:sku)
+
+      Fulfillment::V1::CheckBinStockBatchResponse.new(
+        items: skus.map { |sku| held[sku] ? stock_of(sku, held[sku]) : not_found_of(sku) }
       )
     end
 
@@ -147,6 +165,35 @@ module Rpc
     end
 
     private
+
+    sig do
+      params(sku: String, inventory: BinInventory)
+        .returns(Fulfillment::V1::CheckBinStockResponse)
+    end
+    def stock_of(sku, inventory)
+      available = inventory.available_quantity
+
+      Fulfillment::V1::CheckBinStockResponse.new(
+        found: true,
+        sku: sku,
+        product_name: "Physical Inventory SKU #{sku}",
+        physical_stock: inventory.quantity,
+        allocated_stock: inventory.reserved_quantity,
+        available_stock: available,
+        bin_location: inventory.warehouse_bin&.bin_code.to_s,
+        low_stock_warning: available < 5
+      )
+    end
+
+    sig { params(sku: String).returns(Fulfillment::V1::CheckBinStockResponse) }
+    def not_found_of(sku)
+      Fulfillment::V1::CheckBinStockResponse.new(found: false, sku: sku)
+    end
+
+    sig { params(skus: T::Array[String]).returns(Fulfillment::V1::CheckBinStockBatchResponse) }
+    def not_found_batch(skus)
+      Fulfillment::V1::CheckBinStockBatchResponse.new(items: skus.map { |sku| not_found_of(sku) })
+    end
 
     sig do
       params(

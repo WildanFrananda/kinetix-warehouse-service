@@ -42,6 +42,67 @@ RSpec.describe Rpc::BinStockServiceHandler do
     )
   end
 
+  describe "#check_bin_stock_batch" do
+    def batch(skus, principal_id: principal)
+      handler.check_bin_stock_batch(
+        Fulfillment::V1::CheckBinStockBatchRequest.new(
+          merchant_principal_id: principal_id, skus: skus
+        ), nil
+      )
+    end
+
+    it "answers every sku it was asked about, found or not" do
+      reply = batch([ "SKU-1", "SKU-NOBODY-HAS" ])
+
+      expect(reply.items.map(&:sku)).to eq([ "SKU-1", "SKU-NOBODY-HAS" ])
+      expect(reply.items.map(&:found)).to eq([ true, false ])
+    end
+
+    it "leaves nothing out, because a missing entry would read as no stock" do
+      reply = batch([ "SKU-NOBODY-HAS" ])
+
+      expect(reply.items.length).to eq(1)
+      expect(reply.items.first.found).to be(false)
+      expect(reply.items.first.sku).to eq("SKU-NOBODY-HAS")
+    end
+
+    it "reports the same numbers the single-sku call does" do
+      one = handler.check_bin_stock(
+        Fulfillment::V1::CheckBinStockRequest.new(
+          merchant_principal_id: principal, sku: "SKU-1"
+        ), nil
+      )
+      many = batch([ "SKU-1" ]).items.first
+
+      expect(many.physical_stock).to eq(one.physical_stock)
+      expect(many.available_stock).to eq(one.available_stock)
+      expect(many.bin_location).to eq(one.bin_location)
+    end
+
+    it "does not answer with another merchant's stock" do
+      other = "bbbbbbbb-1111-2222-3333-444444444444"
+      Merchant.create!(cutoff_hour: 14, principal_id: other)
+      BinInventory.create!(
+        warehouse_bin: bin, sku: "SKU-SHARED", quantity: 99, reserved_quantity: 0,
+        merchant_principal_id: other
+      )
+
+      reply = batch([ "SKU-SHARED" ])
+
+      expect(reply.items.first.found).to be(false)
+    end
+
+    it "refuses a caller who asks about more skus than it will answer" do
+      expect { batch(Array.new(201) { |i| "SKU-#{i}" }) }.to raise_error(GRPC::InvalidArgument)
+    end
+
+    it "answers a merchant nobody knows with not-found, one per sku" do
+      reply = batch([ "SKU-1" ], principal_id: "cccccccc-1111-2222-3333-444444444444")
+
+      expect(reply.items.map(&:found)).to eq([ false ])
+    end
+  end
+
   describe "#reserve_stock" do
     it "reserves against the bin that holds the sku and records which bin it took from" do
       res = reserve(quantity: 3)

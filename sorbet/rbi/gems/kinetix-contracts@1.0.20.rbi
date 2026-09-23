@@ -214,119 +214,131 @@ class Fulfillment::V1::BinStockService::Service
   # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:18
   def check_bin_stock(*_arg0); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:20
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:19
+  def check_bin_stock_batch(*_arg0); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:21
   def release_stock(*_arg0); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:19
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:20
   def reserve_stock(*_arg0); end
 end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
 class Fulfillment::V1::BinStockService::Stub < ::GRPC::ClientStub
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
   def initialize(host, creds, **kw); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
   def check_bin_stock(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
+  def check_bin_stock_batch(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
   def release_stock(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:23
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:24
   def reserve_stock(req, metadata = T.unsafe(nil)); end
 end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:28
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:30
 class Fulfillment::V1::CancelOrderRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:29
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:31
 class Fulfillment::V1::CancelOrderResponse < ::Google::Protobuf::AbstractMessage; end
 
 # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:18
-class Fulfillment::V1::CheckBinStockRequest < ::Google::Protobuf::AbstractMessage; end
+class Fulfillment::V1::CheckBinStockBatchRequest < ::Google::Protobuf::AbstractMessage; end
 
 # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:19
+class Fulfillment::V1::CheckBinStockBatchResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:20
+class Fulfillment::V1::CheckBinStockRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:21
 class Fulfillment::V1::CheckBinStockResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:24
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:26
 class Fulfillment::V1::CreateOrderRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:25
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:27
 class Fulfillment::V1::CreateOrderResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:25
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:26
 module Fulfillment::V1::FulfillmentService; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:26
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:27
 class Fulfillment::V1::FulfillmentService::Service
   include ::GRPC::GenericService
   extend ::GRPC::GenericService::Dsl
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:36
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:37
   def cancel_order(*_arg0); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:34
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:35
   def create_order(*_arg0); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:35
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:36
   def get_order_status(*_arg0); end
 end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:40
 class Fulfillment::V1::FulfillmentService::Stub < ::GRPC::ClientStub
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:40
   def initialize(host, creds, **kw); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:40
   def cancel_order(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:40
   def create_order(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:39
+  # pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_services_pb.rb:40
   def get_order_status(req, metadata = T.unsafe(nil)); end
 end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:26
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:28
 class Fulfillment::V1::GetOrderStatusRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:27
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:29
 class Fulfillment::V1::GetOrderStatusResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:22
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:24
 class Fulfillment::V1::ReleaseStockRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:23
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:25
 class Fulfillment::V1::ReleaseStockResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:20
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:22
 class Fulfillment::V1::ReserveStockRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:21
+# pkg:gem/kinetix-contracts#fulfillment/v1/fulfillment_pb.rb:23
 class Fulfillment::V1::ReserveStockResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:15
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:16
 module Identity; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:16
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:17
 module Identity::V1; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:24
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:25
 class Identity::V1::GetMerchantInfoRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:25
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
 class Identity::V1::GetMerchantInfoResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:20
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:21
 class Identity::V1::GetPrincipalRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:21
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:22
 class Identity::V1::GetPrincipalResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:22
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:23
 class Identity::V1::GetUserProfileRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:23
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:24
 class Identity::V1::GetUserProfileResponse < ::Google::Protobuf::AbstractMessage; end
 
 # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:9
@@ -346,6 +358,9 @@ class Identity::V1::IdentityService::Service
   # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:20
   def get_user_profile(*_arg0); end
 
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:23
+  def merchants_changed_since(*_arg0); end
+
   # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:18
   def resolve_principal(*_arg0); end
 
@@ -353,99 +368,114 @@ class Identity::V1::IdentityService::Service
   def validate_token(*_arg0); end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+# pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
 class Identity::V1::IdentityService::Stub < ::GRPC::ClientStub
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def initialize(host, creds, **kw); end
 
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def get_merchant_info(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def get_principal(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def get_user_profile(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
+  def merchants_changed_since(req, metadata = T.unsafe(nil)); end
+
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def resolve_principal(req, metadata = T.unsafe(nil)); end
 
-  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:25
+  # pkg:gem/kinetix-contracts#identity/v1/identity_services_pb.rb:26
   def validate_token(req, metadata = T.unsafe(nil)); end
 end
 
 # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+class Identity::V1::MerchantCursor < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:30
+class Identity::V1::MerchantRecord < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 module Identity::V1::MerchantStatus
   class << self
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
     def descriptor; end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
     def lookup(_arg0); end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 Identity::V1::MerchantStatus::MERCHANT_STATUS_CLOSED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 Identity::V1::MerchantStatus::MERCHANT_STATUS_PENDING = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 Identity::V1::MerchantStatus::MERCHANT_STATUS_SUSPENDED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 Identity::V1::MerchantStatus::MERCHANT_STATUS_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:29
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:34
 Identity::V1::MerchantStatus::MERCHANT_STATUS_VERIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:31
+class Identity::V1::MerchantsChangedSinceRequest < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:32
+class Identity::V1::MerchantsChangedSinceResponse < ::Google::Protobuf::AbstractMessage; end
+
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 module Identity::V1::PrincipalKind
   class << self
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
     def descriptor; end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
     def lookup(_arg0); end
 
-    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+    # pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
     def resolve(_arg0); end
   end
 end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_CUSTOMER = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_DRIVER = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_MERCHANT = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_SERVICE = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_STAFF = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:33
 Identity::V1::PrincipalKind::PRINCIPAL_KIND_UNSPECIFIED = T.let(T.unsafe(nil), Integer)
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:18
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:19
 class Identity::V1::ResolvePrincipalRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:19
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:20
 class Identity::V1::ResolvePrincipalResponse < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:17
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:18
 class Identity::V1::ServiceLocalId < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:26
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
 class Identity::V1::ValidateTokenRequest < ::Google::Protobuf::AbstractMessage; end
 
-# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:27
+# pkg:gem/kinetix-contracts#identity/v1/identity_pb.rb:28
 class Identity::V1::ValidateTokenResponse < ::Google::Protobuf::AbstractMessage; end

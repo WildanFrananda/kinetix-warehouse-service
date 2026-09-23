@@ -13,13 +13,14 @@ class Identity::V1::GetUserProfileResponse < Google::Protobuf::AbstractMessage
       found: T.nilable(T::Boolean),
       full_name: T.nilable(String),
       kind: T.nilable(T.any(Symbol, Integer)),
+      location: T.nilable(Common::V1::GeoPoint),
       phone_number: T.nilable(String),
       postal_code: T.nilable(String),
       principal_id: T.nilable(String),
       street_address: T.nilable(String)
     ).void
   end
-  def initialize(city: nil, email: nil, found: nil, full_name: nil, kind: nil, phone_number: nil, postal_code: nil, principal_id: nil, street_address: nil); end
+  def initialize(city: nil, email: nil, found: nil, full_name: nil, kind: nil, location: nil, phone_number: nil, postal_code: nil, principal_id: nil, street_address: nil); end
 
   sig { returns(String) }
   def city; end
@@ -41,6 +42,9 @@ class Identity::V1::GetUserProfileResponse < Google::Protobuf::AbstractMessage
 
   sig { void }
   def clear_kind; end
+
+  sig { void }
+  def clear_location; end
 
   sig { void }
   def clear_phone_number; end
@@ -72,11 +76,20 @@ class Identity::V1::GetUserProfileResponse < Google::Protobuf::AbstractMessage
   sig { params(value: String).void }
   def full_name=(value); end
 
+  sig { returns(Object) }
+  def has_location?; end
+
   sig { returns(T.any(Symbol, Integer)) }
   def kind; end
 
   sig { params(value: T.any(Symbol, Integer)).void }
   def kind=(value); end
+
+  sig { returns(T.nilable(Common::V1::GeoPoint)) }
+  def location; end
+
+  sig { params(value: T.nilable(Common::V1::GeoPoint)).void }
+  def location=(value); end
 
   sig { returns(String) }
   def phone_number; end
