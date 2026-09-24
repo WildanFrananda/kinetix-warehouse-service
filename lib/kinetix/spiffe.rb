@@ -10,11 +10,12 @@ module Kinetix
 
     DEFAULT_TRUST_DOMAIN = T.let("kinetix.local", String)
 
-    configured_trust_domain = ENV["KINETIX_TRUST_DOMAIN"].to_s.strip
-    TRUST_DOMAIN = T.let(
-      configured_trust_domain.empty? ? DEFAULT_TRUST_DOMAIN : configured_trust_domain,
-      String
+    configured_trust_domains = ENV["KINETIX_TRUST_DOMAIN"].to_s.split(",").map(&:strip).reject(&:empty?)
+    TRUST_DOMAINS = T.let(
+      configured_trust_domains.empty? ? [ DEFAULT_TRUST_DOMAIN ] : configured_trust_domains,
+      T::Array[String]
     )
+    TRUST_DOMAIN = T.let(T.must(TRUST_DOMAINS.first), String)
 
     sig { params(peer_cert_pem: T.nilable(String)).returns(T.nilable(String)) }
     def self.id_of(peer_cert_pem)
@@ -24,7 +25,9 @@ module Kinetix
       san = cert.extensions.find { |e| e.oid == "subjectAltName" }&.value
       return nil if san.nil?
 
-      entry = san.to_s.split(/,\s*/).find { |v| v.start_with?("URI:spiffe://#{TRUST_DOMAIN}/") }
+      entry = san.to_s.split(/,\s*/).find do |v|
+        TRUST_DOMAINS.any? { |domain| v.start_with?("URI:spiffe://#{domain}/") }
+      end
       entry&.delete_prefix("URI:")
     rescue OpenSSL::X509::CertificateError
       nil
@@ -45,7 +48,12 @@ module Kinetix
 
     sig { params(peer_cert_pem: T.nilable(String)).returns(T.nilable(String)) }
     def self.service_of(peer_cert_pem)
-      service_in(id_of(peer_cert_pem), TRUST_DOMAIN)
+      id = id_of(peer_cert_pem)
+      TRUST_DOMAINS.each do |domain|
+        named = service_in(id, domain)
+        return named if named
+      end
+      nil
     end
   end
 end
