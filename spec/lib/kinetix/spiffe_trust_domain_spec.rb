@@ -6,6 +6,23 @@ RSpec.describe Kinetix::Spiffe do
   describe "the trust domain this service accepts" do
     it "keeps the domain the estate runs today when the variable is unset" do
       expect(described_class::TRUST_DOMAIN).to eq("kinetix.local")
+      expect(described_class::TRUST_DOMAINS).to eq([ "kinetix.local" ])
+    end
+
+    it "can accept both domains at once, which is what makes a cutover gradual" do
+      both = [ "kinetix.local", "prod.kinetix" ]
+
+      both.each do |domain|
+        id = "spiffe://#{domain}/service/order"
+        named = both.filter_map { |d| described_class.service_in(id, d) }.first
+        expect(named).to eq("order")
+      end
+    end
+
+    it "still refuses a domain outside the list" do
+      both = [ "kinetix.local", "prod.kinetix" ]
+      named = both.filter_map { |d| described_class.service_in("spiffe://staging.kinetix/service/order", d) }
+      expect(named).to be_empty
     end
   end
 
