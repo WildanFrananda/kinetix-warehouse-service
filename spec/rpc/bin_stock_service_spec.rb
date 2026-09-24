@@ -632,5 +632,37 @@ RSpec.describe Rpc::BinStockServiceHandler do
       expect(res.available_stock).to eq(6)
       expect(res.bin_location).to eq("A-01")
     end
+
+    it "does not answer with another merchant's stock" do
+      other = "bbbbbbbb-1111-2222-3333-444444444444"
+      Merchant.create!(cutoff_hour: 14, principal_id: other)
+      BinInventory.create!(
+        warehouse_bin: bin, sku: "SKU-ELSEWHERE", quantity: 99, reserved_quantity: 0,
+        merchant_principal_id: other
+      )
+
+      res = handler.check_bin_stock(
+        Fulfillment::V1::CheckBinStockRequest.new(
+          merchant_principal_id: principal, sku: "SKU-ELSEWHERE"
+        ), nil
+      )
+
+      expect(res.found).to be(false)
+    end
+
+    it "does not attribute a row that belongs to nobody" do
+      BinInventory.create!(
+        warehouse_bin: bin, sku: "SKU-ORPHAN", quantity: 7, reserved_quantity: 0,
+        merchant_principal_id: nil
+      )
+
+      res = handler.check_bin_stock(
+        Fulfillment::V1::CheckBinStockRequest.new(
+          merchant_principal_id: principal, sku: "SKU-ORPHAN"
+        ), nil
+      )
+
+      expect(res.found).to be(false)
+    end
   end
 end
