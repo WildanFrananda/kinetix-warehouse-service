@@ -1,8 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-# Required explicitly: these files are loaded by bin/grpc_healthcheck outside the Rails
-# boot, where sorbet-runtime is not already on the stack.
 require "sorbet-runtime"
 require "openssl"
 
@@ -10,7 +8,13 @@ module Kinetix
   module Spiffe
     extend T::Sig
 
-    TRUST_DOMAIN = T.let("kinetix.local", String)
+    DEFAULT_TRUST_DOMAIN = T.let("kinetix.local", String)
+
+    configured_trust_domain = ENV["KINETIX_TRUST_DOMAIN"].to_s.strip
+    TRUST_DOMAIN = T.let(
+      configured_trust_domain.empty? ? DEFAULT_TRUST_DOMAIN : configured_trust_domain,
+      String
+    )
 
     sig { params(peer_cert_pem: T.nilable(String)).returns(T.nilable(String)) }
     def self.id_of(peer_cert_pem)
@@ -26,9 +30,22 @@ module Kinetix
       nil
     end
 
+    sig { params(id: T.nilable(String), domain: String).returns(T.nilable(String)) }
+    def self.service_in(id, domain)
+      return nil if id.nil?
+
+      prefix = "spiffe://#{domain}/service/"
+      return nil unless id.start_with?(prefix)
+
+      name = id.delete_prefix(prefix)
+      return nil if name.empty? || name.include?("/")
+
+      name
+    end
+
     sig { params(peer_cert_pem: T.nilable(String)).returns(T.nilable(String)) }
     def self.service_of(peer_cert_pem)
-      id_of(peer_cert_pem)&.delete_prefix("spiffe://#{TRUST_DOMAIN}/service/")
+      service_in(id_of(peer_cert_pem), TRUST_DOMAIN)
     end
   end
 end
