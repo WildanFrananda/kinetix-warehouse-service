@@ -33,7 +33,10 @@ module Rpc
       return NOT_FOUND_STOCK if merchant.nil?
 
       sku = req.sku
-      inventory = BinInventory.joins(:warehouse_bin).find_by(sku: sku)
+
+      inventory = BinInventory
+        .joins(:warehouse_bin)
+        .find_by(merchant_principal_id: merchant.principal_id, sku: sku)
 
       return NOT_FOUND_STOCK if inventory.nil?
 
