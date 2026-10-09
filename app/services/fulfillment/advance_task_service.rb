@@ -48,8 +48,15 @@ module Fulfillment
       task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
       return failure("Fulfillment task not found") unless task
 
-      updated = task_repository.update_status(merchant_id: merchant_id, task_id: task_id, status: new_status)
-      return failure("Failed to update the task") unless updated
+      current = task.status
+      unless Fulfillment::TaskTransitions.merchant_may?(from: current, to: new_status)
+        return failure("a #{current} task cannot be moved to #{new_status}")
+      end
+
+      updated = task_repository.update_status(
+        merchant_id: merchant_id, task_id: task_id, status: new_status, from: current
+      )
+      return failure("the task changed while this request was being handled; read it again") unless updated
 
       updated_at = Time.current
       notified = new_status == PACKED ? notify_order(updated) : nil

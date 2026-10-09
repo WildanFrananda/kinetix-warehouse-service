@@ -17,6 +17,10 @@ module FulfillmentTaskRepositoryInterface
   sig { abstract.params(merchant_id: Integer).returns(T::Array[FulfillmentTask]) }
   def due_today(merchant_id:); end
 
-  sig { abstract.params(merchant_id: Integer, task_id: Integer, status: String).returns(T.nilable(FulfillmentTask)) }
-  def update_status(merchant_id:, task_id:, status:); end
+  sig do
+    abstract.params(
+      merchant_id: Integer, task_id: Integer, status: String, from: T.nilable(String)
+    ).returns(T.nilable(FulfillmentTask))
+  end
+  def update_status(merchant_id:, task_id:, status:, from: nil); end
 end

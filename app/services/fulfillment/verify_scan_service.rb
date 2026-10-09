@@ -53,8 +53,14 @@ module Fulfillment
       ).returns(BaseService::Result)
     end
     def advance(merchant_id:, task:, matched_line:)
-      new_status = task.status == "received" ? "packing" : "packed"
-      task_repository.update_status(merchant_id: merchant_id, task_id: task.id, status: new_status)
+      current = task.status
+      new_status = Fulfillment::TaskTransitions.next_on_scan(current)
+      return failure("this task is #{current}; there is nothing left to scan") if new_status.nil?
+
+      moved = task_repository.update_status(
+        merchant_id: merchant_id, task_id: task.id, status: new_status, from: current
+      )
+      return failure("the task changed while this scan was being handled; scan again") unless moved
 
       matched_sku = matched_line ? T.must(matched_line.sku) : T.must(task.order_number)
 

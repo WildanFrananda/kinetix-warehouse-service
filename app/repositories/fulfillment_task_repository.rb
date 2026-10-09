@@ -32,14 +32,19 @@ class FulfillmentTaskRepository < BaseRepository
     )
   end
 
-  sig { override.params(merchant_id: Integer, task_id: Integer, status: String).returns(T.nilable(FulfillmentTask)) }
-  def update_status(merchant_id:, task_id:, status:)
+  sig do
+    override.params(
+      merchant_id: Integer, task_id: Integer, status: String, from: T.nilable(String)
+    ).returns(T.nilable(FulfillmentTask))
+  end
+  def update_status(merchant_id:, task_id:, status:, from: nil)
     return nil unless FulfillmentTask::STATUSES.include?(status)
 
-    task = find_by_id(merchant_id: merchant_id, id: task_id)
-    return nil unless task
+    scope = model.where(merchant_id: merchant_id, id: task_id)
+    scope = scope.where(status: from) unless from.nil?
+    moved = scope.update_all(status: status, updated_at: Time.current)
+    return nil if moved.zero?
 
-    task.update!(status: status)
-    task
+    find_by_id(merchant_id: merchant_id, id: task_id)
   end
 end
