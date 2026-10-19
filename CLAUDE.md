@@ -26,6 +26,15 @@ still pack, label and process returns for orders that were already paid — the 
 parcel should still go. New sales are stopped where money moves: order refuses a checkout for a
 merchant identity says may not sell.
 
+## Identity's signing keys
+
+`Kinetix::TokenVerifier` answers a token's `kid` from the keys it holds. A `kid` it does not hold makes it fetch
+identity's JWKS again only if the last fetch was at least `UNKNOWN_KEY_REFRESH_SECONDS` (ten) ago, one fetch at a
+time. Until 2026-10-19 every request with an unknown `kid` fetched the JWKS, so forged tokens with made-up key ids
+made identity answer once per request. A JWKS that cannot be fetched is `KeysUnavailable`, answered `503
+IDENTITY_UNAVAILABLE`; it used to escape as a 500, and it is never a `401`, which would tell a signed-in user
+their token is bad when identity simply did not answer.
+
 ## Type checking
 
 `bundle exec srb tc` reported 34 errors on `main` at v0.1.18 (stale generated RBIs for the order and

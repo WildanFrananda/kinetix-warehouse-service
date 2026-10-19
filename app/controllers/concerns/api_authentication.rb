@@ -36,6 +36,14 @@ module ApiAuthentication
     rescue Kinetix::TokenVerifier::InvalidToken, Kinetix::AccessClaims::Malformed
       render json: { error: "Unauthorized: invalid token" }, status: :unauthorized
       nil
+    rescue Kinetix::TokenVerifier::KeysUnavailable => e
+      Rails.logger.warn("identity's signing keys could not be fetched: #{e.message}")
+      response.headers["Retry-After"] = "15"
+      render json: {
+        error: "IDENTITY_UNAVAILABLE",
+        message: "we could not check this token with identity's keys, so the request was not applied."
+      }, status: :service_unavailable
+      nil
     end
   end
 
