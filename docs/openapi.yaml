@@ -1,76 +1,46 @@
 openapi: 3.0.3
 info:
-  title: Fashion Fulfillment OMS API
-  description: Order Management System for Local Muslim Fashion Brands
-  version: 1.0.0
+  title: Kinetix warehouse API
+  version: 1.1.0
+  description: >-
+    The warehouse's REST surface, reached through the gateway, which strips `/api/v1/warehouse` to the
+    service's own `/api/v1`. Every call carries an access token issued by identity. Seller calls need a
+    token whose role is `seller`, and identity is asked about the merchant on every one of them; staff
+    calls need the `admin` role. `/health`, `/health/ready` and `/metrics` are served to the platform
+    only and are not routed through the gateway.
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: /api/v1/warehouse
+    description: the gateway
+security:
+  - identityToken: []
 paths:
-  /orders:
-    post:
-      summary: Ingest new order from external storefront
-      parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [order_number, buyer_name, shipping_address, total_amount, items]
-              properties:
-                order_number: { type: string }
-                buyer_name: { type: string }
-                buyer_phone: { type: string }
-                shipping_address: { type: string }
-                total_amount: { type: number }
-                items:
-                  type: array
-                  items:
-                    type: object
-                    required: [sku, product_name, quantity, price]
-                    properties:
-                      sku: { type: string }
-                      product_name: { type: string }
-                      quantity: { type: integer }
-                      price: { type: number }
-      responses:
-        '201':
-          description: Order created successfully
-        '401':
-          description: Unauthorized API key
-        '422':
-          description: Validation failure
-  /orders/queue:
+  /fulfillment_tasks/queue:
     get:
-      summary: Fetch warehouse order fulfillment queue sorted by SLA urgency
-      parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
+      summary: The seller's work left to do
+      description: >-
+        Tasks still to pack (`received`, `packing`) and packed parcels whose label has not been printed
+        yet, earliest cutoff first. Cancelled tasks and printed parcels are not on it.
+      tags: [seller]
       responses:
         '200':
-          description: List of queued orders
-  /orders/{id}/status:
+          description: The queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TaskCard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /fulfillment_tasks/{id}/status:
     patch:
-      summary: Update order fulfillment status and broadcast real-time update
+      summary: Move a task forward
+      description: >-
+        `received → packing → packed`, one step at a time. Setting `packed` again re-sends the report to
+        order. Reaching `packed` tells order, which dispatches a courier.
+      tags: [seller]
       parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/TaskId'
       requestBody:
         required: true
         content:
@@ -79,41 +49,78 @@ paths:
               type: object
               required: [status]
               properties:
-                status: { type: string, enum: [received, packing, packed, picked_up, delivered] }
+                status: { type: string, enum: [received, packing, packed, cancelled] }
       responses:
         '200':
-          description: Order status updated
-  /orders/{id}/label:
+          description: The task moved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaskMove' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/TaskNotFound' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /fulfillment_tasks/{id}/label:
     post:
-      summary: Generate AWB shipping label
+      summary: Print the parcel's label
+      description: >-
+        The label carries the tracking number the fleet issued. The first print is not a reprint. A
+        cancelled task has no label to print.
+      tags: [seller]
       parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/TaskId'
       responses:
         '200':
-          description: Shipping label generated
-  /orders/{order_id}/returns:
+          description: The label
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Label' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/TaskNotFound' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /fulfillment_tasks/{id}/verify_scan:
     post:
-      summary: Initiate return or size exchange request
+      summary: Scan a parcel, which moves its task one step forward
+      description: >-
+        A SKU on the task, its order number or its tracking number matches. The scan takes the same
+        steps as setting the status, and a scan that packs the parcel tells order.
+      tags: [seller]
       parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scanned_code]
+              properties:
+                scanned_code: { type: string }
+      responses:
+        '200':
+          description: The scan matched and the task moved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScanResult' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/TaskNotFound' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /fulfillment_tasks/{fulfillment_task_id}/returns:
+    post:
+      summary: Open a return with order for a task's order
+      tags: [seller]
+      parameters:
         - in: path
-          name: order_id
+          name: fulfillment_task_id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -125,30 +132,415 @@ paths:
                 reason: { type: string }
       responses:
         '201':
-          description: Return request initiated
-  /returns/{id}/status:
-    patch:
-      summary: Update return request status
+          description: Order opened the return
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OpenedReturn' }
+        '200':
+          description: The return was already open
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OpenedReturn' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/TaskNotFound' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '502': { $ref: '#/components/responses/OrderRefused' }
+        '503': { $ref: '#/components/responses/DependencyUnavailable' }
+  /returns/{return_number}/received:
+    post:
+      summary: Report returned goods back on a shelf
+      tags: [seller]
       parameters:
-        - in: header
-          name: X-Merchant-Api-Key
-          required: true
-          schema:
-            type: string
         - in: path
-          name: id
+          name: return_number
           required: true
-          schema:
-            type: integer
+          schema: { type: string }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [status]
+              required: [bin_code, lines]
               properties:
-                status: { type: string, enum: [requested, picked_up_from_buyer, received_at_warehouse, inspected, resolved] }
+                bin_code: { type: string }
+                lines:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [sku, quantity]
+                    properties:
+                      sku: { type: string }
+                      quantity: { type: integer, minimum: 1 }
       responses:
         '200':
-          description: Return status updated
+          description: Order recorded the goods
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  return_number: { type: string }
+                  already_recorded: { type: boolean }
+        '400':
+          description: The body is unreadable, or `lines` is not a list of objects
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Refusal' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '502': { $ref: '#/components/responses/OrderRefused' }
+        '503': { $ref: '#/components/responses/DependencyUnavailable' }
+  /merchants/me:
+    get:
+      summary: The caller's own merchant row
+      description: Its `id` is what `PATCH /merchants/{id}` takes.
+      tags: [seller]
+      responses:
+        '200':
+          description: The merchant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  principal_id: { type: string, format: uuid }
+                  cutoff_hour: { type: integer, minimum: 0, maximum: 23 }
+                  may_sell: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /merchants/{id}:
+    patch:
+      summary: Set the same-day packing cutoff hour
+      description: >-
+        The hour is read on the platform's clock (`KINETIX_TIME_ZONE`). Only a merchant identity permits
+        to trade may change it.
+      tags: [seller]
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody: { $ref: '#/components/requestBodies/Cutoff' }
+      responses:
+        '200': { $ref: '#/components/responses/CutoffSet' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+    put:
+      summary: Set the same-day packing cutoff hour (same as PATCH)
+      tags: [seller]
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody: { $ref: '#/components/requestBodies/Cutoff' }
+      responses:
+        '200': { $ref: '#/components/responses/CutoffSet' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /bins:
+    post:
+      summary: Create a bin, or update the one with that code
+      tags: [staff]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_code, zone]
+              properties:
+                bin_code: { type: string }
+                zone: { type: string }
+                shelf_level: { type: integer }
+      responses:
+        '201':
+          description: The bin was created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Bin' }
+        '200':
+          description: The bin existed and was updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Bin' }
+        '400': { $ref: '#/components/responses/UnreadableBody' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '422': { $ref: '#/components/responses/Refused' }
+  /stock_receipts:
+    post:
+      summary: Book goods in
+      description: >-
+        `merchant_principal_id` is whose goods these are; identity must know it as a merchant. The key is
+        one merchant's: the same key and the same receipt replay, the same key and a different receipt is
+        a conflict.
+      tags: [staff]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_code, sku, quantity, idempotency_key, merchant_principal_id]
+              properties:
+                bin_code: { type: string }
+                sku: { type: string, minLength: 1, maxLength: 128 }
+                quantity: { type: integer, minimum: 1 }
+                idempotency_key: { type: string, maxLength: 255 }
+                merchant_principal_id: { type: string, format: uuid }
+                note: { type: string }
+      responses:
+        '201':
+          description: The goods were booked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receipt' }
+        '200':
+          description: A replay of a receipt already booked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receipt' }
+        '400': { $ref: '#/components/responses/MissingField' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
+  /stock_adjustments:
+    post:
+      summary: Write stock off, or correct a count
+      tags: [staff]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bin_code, sku, quantity_delta, reason, idempotency_key, merchant_principal_id]
+              properties:
+                bin_code: { type: string }
+                sku: { type: string }
+                quantity_delta: { type: integer, not: { enum: [0] } }
+                reason: { type: string, enum: [DAMAGE, SHRINKAGE, MISCOUNT, RETURN_TO_SUPPLIER, EXPIRY] }
+                idempotency_key: { type: string, maxLength: 255 }
+                merchant_principal_id: { type: string, format: uuid }
+                note: { type: string }
+      responses:
+        '201':
+          description: The adjustment was made
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Adjustment' }
+        '200':
+          description: A replay of an adjustment already made
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Adjustment' }
+        '400': { $ref: '#/components/responses/MissingField' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Refused' }
+components:
+  securitySchemes:
+    identityToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TaskId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+    MerchantId:
+      in: path
+      name: id
+      required: true
+      description: The `id` from `GET /merchants/me`.
+      schema: { type: integer }
+  requestBodies:
+    Cutoff:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [cutoff_hour]
+            properties:
+              cutoff_hour: { type: integer, minimum: 0, maximum: 23 }
+  responses:
+    Unauthorized:
+      description: No token, or a token identity did not issue
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    NotASeller:
+      description: >-
+        `NOT_A_SELLER` (the token's role is not `seller`), `NOT_A_MERCHANT` (identity knows no merchant
+        for the caller), `MERCHANT_NOT_TRADING` (identity does not permit the merchant to trade), or a
+        merchant row that is not the caller's
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    NotStaff:
+      description: The token's role is not `admin`
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    TaskNotFound:
+      description: The caller's merchant has no task with that id
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    Refused:
+      description: The request was understood and refused; `error` says why
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    MissingField:
+      description: A required field is missing, `merchant_principal_id` is not a UUID, or the body is unreadable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    UnreadableBody:
+      description: '`INVALID_REQUEST`: the body could not be parsed as the content type it declares'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    Conflict:
+      description: >-
+        `IDEMPOTENCY_KEY_CONFLICT` (that key already did something different for this merchant), or the
+        stock belongs to another merchant, or the write would cut into reserved stock
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    OrderRefused:
+      description: '`RETURN_NOT_RECORDED`: order answered and refused; `message` is order''s reason'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    IdentityUnavailable:
+      description: '`IDENTITY_UNAVAILABLE`: identity could not be asked, so nothing was applied'
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    DependencyUnavailable:
+      description: '`IDENTITY_UNAVAILABLE` or `ORDER_UNAVAILABLE`: a service this call needs did not answer'
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    CutoffSet:
+      description: The cutoff hour was set
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id: { type: integer }
+              cutoff_hour: { type: integer }
+  schemas:
+    Refusal:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+        traceId: { type: string }
+    TaskLine:
+      type: object
+      properties:
+        sku: { type: string }
+        quantity: { type: integer }
+        bin_location:
+          type: string
+          description: The bin the order's stock was reserved from; empty when no reservation names one
+    TaskCard:
+      type: object
+      properties:
+        id: { type: integer }
+        order_number: { type: string }
+        status: { type: string, enum: [received, packing, packed] }
+        same_day_cutoff_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        tracking_number: { type: string, nullable: true }
+        sla_urgency: { type: string, enum: [overdue, due_soon, due_today, packed] }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/TaskLine' }
+    TaskMove:
+      type: object
+      properties:
+        id: { type: integer }
+        order_number: { type: string }
+        status: { type: string }
+        updated_at: { type: string, format: date-time }
+        order_notified: { type: boolean }
+        notify_error: { type: string, nullable: true }
+        dispatch_ref: { type: string, nullable: true }
+    ScanResult:
+      type: object
+      properties:
+        fulfillment_task_id: { type: integer }
+        order_number: { type: string }
+        matched_sku: { type: string }
+        new_status: { type: string }
+        message: { type: string }
+        order_notified: { type: boolean }
+        notify_error: { type: string, nullable: true }
+        dispatch_ref: { type: string, nullable: true }
+    Label:
+      type: object
+      properties:
+        id: { type: integer }
+        fulfillment_task_id: { type: integer }
+        awb_number: { type: string }
+        print_count: { type: integer }
+        reprint_count: { type: integer }
+    OpenedReturn:
+      type: object
+      properties:
+        return_number: { type: string }
+        fulfillment_task_id: { type: integer }
+        already_open: { type: boolean }
+    Bin:
+      type: object
+      properties:
+        id: { type: integer }
+        bin_code: { type: string }
+        zone: { type: string }
+        shelf_level: { type: integer }
+    Receipt:
+      type: object
+      properties:
+        id: { type: integer }
+        sku: { type: string }
+        quantity: { type: integer }
+        bin_code: { type: string }
+        quantity_on_hand: { type: integer }
+        replayed: { type: boolean }
+    Adjustment:
+      type: object
+      properties:
+        id: { type: integer }
+        sku: { type: string }
+        quantity_delta: { type: integer }
+        reason: { type: string }
+        bin_code: { type: string }
+        quantity_before: { type: integer }
+        quantity_on_hand: { type: integer }
+        reserved_quantity: { type: integer }
+        replayed: { type: boolean }

@@ -42,10 +42,26 @@ module Api
             id: result.receipt&.id,
             sku: result.receipt&.sku,
             quantity: result.receipt&.quantity,
-            bin_code: params[:bin_code].to_s,
+            bin_code: result.bin_code,
             quantity_on_hand: result.quantity_on_hand,
             replayed: result.replayed
           }, status: result.replayed ? :ok : :created
+        when Inventory::ReceiveStockService::INVALID_MERCHANT_PRINCIPAL
+          render json: { error: "merchant_principal_id must be a UUID" }, status: :bad_request
+        when Inventory::ReceiveStockService::INVALID_SKU
+          render json: {
+            error: "sku is required and must be at most #{StockOperation::MAX_SKU_LENGTH} characters"
+          }, status: :unprocessable_entity
+        when Inventory::ReceiveStockService::UNKNOWN_MERCHANT
+          render json: {
+            error: "UNKNOWN_MERCHANT",
+            message: "identity knows no merchant with that principal, so no goods can be booked for it"
+          }, status: :unprocessable_entity
+        when Inventory::ReceiveStockService::IDEMPOTENCY_KEY_CONFLICT
+          render json: {
+            error: "IDEMPOTENCY_KEY_CONFLICT",
+            message: "that idempotency_key already booked a different receipt for this merchant"
+          }, status: :conflict
         when Inventory::ReceiveStockService::WRONG_OWNER
           render json: {
             error: "that sku is already on this shelf under a different merchant"

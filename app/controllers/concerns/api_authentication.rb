@@ -56,18 +56,44 @@ module ApiAuthentication
   end
 
   sig { returns(T.nilable(Merchant)) }
-  def current_api_merchant
-    service = T.let(Container[:resolve_merchant_service], Merchants::ResolveService)
-    service.call(principal_id: api_claims.principal_id)
+  def require_api_merchant!
+    standing = require_api_standing!
+    return nil if standing.nil?
+
+    standing.merchant
   end
 
   sig { returns(T.nilable(Merchant)) }
-  def require_api_merchant!
-    merchant = current_api_merchant
-    return merchant if merchant
+  def require_trading_merchant!
+    standing = require_api_standing!
+    return nil if standing.nil?
+    return standing.merchant if standing.may_sell
 
     render json: {
-      error: "Forbidden: this account is not linked to a merchant in this service"
+      error: "MERCHANT_NOT_TRADING",
+      message: "identity does not permit this merchant to trade, so how its store runs cannot change."
+    }, status: :forbidden
+    nil
+  end
+
+  sig { returns(T.nilable(Merchants::Standing)) }
+  def require_api_standing!
+    unless api_claims.seller?
+      render json: {
+        error: "NOT_A_SELLER",
+        message: "this token was not issued to a seller. An account approved as a seller after it signed in " \
+                 "gets a seller's token when its session is refreshed."
+      }, status: :forbidden
+      return nil
+    end
+
+    service = T.let(Container[:resolve_merchant_service], Merchants::ResolveService)
+    standing = service.call(principal_id: api_claims.principal_id)
+    return standing if standing
+
+    render json: {
+      error: "NOT_A_MERCHANT",
+      message: "identity knows no merchant for this account."
     }, status: :forbidden
     nil
   end

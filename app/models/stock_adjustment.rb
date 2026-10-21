@@ -15,7 +15,7 @@ class StockAdjustment < ApplicationRecord
   belongs_to :warehouse_bin
 
   validates :sku, presence: true
-  validates :idempotency_key, presence: true, uniqueness: true
+  validates :idempotency_key, presence: true, uniqueness: { scope: :merchant_principal_id }
   validates :adjusted_by_principal_id, presence: true
   validates :merchant_principal_id, presence: true
   validates :reason, inclusion: { in: REASONS }

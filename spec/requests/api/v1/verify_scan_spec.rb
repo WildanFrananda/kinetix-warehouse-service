@@ -11,6 +11,11 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
   let!(:task) { create(:fulfillment_task, merchant: merchant, status: "received") }
   let!(:line) { create(:fulfillment_task_line, fulfillment_task: task, sku: "GAMIS-RED-M") }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
+  let(:order) { FakePackedReport.new }
+
+  before do
+    allow(Container).to receive(:[]).with(:order_grpc_client).and_return(order)
+  end
 
   def scan(code, with: headers)
     post "/api/v1/fulfillment_tasks/#{task.id}/verify_scan",
@@ -41,10 +46,11 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       context "and identity says that merchant may not trade" do
         let(:identity_client) { FakeIdentityClient.new(may_sell: false, status: "MERCHANT_STATUS_SUSPENDED") }
 
-        it "refuses" do
+        it "does not refuse it for its standing, since scanning finishes a paid order; the task is not its own" do
           scan("GAMIS-RED-M", with: other)
 
-          expect(response).to have_http_status(:forbidden)
+          expect(response).to have_http_status(:not_found)
+          expect(task.reload.status).to eq("received")
         end
       end
 
@@ -72,12 +78,14 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       end
     end
 
-    it "does not read the role claim" do
+    it "refuses a customer token, even for a principal this service has a merchant row for" do
       customer = bearer(access_token(principal_id: principal_id, role: "customer"))
       scan("GAMIS-RED-M", with: customer)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:forbidden)
+      expect(response.parsed_body["error"]).to eq("NOT_A_SELLER")
       expect(identity_client.asked).to be_empty
+      expect(task.reload.status).to eq("received")
     end
   end
 
@@ -98,6 +106,27 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
 
       expect(JSON.parse(response.body)["new_status"]).to eq("packed")
       expect(task.reload.status).to eq("packed")
+    end
+
+    it "tells order once the scan packs the parcel, so a courier is dispatched" do
+      scan("GAMIS-RED-M")
+      expect(order.packed).to be_empty
+
+      scan("GAMIS-RED-M")
+
+      expect(order.packed).to eq([ task.order_number ])
+      json = JSON.parse(response.body)
+      expect(json["order_notified"]).to be(true)
+      expect(json["dispatch_ref"]).to eq("DISPATCH-1")
+    end
+
+    it "re-sends the report when a packed parcel is scanned again" do
+      task.update!(status: "packed")
+
+      scan("GAMIS-RED-M")
+
+      expect(response).to have_http_status(:ok)
+      expect(order.packed).to eq([ task.order_number ])
     end
 
     it "accepts the order number as well as the SKU, because both are on the paperwork" do
@@ -140,7 +169,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       post "/api/v1/fulfillment_tasks/#{other_task.id}/verify_scan",
            params: { scanned_code: "GAMIS-RED-M" }, headers: headers
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:not_found)
       expect(other_task.reload.status).to eq("received")
     end
   end

@@ -633,6 +633,24 @@ RSpec.describe Rpc::BinStockServiceHandler do
       expect(res.bin_location).to eq("A-01")
     end
 
+    it "warns of low stock below the configured threshold, and not at it" do
+      inventory.update!(reserved_quantity: 4)
+      request = Fulfillment::V1::CheckBinStockRequest.new(merchant_principal_id: principal, sku: "SKU-1")
+
+      expect(described_class.new(low_stock_threshold: 7).check_bin_stock(request, nil).low_stock_warning).to be(true)
+      expect(described_class.new(low_stock_threshold: 6).check_bin_stock(request, nil).low_stock_warning).to be(false)
+    end
+
+    it "sends no product name, because the name is catalog's and this service holds none" do
+      res = handler.check_bin_stock(
+        Fulfillment::V1::CheckBinStockRequest.new(
+          merchant_principal_id: principal, sku: "SKU-1"
+        ), nil
+      )
+
+      expect(res.product_name).to eq("")
+    end
+
     it "does not answer with another merchant's stock" do
       other = "bbbbbbbb-1111-2222-3333-444444444444"
       Merchant.create!(cutoff_hour: 14, principal_id: other)

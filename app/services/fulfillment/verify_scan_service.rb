@@ -10,17 +10,30 @@ module Fulfillment
       const :matched_sku, String
       const :new_status, String
       const :message, String
+      const :order_notified, T::Boolean
+      const :notify_error, T.nilable(String)
+      const :dispatch_ref, T.nilable(String)
     end
 
     sig { returns(FulfillmentTaskRepositoryInterface) }
     attr_reader :task_repository
 
-    sig { params(task_repository: FulfillmentTaskRepositoryInterface).void }
+    sig { returns(AdvanceTaskService) }
+    attr_reader :advance_task_service
+
+    sig do
+      params(
+        task_repository: FulfillmentTaskRepositoryInterface,
+        advance_task_service: AdvanceTaskService
+      ).void
+    end
     def initialize(
-      task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
+      task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface),
+      advance_task_service: T.let(Container[:advance_task_service], AdvanceTaskService)
     )
       super()
       @task_repository = task_repository
+      @advance_task_service = advance_task_service
     end
 
     sig { params(merchant_id: Integer, task_id: Integer, scanned_code: String).returns(BaseService::Result) }
@@ -29,7 +42,7 @@ module Fulfillment
       return failure("Scanned barcode code cannot be blank") if clean_code.blank?
 
       task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
-      return failure("Fulfillment task ##{task_id} not found for this merchant") unless task
+      return not_found("Fulfillment task ##{task_id} not found for this merchant") unless task
 
       matched_line = task.fulfillment_task_lines.find { |line| line.sku.to_s.casecmp?(clean_code) }
       awb_match = task.shipping_label&.awb_number&.casecmp?(clean_code)
@@ -57,20 +70,22 @@ module Fulfillment
       new_status = Fulfillment::TaskTransitions.next_on_scan(current)
       return failure("this task is #{current}; there is nothing left to scan") if new_status.nil?
 
-      moved = task_repository.update_status(
-        merchant_id: merchant_id, task_id: task.id, status: new_status, from: current
-      )
-      return failure("the task changed while this scan was being handled; scan again") unless moved
+      moved = advance_task_service.call(merchant_id: merchant_id, task_id: task.id, new_status: new_status)
+      return moved if moved.failure?
 
-      matched_sku = matched_line ? T.must(matched_line.sku) : T.must(task.order_number)
+      advanced = T.cast(moved.data, AdvanceTaskService::ResultData)
+      matched_sku = matched_line ? matched_line.sku.to_s : advanced.order_number
 
       success(
         ResultData.new(
-          fulfillment_task_id: task.id,
-          order_number: T.must(task.order_number),
+          fulfillment_task_id: advanced.id,
+          order_number: advanced.order_number,
           matched_sku: matched_sku,
-          new_status: new_status,
-          message: "✓ MATCHED! #{matched_sku} verified."
+          new_status: advanced.status,
+          message: "✓ MATCHED! #{matched_sku} verified.",
+          order_notified: advanced.order_notified,
+          notify_error: advanced.notify_error,
+          dispatch_ref: advanced.dispatch_ref
         )
       )
     end

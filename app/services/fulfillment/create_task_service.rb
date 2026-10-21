@@ -18,19 +18,31 @@ module Fulfillment
     sig { returns(FulfillmentTaskRepositoryInterface) }
     attr_reader :task_repository
 
+    sig { returns(StockReservationRepositoryInterface) }
+    attr_reader :reservation_repository
+
+    sig { returns(ActiveSupport::TimeZone) }
+    attr_reader :time_zone
+
     sig do
       params(
         merchant_repository: MerchantRepositoryInterface,
-        task_repository: FulfillmentTaskRepositoryInterface
+        task_repository: FulfillmentTaskRepositoryInterface,
+        reservation_repository: StockReservationRepositoryInterface,
+        time_zone: ActiveSupport::TimeZone
       ).void
     end
     def initialize(
       merchant_repository: T.let(Container[:merchant_repository], MerchantRepositoryInterface),
-      task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
+      task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface),
+      reservation_repository: T.let(Container[:stock_reservation_repository], StockReservationRepositoryInterface),
+      time_zone: T.let(Rails.configuration.x.platform_time_zone, ActiveSupport::TimeZone)
     )
       super()
       @merchant_repository = merchant_repository
       @task_repository = task_repository
+      @reservation_repository = reservation_repository
+      @time_zone = time_zone
     end
 
     sig { params(merchant_id: Integer, form: CreateTaskForm).returns(BaseService::Result) }
@@ -58,22 +70,20 @@ module Fulfillment
       ).returns(FulfillmentTask)
     end
     def create_task(merchant_id:, merchant:, form:)
-      cutoff_at = calculate_cutoff_at(merchant.cutoff_hour || 12)
+      cutoff_at = calculate_cutoff_at(merchant.cutoff_hour)
+      bins = reservation_repository.held_bin_codes(merchant_id: merchant_id, order_number: form.order_number)
 
-      task = task_repository.create(
+      task_repository.create(
         merchant_id: merchant_id,
         attributes: {
           order_number: form.order_number,
           status: "received",
           same_day_cutoff_at: cutoff_at
-        }
+        },
+        lines: form.lines.map do |line|
+          { sku: line.sku, quantity: line.quantity, bin_location: bins[line.sku] }
+        end
       )
-
-      form.lines.each do |line|
-        task.fulfillment_task_lines.create!(sku: line.sku, quantity: line.quantity)
-      end
-
-      task
     end
 
     sig { params(task: FulfillmentTask, already_created: T::Boolean).returns(ResultData) }
@@ -81,17 +91,18 @@ module Fulfillment
       ResultData.new(
         id: task.id,
         order_number: T.must(task.order_number),
-        status: T.must(task.status),
+        status: task.status,
         same_day_cutoff_at: T.must(task.same_day_cutoff_at),
         already_created: already_created
       )
     end
 
-    sig { params(cutoff_hour: Integer).returns(Time) }
+    sig { params(cutoff_hour: Integer).returns(ActiveSupport::TimeWithZone) }
     def calculate_cutoff_at(cutoff_hour)
-      today_cutoff = Time.current.change(hour: cutoff_hour, min: 0, sec: 0)
+      now = time_zone.now
+      today_cutoff = now.change(hour: cutoff_hour, min: 0, sec: 0)
 
-      Time.current <= today_cutoff ? today_cutoff : today_cutoff + 1.day
+      now <= today_cutoff ? today_cutoff : today_cutoff + 1.day
     end
   end
 end

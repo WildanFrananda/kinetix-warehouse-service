@@ -5,6 +5,8 @@ module Fulfillment
     extend T::Sig
 
     PACKED = "packed"
+    ORDER_NOT_TOLD = "order-service could not be told this parcel is packed, so no courier has been sent yet. " \
+                     "Set the task to packed again to re-send the report."
 
     class ResultData < T::Struct
       const :id, Integer
@@ -46,7 +48,7 @@ module Fulfillment
       end
 
       task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
-      return failure("Fulfillment task not found") unless task
+      return not_found("Fulfillment task not found") unless task
 
       current = task.status
       unless Fulfillment::TaskTransitions.merchant_may?(from: current, to: new_status)
@@ -65,7 +67,7 @@ module Fulfillment
         ResultData.new(
           id: updated.id,
           order_number: T.must(updated.order_number),
-          status: T.must(updated.status),
+          status: updated.status,
           updated_at: updated_at,
           order_notified: !notified.nil? && notified[:success],
           notify_error: notified && !notified[:success] ? notified[:error] : nil,
@@ -96,7 +98,7 @@ module Fulfillment
       )
     rescue StandardError => e
       Rails.logger.error("[Order] task #{task.id} is packed but telling order-service raised #{e.class}: #{e.message}")
-      { success: false, error: e.message, dispatch_ref: "" }
+      { success: false, error: ORDER_NOT_TOLD, dispatch_ref: "" }
     end
   end
 end

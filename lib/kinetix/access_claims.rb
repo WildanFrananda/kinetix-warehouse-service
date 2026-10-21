@@ -11,7 +11,14 @@ module Kinetix
     const :email, String
     const :role, String
 
+    SELLER = "seller"
+
     class Malformed < StandardError; end
+
+    sig { returns(T::Boolean) }
+    def seller?
+      role == SELLER
+    end
 
     sig { params(payload: T::Hash[String, T.untyped]).returns(Kinetix::AccessClaims) }
     def self.from_payload(payload)

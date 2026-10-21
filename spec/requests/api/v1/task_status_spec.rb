@@ -12,7 +12,6 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
   let(:order) { FakePackedReport.new }
 
   before do
-    allow(Container).to receive(:[]).and_call_original
     allow(Container).to receive(:[]).with(:order_grpc_client).and_return(order)
   end
 
@@ -44,6 +43,23 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(order.packed).to eq([ task.order_number ])
+    end
+
+    context "when order cannot be reached" do
+      let(:order) { Order::GrpcClient.new(host: "127.0.0.1:1") }
+
+      it "keeps the task packed and says order was not told, without the transport's own words" do
+        task = create(:fulfillment_task, merchant: merchant, status: "packing")
+
+        move(task, "packed")
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json["order_notified"]).to be(false)
+        expect(json["notify_error"]).to be_present
+        expect(json["notify_error"]).not_to match(/127\.0\.0\.1|connect|UNAVAILABLE:|14:/)
+        expect(task.reload.status).to eq("packed")
+      end
     end
 
     it "will not skip packing" do

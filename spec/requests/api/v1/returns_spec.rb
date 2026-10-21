@@ -14,7 +14,6 @@ RSpec.describe "Api::V1::Returns", type: :request do
   let(:relay) { FakeReturnRelay.new }
 
   before do
-    allow(Container).to receive(:[]).and_call_original
     allow(Container).to receive(:[]).with(:order_grpc_client).and_return(relay)
   end
 
@@ -69,6 +68,29 @@ RSpec.describe "Api::V1::Returns", type: :request do
       expect(JSON.parse(response.body)["error"]).to eq("RETURN_NOT_RECORDED")
     end
 
+    it "answers 200, not 201, when order says that return was already open" do
+      relay.already_open!
+
+      post "/api/v1/fulfillment_tasks/#{task.id}/returns",
+           params: { reason: "Wrong size" }, headers: valid_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["already_open"]).to be(true)
+    end
+
+    context "when order cannot be reached" do
+      let(:relay) { Order::GrpcClient.new(host: "127.0.0.1:1") }
+
+      it "answers 503 and does not pass on what the transport said" do
+        post "/api/v1/fulfillment_tasks/#{task.id}/returns",
+             params: { reason: "Wrong size" }, headers: valid_headers
+
+        expect(response).to have_http_status(:service_unavailable)
+        expect(JSON.parse(response.body)["error"]).to eq("ORDER_UNAVAILABLE")
+        expect(response.body).not_to match(/127\.0\.0\.1|connect|UNAVAILABLE:|14:/)
+      end
+    end
+
     it "returns 401 when no token is presented" do
       post "/api/v1/fulfillment_tasks/#{task.id}/returns", params: { reason: "Wrong size delivered" }
 
@@ -88,6 +110,19 @@ RSpec.describe "Api::V1::Returns", type: :request do
       expect(received[:return_number]).to eq("RMA-20260921-ABCD1234")
       expect(received[:bin_code]).to eq("A-01-1")
       expect(received[:lines]).to eq([ { sku: "GAMIS-RED-M", quantity: 2 } ])
+    end
+
+    context "when order cannot be reached" do
+      let(:relay) { Order::GrpcClient.new(host: "127.0.0.1:1") }
+
+      it "answers 503 and does not pass on what the transport said" do
+        post "/api/v1/returns/RMA-20260921-ABCD1234/received",
+             params: { bin_code: "A-01-1", lines: [ { sku: "GAMIS-RED-M", quantity: 2 } ] },
+             headers: valid_headers
+
+        expect(response).to have_http_status(:service_unavailable)
+        expect(response.body).not_to match(/127\.0\.0\.1|connect|UNAVAILABLE:|14:/)
+      end
     end
 
     it "refuses to report goods it cannot name" do

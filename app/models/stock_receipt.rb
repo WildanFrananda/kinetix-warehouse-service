@@ -7,7 +7,7 @@ class StockReceipt < ApplicationRecord
   belongs_to :warehouse_bin
 
   validates :sku, presence: true
-  validates :idempotency_key, presence: true, uniqueness: true
+  validates :idempotency_key, presence: true, uniqueness: { scope: :merchant_principal_id }
   validates :received_by_principal_id, presence: true
   validates :quantity, numericality: { only_integer: true, greater_than: 0 }
 end

@@ -19,7 +19,7 @@ module GeneratedPathHelpersModule
   def api_v1_merchant_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_merchants_path(*args); end
+  def api_v1_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def api_v1_stock_adjustments_path(*args); end
@@ -35,6 +35,9 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def label_api_v1_fulfillment_task_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def me_api_v1_merchants_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def metrics_path(*args); end
@@ -79,21 +82,6 @@ module GeneratedPathHelpersModule
   def rails_disk_service_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def rails_info_notes_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_properties_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_routes_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_mailers_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
   def rails_mailgun_inbound_emails_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -128,9 +116,6 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_fulfillment_task_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_return_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_path(*args); end

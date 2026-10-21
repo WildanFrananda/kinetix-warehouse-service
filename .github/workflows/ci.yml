@@ -103,6 +103,8 @@ jobs:
       # is 503 — never a decision about the account.
       ORDER_GRPC_HOST: 127.0.0.1:1
       IDENTITY_GRPC_HOST: 127.0.0.1:1
+      KINETIX_TIME_ZONE: Asia/Jakarta
+      WAREHOUSE_LOW_STOCK_THRESHOLD: "5"
 
     steps:
       - name: Install system packages

@@ -819,50 +819,50 @@ class ShippingLabel
     sig { void }
     def id_will_change!; end
 
-    sig { returns(T.nilable(::String)) }
-    def pdf_url; end
+    sig { returns(::Integer) }
+    def print_count; end
 
-    sig { params(value: T.nilable(::String)).returns(T.nilable(::String)) }
-    def pdf_url=(value); end
+    sig { params(value: ::Integer).returns(::Integer) }
+    def print_count=(value); end
 
     sig { returns(T::Boolean) }
-    def pdf_url?; end
+    def print_count?; end
 
-    sig { returns(T.nilable(::String)) }
-    def pdf_url_before_last_save; end
+    sig { returns(T.nilable(::Integer)) }
+    def print_count_before_last_save; end
 
     sig { returns(T.untyped) }
-    def pdf_url_before_type_cast; end
+    def print_count_before_type_cast; end
 
     sig { returns(T::Boolean) }
-    def pdf_url_came_from_user?; end
+    def print_count_came_from_user?; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def pdf_url_change; end
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def print_count_change; end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def pdf_url_change_to_be_saved; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def pdf_url_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::String)) }
-    def pdf_url_in_database; end
-
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def pdf_url_previous_change; end
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def print_count_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def pdf_url_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def print_count_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable(::String)) }
-    def pdf_url_previously_was; end
+    sig { returns(T.nilable(::Integer)) }
+    def print_count_in_database; end
 
-    sig { returns(T.nilable(::String)) }
-    def pdf_url_was; end
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def print_count_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def print_count_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::Integer)) }
+    def print_count_previously_was; end
+
+    sig { returns(T.nilable(::Integer)) }
+    def print_count_was; end
 
     sig { void }
-    def pdf_url_will_change!; end
+    def print_count_will_change!; end
 
     sig { returns(T.nilable(::Integer)) }
     def reprint_count; end
@@ -925,7 +925,7 @@ class ShippingLabel
     def restore_id_value!; end
 
     sig { void }
-    def restore_pdf_url!; end
+    def restore_print_count!; end
 
     sig { void }
     def restore_reprint_count!; end
@@ -963,11 +963,11 @@ class ShippingLabel
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
-    def saved_change_to_pdf_url; end
+    sig { returns(T.nilable([::Integer, ::Integer])) }
+    def saved_change_to_print_count; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def saved_change_to_pdf_url?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def saved_change_to_print_count?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([T.nilable(::Integer), T.nilable(::Integer)])) }
     def saved_change_to_reprint_count; end
@@ -1042,7 +1042,7 @@ class ShippingLabel
     def will_save_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def will_save_change_to_pdf_url?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def will_save_change_to_print_count?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_reprint_count?(from: T.unsafe(nil), to: T.unsafe(nil)); end

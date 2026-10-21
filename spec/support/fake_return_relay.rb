@@ -10,10 +10,15 @@ class FakeReturnRelay
     @opened = []
     @received = []
     @open_error = nil
+    @already_open = false
   end
 
   def refuse_open(message)
     @open_error = message
+  end
+
+  def already_open!
+    @already_open = true
   end
 
   def open_return(merchant_principal_id:, order_number:, reason:)
@@ -27,7 +32,7 @@ class FakeReturnRelay
       reason: reason
     }
 
-    { success: true, return_number: "RMA-20260921-ABCD1234", already_open: false, error: nil }
+    { success: true, return_number: "RMA-20260921-ABCD1234", already_open: @already_open, error: nil }
   end
 
   def return_goods_received(merchant_principal_id:, return_number:, lines:, bin_code:, received_at:)

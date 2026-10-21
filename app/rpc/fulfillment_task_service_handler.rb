@@ -28,7 +28,7 @@ module Rpc
       )
 
       service = T.let(Container[:create_task_service], Fulfillment::CreateTaskService)
-      result = service.call(merchant_id: T.must(merchant.id), form: form)
+      result = service.call(merchant_id: merchant.id, form: form)
 
       return refuse_create("VALIDATION_FAILED", result.error.to_s) unless result.success?
 
@@ -51,16 +51,16 @@ module Rpc
       merchant = merchant_for(req.merchant_principal_id)
       return refuse_cancel("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
 
-      task_id = Integer(req.task_id, exception: false)
+      task_id = T.let(Integer(req.task_id, exception: false), T.nilable(Integer))
       return refuse_cancel("UNKNOWN_TASK", "task_id is not a number this warehouse could have issued") unless task_id
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-      task = repository.find_by_id(merchant_id: T.must(merchant.id), id: task_id)
+      task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
       return refuse_cancel("UNKNOWN_TASK", "no task with that id belongs to this merchant") unless task
 
       return already_cancelled(task) if task.status == "cancelled"
 
-      repository.update_status(merchant_id: T.must(merchant.id), task_id: task_id, status: "cancelled")
+      repository.update_status(merchant_id: merchant.id, task_id: task_id, status: "cancelled")
 
       Fulfillment::V1::CancelFulfillmentTaskResponse.new(success: true, already_cancelled: false)
     end
@@ -77,11 +77,11 @@ module Rpc
 
       return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing") if req.awb_number.strip.empty?
 
-      task_id = Integer(req.fulfillment_task_id, exception: false)
+      task_id = T.let(Integer(req.fulfillment_task_id, exception: false), T.nilable(Integer))
       return refuse_awb("UNKNOWN_TASK", "fulfillment_task_id is not a number this warehouse could have issued") unless task_id
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-      task = repository.find_by_id(merchant_id: T.must(merchant.id), id: task_id)
+      task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
       return refuse_awb("UNKNOWN_TASK", "no task with that id belongs to this merchant") unless task
 
       existing = task.shipping_label
@@ -105,12 +105,10 @@ module Rpc
 
     sig { params(principal_id: String).returns(T.nilable(Merchant)) }
     def merchant_for(principal_id)
-      return nil if principal_id.empty?
-
-      Merchant.find_by(principal_id: principal_id)
+      T.let(Container[:merchant_repository], MerchantRepositoryInterface).find_by_principal_id(principal_id)
     end
 
-    sig { params(task: FulfillmentTask).returns(Fulfillment::V1::CancelFulfillmentTaskResponse) }
+    sig { params(_task: FulfillmentTask).returns(Fulfillment::V1::CancelFulfillmentTaskResponse) }
     def already_cancelled(_task)
       Fulfillment::V1::CancelFulfillmentTaskResponse.new(success: true, already_cancelled: true)
     end

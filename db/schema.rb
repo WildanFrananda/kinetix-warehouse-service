@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.bigint "warehouse_bin_id", null: false
     t.index ["merchant_principal_id", "sku"], name: "index_bin_inventories_on_merchant_principal_id_and_sku"
     t.index ["sku"], name: "index_bin_inventories_on_sku"
+    t.index ["warehouse_bin_id", "sku"], name: "index_bin_inventories_on_warehouse_bin_id_and_sku", unique: true
     t.index ["warehouse_bin_id"], name: "index_bin_inventories_on_warehouse_bin_id"
   end
 
@@ -52,16 +53,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
 
   create_table "merchants", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "cutoff_hour"
+    t.integer "cutoff_hour", default: 12, null: false
     t.uuid "principal_id"
     t.datetime "updated_at", null: false
     t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
+    t.check_constraint "cutoff_hour >= 0 AND cutoff_hour <= 23", name: "merchants_cutoff_hour_is_an_hour"
   end
 
   create_table "shipping_labels", force: :cascade do |t|
     t.string "awb_number"
     t.datetime "created_at", null: false
     t.bigint "fulfillment_task_id", null: false
+    t.integer "print_count", default: 0, null: false
     t.integer "reprint_count"
     t.datetime "updated_at", null: false
     t.index ["awb_number"], name: "index_shipping_labels_on_awb_number", unique: true
@@ -81,7 +84,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.string "sku", null: false
     t.datetime "updated_at", null: false
     t.bigint "warehouse_bin_id", null: false
-    t.index ["idempotency_key"], name: "index_stock_adjustments_on_idempotency_key", unique: true
+    t.index ["merchant_principal_id", "idempotency_key"], name: "index_stock_adjustments_on_merchant_and_idempotency_key", unique: true
     t.index ["sku", "created_at"], name: "index_stock_adjustments_on_sku_and_created_at"
     t.index ["warehouse_bin_id"], name: "index_stock_adjustments_on_warehouse_bin_id"
     t.check_constraint "quantity_delta <> 0", name: "stock_adjustments_delta_not_zero"
@@ -121,7 +124,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.string "sku", null: false
     t.datetime "updated_at", null: false
     t.bigint "warehouse_bin_id", null: false
-    t.index ["idempotency_key"], name: "index_stock_receipts_on_idempotency_key", unique: true
+    t.index ["merchant_principal_id", "idempotency_key"], name: "index_stock_receipts_on_merchant_and_idempotency_key", unique: true, nulls_not_distinct: true
     t.index ["sku"], name: "index_stock_receipts_on_sku"
     t.index ["warehouse_bin_id"], name: "index_stock_receipts_on_warehouse_bin_id"
     t.check_constraint "quantity > 0", name: "stock_receipts_quantity_positive"

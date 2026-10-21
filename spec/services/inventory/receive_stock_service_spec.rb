@@ -7,6 +7,10 @@ RSpec.describe Inventory::ReceiveStockService do
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01-1", zone: "A", shelf_level: 1) }
 
   let(:owner) { "22222222-3333-4444-5555-666666666666" }
+  let(:identity_client) { FakeIdentityClient.new }
+  let(:resolver) do
+    Merchants::ResolveService.new(merchant_repository: MerchantRepository.new, identity_client: identity_client)
+  end
 
   def receive(quantity: 5, key: "RCV-1", sku: "SKU-1", bin_code: "A-01-1", merchant: nil)
     described_class.new(
@@ -15,7 +19,8 @@ RSpec.describe Inventory::ReceiveStockService do
       quantity: quantity,
       idempotency_key: key,
       received_by_principal_id: "11111111-2222-3333-4444-555555555555",
-      merchant_principal_id: merchant || owner
+      merchant_principal_id: merchant || owner,
+      resolve_merchant_service: resolver
     ).call
   end
 

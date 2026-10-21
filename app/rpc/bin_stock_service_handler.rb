@@ -17,9 +17,10 @@ module Rpc
     UNKNOWN_MERCHANT = "UNKNOWN_MERCHANT"
     INVALID_ARGUMENT = "INVALID_ARGUMENT"
 
-    sig { void }
-    def initialize
-      super
+    sig { params(low_stock_threshold: Integer).void }
+    def initialize(low_stock_threshold: T.let(Rails.configuration.x.low_stock_threshold, Integer))
+      super()
+      @low_stock_threshold = low_stock_threshold
     end
 
     sig do
@@ -179,12 +180,11 @@ module Rpc
       Fulfillment::V1::CheckBinStockResponse.new(
         found: true,
         sku: sku,
-        product_name: "Physical Inventory SKU #{sku}",
         physical_stock: inventory.quantity,
         allocated_stock: inventory.reserved_quantity,
         available_stock: available,
         bin_location: inventory.warehouse_bin&.bin_code.to_s,
-        low_stock_warning: available < 5
+        low_stock_warning: available < @low_stock_threshold
       )
     end
 
@@ -285,9 +285,7 @@ module Rpc
 
     sig { params(principal_id: String).returns(T.nilable(Merchant)) }
     def merchant_for(principal_id)
-      return nil if principal_id.empty?
-
-      Merchant.find_by(principal_id: principal_id)
+      T.let(Container[:merchant_repository], MerchantRepositoryInterface).find_by_principal_id(principal_id)
     end
   end
 end

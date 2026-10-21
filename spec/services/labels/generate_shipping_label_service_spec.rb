@@ -15,16 +15,30 @@ RSpec.describe Labels::GenerateShippingLabelService, type: :service do
     expect(task.reload.shipping_label).to be_nil
   end
 
-  it "counts reprints once the courier's number is recorded" do
+  it "does not count the first print as a reprint" do
     task.create_shipping_label!(awb_number: "KNX-20260921-ABCDEFGH", reprint_count: 0)
 
     result1 = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
     expect(result1.success?).to be true
-    expect(result1.data.reprint_count).to eq(1)
+    expect(result1.data.reprint_count).to eq(0)
 
     result2 = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
     expect(result2.success?).to be true
-    expect(result2.data.reprint_count).to eq(2)
+    expect(result2.data.reprint_count).to eq(1)
+
+    result3 = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
+    expect(result3.data.reprint_count).to eq(2)
+  end
+
+  it "refuses to print a label for a task order has cancelled" do
+    task.update!(status: "cancelled")
+    task.create_shipping_label!(awb_number: "KNX-20260921-CANCELLD", reprint_count: 0)
+
+    result = service.call(merchant_id: merchant.id, fulfillment_task_id: task.id)
+
+    expect(result.success?).to be false
+    expect(result.error).to include("cancelled")
+    expect(task.reload.shipping_label.reprint_count).to eq(0)
   end
 
   it "does not name a document it has not produced" do

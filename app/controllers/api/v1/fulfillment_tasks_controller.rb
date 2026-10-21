@@ -66,7 +66,7 @@ module Api
         if result.success?
           render json: result.data
         else
-          render json: { error: result.error }, status: :unprocessable_entity
+          render json: { error: result.error }, status: result.not_found? ? :not_found : :unprocessable_entity
         end
       end
     end
