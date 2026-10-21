@@ -24,6 +24,10 @@ module Order
       "/#{::Order::V1::OrderService::Service.service_name}/ReturnGoodsReceived",
       String
     )
+    TRANSPORT_FAILURES = T.let(
+      [ GRPC::BadStatus, GRPC::Core::CallError, SocketError, IOError ].freeze,
+      T::Array[T.class_of(Exception)]
+    )
 
     sig { returns(String) }
     attr_reader :host
@@ -57,9 +61,8 @@ module Order
         dispatch_ref: res.dispatch_ref,
         error: res.error&.message
       }
-    rescue StandardError => e
-      Rails.logger.error("[Order::GrpcClient] FulfillmentPacked failed: #{e.message}")
-      { success: false, already_packed: false, dispatch_ref: "", error: e.message }
+    rescue *TRANSPORT_FAILURES => e
+      raise Order::Unavailable.new("FulfillmentPacked", e.message)
     end
 
     sig do
@@ -86,9 +89,8 @@ module Order
         already_open: res.already_open,
         error: res.error&.message
       }
-    rescue StandardError => e
-      Rails.logger.error("[Order::GrpcClient] OpenReturn failed: #{e.message}")
-      { success: false, return_number: "", already_open: false, error: e.message }
+    rescue *TRANSPORT_FAILURES => e
+      raise Order::Unavailable.new("OpenReturn", e.message)
     end
 
     sig do
@@ -118,9 +120,8 @@ module Order
         already_recorded: res.already_recorded,
         error: res.error&.message
       }
-    rescue StandardError => e
-      Rails.logger.error("[Order::GrpcClient] ReturnGoodsReceived failed: #{e.message}")
-      { accepted: false, already_recorded: false, error: e.message }
+    rescue *TRANSPORT_FAILURES => e
+      raise Order::Unavailable.new("ReturnGoodsReceived", e.message)
     end
 
     private

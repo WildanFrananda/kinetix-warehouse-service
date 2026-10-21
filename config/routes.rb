@@ -15,8 +15,11 @@ Rails.application.routes.draw do
 
       post "/returns/:return_number/received", to: "returns#received"
 
-
-      resources :merchants, only: [ :update ]
+      resources :merchants, only: [ :update ] do
+        collection do
+          get :me
+        end
+      end
       resources :bins, only: [ :create ]
       resources :stock_receipts, only: [ :create ]
       resources :stock_adjustments, only: [ :create ]

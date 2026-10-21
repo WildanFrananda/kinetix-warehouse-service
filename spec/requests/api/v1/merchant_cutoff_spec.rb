@@ -6,6 +6,7 @@ require "rails_helper"
 # gone; the setting is a warehouse operating parameter, so it needs a way in that is not a page.
 RSpec.describe "Api::V1::Merchants#update", type: :request do
   include_context "identity issues tokens"
+  include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
   let!(:merchant) { create(:merchant, principal_id: principal_id, cutoff_hour: 14) }

@@ -419,9 +419,6 @@ class FulfillmentTask
     sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
     def build_merchant(*args, &blk); end
 
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Return) }
-    def build_return_request(*args, &blk); end
-
     sig { params(args: T.untyped, blk: T.untyped).returns(::ShippingLabel) }
     def build_shipping_label(*args, &blk); end
 
@@ -430,12 +427,6 @@ class FulfillmentTask
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
     def create_merchant!(*args, &blk); end
-
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Return) }
-    def create_return_request(*args, &blk); end
-
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Return) }
-    def create_return_request!(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::ShippingLabel) }
     def create_shipping_label(*args, &blk); end
@@ -472,9 +463,6 @@ class FulfillmentTask
     sig { returns(T.nilable(::Merchant)) }
     def reload_merchant; end
 
-    sig { returns(T.nilable(::Return)) }
-    def reload_return_request; end
-
     sig { returns(T.nilable(::ShippingLabel)) }
     def reload_shipping_label; end
 
@@ -482,16 +470,7 @@ class FulfillmentTask
     def reset_merchant; end
 
     sig { void }
-    def reset_return_request; end
-
-    sig { void }
     def reset_shipping_label; end
-
-    sig { returns(T.nilable(::Return)) }
-    def return_request; end
-
-    sig { params(value: T.nilable(::Return)).void }
-    def return_request=(value); end
 
     sig { returns(T.nilable(::ShippingLabel)) }
     def shipping_label; end

@@ -19,13 +19,13 @@ module GeneratedUrlHelpersModule
   def api_v1_merchant_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def api_v1_merchants_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
   def api_v1_stock_adjustments_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def api_v1_stock_receipts_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def api_v1_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def health_ready_url(*args); end
@@ -35,6 +35,9 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def label_api_v1_fulfillment_task_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def me_api_v1_merchants_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def metrics_url(*args); end
@@ -79,21 +82,6 @@ module GeneratedUrlHelpersModule
   def rails_disk_service_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def rails_info_notes_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_properties_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_routes_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_info_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_mailers_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
   def rails_mailgun_inbound_emails_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -128,9 +116,6 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_fulfillment_task_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_return_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_url(*args); end

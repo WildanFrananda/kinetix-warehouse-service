@@ -44,7 +44,7 @@ module Api
             sku: result.adjustment&.sku,
             quantity_delta: result.adjustment&.quantity_delta,
             reason: result.adjustment&.reason,
-            bin_code: params[:bin_code].to_s,
+            bin_code: result.bin_code,
             quantity_before: result.adjustment&.quantity_before,
             quantity_on_hand: result.quantity_on_hand,
             reserved_quantity: result.reserved_quantity,
@@ -57,6 +57,13 @@ module Api
             quantity_on_hand: result.quantity_on_hand,
             reserved_quantity: result.reserved_quantity,
             max_reduction: writable
+          }, status: :conflict
+        when Inventory::AdjustStockService::INVALID_MERCHANT_PRINCIPAL
+          render json: { error: "merchant_principal_id must be a UUID" }, status: :bad_request
+        when Inventory::AdjustStockService::IDEMPOTENCY_KEY_CONFLICT
+          render json: {
+            error: "IDEMPOTENCY_KEY_CONFLICT",
+            message: "that idempotency_key already made a different adjustment for this merchant"
           }, status: :conflict
         when Inventory::AdjustStockService::WRONG_OWNER
           render json: { error: "that stock belongs to a different merchant" }, status: :conflict

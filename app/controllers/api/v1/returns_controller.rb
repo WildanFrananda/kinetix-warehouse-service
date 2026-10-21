@@ -33,7 +33,7 @@ module Api
             return_number: result[:return_number],
             fulfillment_task_id: task.id,
             already_open: result[:already_open]
-          }, status: :created
+          }, status: result[:already_open] ? :ok : :created
         else
           render_order_refused(result[:error])
         end
@@ -44,12 +44,16 @@ module Api
         merchant = require_api_merchant!
         return if merchant.nil?
 
-        lines = Array(params[:lines]).map do |line|
-          { sku: line[:sku].to_s, quantity: line[:quantity].to_i }
+        form = Returns::ReturnedLinesForm.new(params[:lines])
+        unless form.well_formed?
+          render json: { error: "lines must be a list of objects, each with a sku and a quantity" },
+                 status: :bad_request
+          return
         end
 
-        if lines.empty?
-          render json: { error: "Name at least one SKU that came back" }, status: :unprocessable_entity
+        problem = form.problem
+        if problem
+          render json: { error: problem }, status: :unprocessable_entity
           return
         end
 
@@ -57,9 +61,9 @@ module Api
         result = relay.return_goods_received(
           merchant_principal_id: T.must(merchant.principal_id),
           return_number: params[:return_number].to_s,
-          lines: lines,
+          lines: form.lines,
           bin_code: params[:bin_code].to_s,
-          received_at: Time.current
+          received_at: Time.current.utc
         )
 
         if result[:accepted]
@@ -77,7 +81,7 @@ module Api
       sig { params(merchant: Merchant, task_id: Integer).returns(T.nilable(FulfillmentTask)) }
       def find_task(merchant, task_id)
         repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-        task = repository.find_by_id(merchant_id: T.must(merchant.id), id: task_id)
+        task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
 
         if task.nil?
           render json: { error: "Fulfillment task not found" }, status: :not_found

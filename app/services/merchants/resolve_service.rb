@@ -25,19 +25,16 @@ module Merchants
       @identity_client = identity_client
     end
 
-    sig { params(principal_id: String).returns(T.nilable(Merchant)) }
+    sig { params(principal_id: String).returns(T.nilable(Standing)) }
     def call(principal_id:)
-      existing = merchant_repository.find_by_principal_id(principal_id)
-      return existing if existing
-
       info = identity_client.merchant_info(principal_id)
       return nil if info.nil?
-      return nil unless info[:may_sell]
 
       named = info[:merchant_principal_id].to_s
       key = named.empty? ? principal_id : named
+      merchant = merchant_repository.find_by_principal_id(key) || merchant_repository.project(key)
 
-      merchant_repository.project(key)
+      Standing.new(merchant: merchant, may_sell: info[:may_sell] == true)
     end
   end
 end

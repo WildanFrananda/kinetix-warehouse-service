@@ -11,11 +11,17 @@ module FulfillmentTaskRepositoryInterface
   sig { abstract.params(merchant_id: Integer, order_number: String).returns(T.nilable(FulfillmentTask)) }
   def find_by_order_number(merchant_id:, order_number:); end
 
-  sig { abstract.params(merchant_id: Integer, attributes: T::Hash[Symbol, T.anything]).returns(FulfillmentTask) }
-  def create(merchant_id:, attributes:); end
+  sig do
+    abstract.params(
+      merchant_id: Integer,
+      attributes: T::Hash[Symbol, T.anything],
+      lines: T::Array[T::Hash[Symbol, T.anything]]
+    ).returns(FulfillmentTask)
+  end
+  def create(merchant_id:, attributes:, lines:); end
 
   sig { abstract.params(merchant_id: Integer).returns(T::Array[FulfillmentTask]) }
-  def due_today(merchant_id:); end
+  def open_work(merchant_id:); end
 
   sig do
     abstract.params(

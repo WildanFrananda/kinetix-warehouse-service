@@ -13,8 +13,9 @@ module ApiErrorHandling
 
     rescue_from StandardError, with: :render_internal_error
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
-    rescue_from ActionController::ParameterMissing, with: :render_bad_request
+    rescue_from ActionDispatch::Http::Parameters::ParseError, with: :render_unreadable_body
     rescue_from Identity::Unavailable, with: :render_identity_unavailable
+    rescue_from Order::Unavailable, with: :render_order_unavailable
   end
 
   private
@@ -67,11 +68,25 @@ module ApiErrorHandling
     }, status: :service_unavailable
   end
 
-  sig { params(exception: ActionController::ParameterMissing).void }
-  def render_bad_request(exception)
+  sig { params(exception: Order::Unavailable).void }
+  def render_order_unavailable(exception)
+    Rails.logger.warn("order could not be asked (request_id=#{trace_id}): #{exception.message}")
+
+    response.headers["Retry-After"] = "15"
+    render json: {
+      error: "ORDER_UNAVAILABLE",
+      message: "order-service did not answer, so nothing was recorded. Try again shortly.",
+      traceId: trace_id
+    }, status: :service_unavailable
+  end
+
+  sig { params(exception: ActionDispatch::Http::Parameters::ParseError).void }
+  def render_unreadable_body(exception)
+    Rails.logger.info("unreadable body serving #{request.path} (request_id=#{trace_id}): #{exception.message}")
+
     render json: {
       error: "INVALID_REQUEST",
-      message: "the request is missing #{exception.param}.",
+      message: "the request body could not be parsed as the content type it declares.",
       traceId: trace_id
     }, status: :bad_request
   end

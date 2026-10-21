@@ -24,11 +24,4 @@ FactoryBot.define do
     sequence(:awb_number) { |n| "AWB-100#{n}" }
     reprint_count { 1 }
   end
-
-  factory :return do
-    merchant
-    fulfillment_task
-    reason { "Wrong Size" }
-    status { "requested" }
-  end
 end

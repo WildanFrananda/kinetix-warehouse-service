@@ -5,6 +5,7 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::StockReceipts", type: :request do
   include_context "identity issues tokens"
+  include_context "identity answers about merchants"
 
   let(:principal) { "aaaaaaaa-1111-2222-3333-444444444444" }
   let(:owner) { "bbbbbbbb-1111-2222-3333-444444444444" }

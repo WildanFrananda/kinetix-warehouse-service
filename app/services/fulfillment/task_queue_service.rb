@@ -4,6 +4,8 @@ module Fulfillment
   class TaskQueueService < BaseService
     extend T::Sig
 
+    PACKED = "packed"
+
     class TaskLineData < T::Struct
       const :sku, String
       const :quantity, Integer
@@ -36,7 +38,7 @@ module Fulfillment
     def call(merchant_id:)
       now = Time.current
 
-      cards = task_repository.due_today(merchant_id: merchant_id).map do |task|
+      cards = task_repository.open_work(merchant_id: merchant_id).map do |task|
         build_card(task, now)
       end
 
@@ -45,37 +47,32 @@ module Fulfillment
 
     private
 
-    sig { params(task: FulfillmentTask, now: Time).returns(TaskCardData) }
+    sig { params(task: FulfillmentTask, now: ActiveSupport::TimeWithZone).returns(TaskCardData) }
     def build_card(task, now)
       cutoff = T.must(task.same_day_cutoff_at)
-      label = T.must(task.shipping_label)&.awb_number if task.shipping_label
 
       TaskCardData.new(
         id: task.id,
         order_number: T.must(task.order_number),
-        status: T.must(task.status),
+        status: task.status,
         same_day_cutoff_at: cutoff,
         created_at: task.created_at,
-        tracking_number: label,
-        sla_urgency: urgency_for(cutoff, now),
+        tracking_number: task.shipping_label&.awb_number,
+        sla_urgency: task.status == PACKED ? PACKED : urgency_for(cutoff, now),
         lines: task.fulfillment_task_lines.map { |line| build_line(line) }
       )
     end
 
     sig { params(line: FulfillmentTaskLine).returns(TaskLineData) }
     def build_line(line)
-      raw_bin = T.cast(line.read_attribute(:bin_location), T.nilable(String))
-
       TaskLineData.new(
         sku: T.must(line.sku),
         quantity: T.must(line.quantity),
-        # Empty rather than a made-up shelf. The old default was the literal "Rak A-01, Bin 01", which
-        # sent a picker to a real bin that had nothing to do with the parcel.
-        bin_location: raw_bin.presence || ""
+        bin_location: line.bin_location.to_s
       )
     end
 
-    sig { params(cutoff: T.any(Time, ActiveSupport::TimeWithZone), now: Time).returns(String) }
+    sig { params(cutoff: ActiveSupport::TimeWithZone, now: ActiveSupport::TimeWithZone).returns(String) }
     def urgency_for(cutoff, now)
       return "overdue" if cutoff < now
       return "due_soon" if cutoff < now + 2.hours

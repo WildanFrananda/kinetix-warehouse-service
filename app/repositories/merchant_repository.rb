@@ -16,17 +16,18 @@ class MerchantRepository < BaseRepository
 
   sig { override.params(principal_id: String).returns(T.nilable(Merchant)) }
   def find_by_principal_id(principal_id)
-    return nil if principal_id.empty?
+    canonical = Kinetix::PrincipalId.canonical(principal_id)
+    return nil if canonical.nil?
 
-    T.cast(model.find_by(principal_id: principal_id), T.nilable(Merchant))
+    T.cast(model.find_by(principal_id: canonical), T.nilable(Merchant))
   end
 
   sig { override.params(principal_id: String).returns(Merchant) }
   def project(principal_id)
     T.cast(model.create!(principal_id: principal_id), Merchant)
-  rescue ActiveRecord::RecordNotUnique
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
     found = find_by_principal_id(principal_id)
-    raise if found.nil?
+    raise e if found.nil?
 
     found
   end
