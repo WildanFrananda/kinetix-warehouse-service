@@ -1,9 +1,9 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+gem "rails", "~> 8.1.4"
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 
@@ -90,4 +90,4 @@ gem "jwt", "~> 2.9"
 # 1.0.14 or later: `identity.v1.GetMerchantInfoResponse.may_sell` arrived there, and this service
 # now asks identity whether a principal may trade instead of reading a role claim and guessing.
 # An older gem resolves, installs and then raises NoMethodError on the first merchant lookup.
-gem "kinetix-contracts", "~> 1.0", ">= 1.0.20"
+gem "kinetix-contracts", "~> 1.7"
