@@ -4,6 +4,7 @@
 
 # typed: false
 
+module ::FFI::ModernForkTracking; end
 module ::RedisClient::PIDCache::CoreExt; end
 module ::Turbo::Broadcastable; end
 module ::Turbo::Broadcastable::ClassMethods; end
