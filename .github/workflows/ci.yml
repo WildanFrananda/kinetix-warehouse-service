@@ -8,7 +8,6 @@ name: CI
 #     suite written entirely in RSpec. Zero examples executed and the job reported green.
 #   * Redis was commented out, so every spec touching the dispatch or tracking path failed or
 #     was quietly skipped.
-#   * RAILS_MASTER_KEY was commented out, so anything reading encrypted credentials blew up.
 #   * The database credentials were `postgres`/`postgres` — the shared literal that was
 #     committed across this platform and is invalid everywhere else now.
 
@@ -75,7 +74,11 @@ jobs:
       DB_PASSWORD: ci-ephemeral-not-a-deployed-credential
       TEST_DB_NAME: kinetix_warehouse_test
       REDIS_URL: redis://localhost:6379/0
-      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      # No RAILS_MASTER_KEY. The credentials file holds only a secret_key_base that production never
+      # reads (it takes SECRET_KEY_BASE from the store), and the test environment draws its own into
+      # tmp/local_secret.txt: on 2026-10-25 the suite ran 530 examples, 0 failures, with the key file
+      # moved away. Without a secret here, Dependabot's pull requests, which get no Actions secrets,
+      # run the same job as everyone else's instead of failing at its first step.
 
       # Not secrets: the issuer and audience are public claim values, and the JWKS URL is never
       # fetched under test — spec/support/identity_tokens.rb stubs Net::HTTP.get and mints its own
@@ -114,29 +117,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-
-      # A shape check, not just a presence check. Rails' master key is 32 hex characters that
-      # decode to exactly 16 bytes; one stray newline or space makes it decode to something else
-      # and Rails dies with "ArgumentError: key must be 16 bytes" from deep inside ActiveSupport.
-      # Only the length and character class are reported; neither is the secret.
-      - name: The master key must have the right shape
-        run: |
-          if [ -z "$RAILS_MASTER_KEY" ]; then
-            echo "RAILS_MASTER_KEY is not set. Add it under Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          len=$(printf '%s' "$RAILS_MASTER_KEY" | wc -c | tr -d ' ')
-          if [ "$len" -ne 32 ]; then
-            echo "RAILS_MASTER_KEY is $len characters; it must be exactly 32."
-            echo "A trailing newline is the usual cause. Re-copy it with:"
-            echo "    tr -d '\\n' < config/master.key | pbcopy"
-            exit 1
-          fi
-          printf '%s' "$RAILS_MASTER_KEY" | grep -qE '^[a-f0-9]{32}$' || {
-            echo "RAILS_MASTER_KEY is 32 characters but is not lowercase hexadecimal."
-            exit 1
-          }
-          echo "RAILS_MASTER_KEY is 32 hex characters, as required"
 
       # db:schema:load, not db:prepare. db:prepare seeds a database it considers newly set
       # up, and db/seeds.rb creates the same merchant codes the request specs create in their

@@ -12,11 +12,10 @@
 # which runs **Minitest**, against a suite written entirely in RSpec. Zero examples executed and
 # the job reported green.
 #
-# Four things that workflow was missing and this one has:
+# Three things that workflow was missing and this one has:
 #   1. RSpec, so the 18 spec files are actually executed.
 #   2. A test-count floor, so an empty run fails instead of passing.
 #   3. Redis, which the dispatch and tracking specs need.
-#   4. RAILS_MASTER_KEY, which was commented out, so anything touching credentials blew up.
 #
 # The database credentials here are per-pipeline, not the postgres/postgres literal the old
 # workflow used — that literal is one of the values this platform spent S1 invalidating.
@@ -93,9 +92,7 @@ rspec:
     DB_PASSWORD: ci-ephemeral-not-a-deployed-credential
     TEST_DB_NAME: kinetix_warehouse_test
     REDIS_URL: redis://redis:6379/0
-    # Masked, protected CI variable. Commented out in the old workflow, which meant any spec
-    # touching encrypted credentials failed for a reason nobody ever saw.
-    RAILS_MASTER_KEY: $RAILS_MASTER_KEY
+    # No RAILS_MASTER_KEY: the suite needs none (see .github/workflows/ci.yml, where this was measured).
     # Not secrets: the issuer and audience are public claim values, and the JWKS URL is never
     # fetched under test — spec/support/identity_tokens.rb stubs Net::HTTP.get and mints its own
     # RS256 keypair. They are here because lib/kinetix/token_verifier.rb builds every verifier
@@ -121,31 +118,6 @@ rspec:
     KINETIX_TIME_ZONE: Asia/Jakarta
     WAREHOUSE_LOW_STOCK_THRESHOLD: "5"
   script:
-    - |
-      # A shape check, not just a presence check. Rails' master key is 32 hex characters that
-      # decode to exactly 16 bytes; one stray newline or space makes it decode to something
-      # else, and Rails dies with "ArgumentError: key must be 16 bytes" from deep inside
-      # ActiveSupport, sixty stack frames away from the cause. This says it plainly instead.
-      #
-      # Only the length and character class are reported. Neither of those is the secret.
-      if [ -z "$RAILS_MASTER_KEY" ]; then
-        echo "RAILS_MASTER_KEY is not set."
-        echo "Add it under Settings > CI/CD > Variables, masked and protected."
-        exit 1
-      fi
-      len=$(printf '%s' "$RAILS_MASTER_KEY" | wc -c | tr -d ' ')
-      if [ "$len" -ne 32 ]; then
-        echo "RAILS_MASTER_KEY is $len characters; it must be exactly 32."
-        echo "A trailing newline or space is the usual cause: copying the file in an editor"
-        echo "picks one up. Re-copy it with:"
-        echo "    tr -d '\\n' < config/master.key | pbcopy"
-        exit 1
-      fi
-      if ! printf '%s' "$RAILS_MASTER_KEY" | grep -qE '^[a-f0-9]{32}$'; then
-        echo "RAILS_MASTER_KEY is 32 characters but is not lowercase hexadecimal."
-        exit 1
-      fi
-      echo "RAILS_MASTER_KEY is 32 hex characters, as required"
     - bundle exec rails db:schema:load
     - bundle exec rspec --format progress --format json --out rspec.json
     # A suite that runs no examples is a failed suite, not a passing one. This is the exact
