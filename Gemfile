@@ -72,7 +72,7 @@ end
 group :development, :test do
   gem "tapioca", require: false
   gem "ruby-lsp", require: false
-  gem "rspec-rails", "~> 7.0"
+  gem "rspec-rails", "~> 8.0"
   gem "factory_bot_rails"
 end
 
@@ -83,7 +83,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "jwt", "~> 2.9"
+gem "jwt", "~> 3.3"
 # 1.0.14 or later: `identity.v1.GetMerchantInfoResponse.may_sell` arrived there, and this service
 # now asks identity whether a principal may trade instead of reading a role claim and guessing.
 # An older gem resolves, installs and then raises NoMethodError on the first merchant lookup.
