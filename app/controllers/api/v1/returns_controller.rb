@@ -6,18 +6,20 @@ module Api
       extend T::Sig
       include ApiAuthentication
       include ApiErrorHandling
+      include ApiStringParams
 
       sig { void }
       def create
         merchant = require_api_merchant!
         return if merchant.nil?
 
-        task = find_task(merchant, params[:fulfillment_task_id].to_i)
+        task = find_task(merchant, Kinetix::IntegerParam.id(params[:fulfillment_task_id]))
         return if task.nil?
+        return if refuse_unusable_strings(%i[reason], coded: false)
 
-        reason = params[:reason].to_s
+        reason = string_param(:reason).to_s
         if reason.strip.empty?
-          render json: { error: "Reason cannot be blank" }, status: :unprocessable_entity
+          render json: { error: "Reason cannot be blank" }, status: :unprocessable_content
           return
         end
 
@@ -43,17 +45,29 @@ module Api
       def received
         merchant = require_api_merchant!
         return if merchant.nil?
+        return if refuse_unusable_strings(%i[bin_code], coded: false)
+
+        bin_code = string_param(:bin_code).to_s
+        if bin_code.length > WarehouseBin::MAX_CODE_LENGTH
+          render(
+            json: { error: "bin_code must be at most #{WarehouseBin::MAX_CODE_LENGTH} characters" },
+            status: :unprocessable_content
+          )
+          return
+        end
 
         form = Returns::ReturnedLinesForm.new(params[:lines])
         unless form.well_formed?
-          render json: { error: "lines must be a list of objects, each with a sku and a quantity" },
-                 status: :bad_request
+          render(
+            json: { error: "lines must be a list of objects, each with a sku and a quantity" },
+            status: :bad_request
+          )
           return
         end
 
         problem = form.problem
         if problem
-          render json: { error: problem }, status: :unprocessable_entity
+          render json: { error: problem }, status: :unprocessable_content
           return
         end
 
@@ -62,7 +76,7 @@ module Api
           merchant_principal_id: T.must(merchant.principal_id),
           return_number: params[:return_number].to_s,
           lines: form.lines,
-          bin_code: params[:bin_code].to_s,
+          bin_code: bin_code,
           received_at: Time.current.utc
         )
 
@@ -78,10 +92,10 @@ module Api
 
       private
 
-      sig { params(merchant: Merchant, task_id: Integer).returns(T.nilable(FulfillmentTask)) }
+      sig { params(merchant: Merchant, task_id: T.nilable(Integer)).returns(T.nilable(FulfillmentTask)) }
       def find_task(merchant, task_id)
         repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-        task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
+        task = task_id && repository.find_by_id(merchant_id: merchant.id, id: task_id)
 
         if task.nil?
           render json: { error: "Fulfillment task not found" }, status: :not_found

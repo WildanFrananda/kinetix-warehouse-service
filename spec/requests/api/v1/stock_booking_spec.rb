@@ -65,7 +65,7 @@ RSpec.describe "booking stock for a merchant", type: :request do
       it "books nothing" do
         book
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.parsed_body["error"]).to eq("UNKNOWN_MERCHANT")
         expect(BinInventory.count).to eq(0)
         expect(StockReceipt.count).to eq(0)
@@ -119,14 +119,14 @@ RSpec.describe "booking stock for a merchant", type: :request do
     it "refuses a blank one with a 422, not a 500" do
       book(sku: "   ")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(BinInventory.count).to eq(0)
     end
 
     it "refuses one longer than a reservation could ever name" do
       book(sku: "S" * (StockOperation::MAX_SKU_LENGTH + 1))
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(BinInventory.count).to eq(0)
     end
   end

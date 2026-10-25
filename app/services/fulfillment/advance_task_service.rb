@@ -4,6 +4,7 @@ module Fulfillment
   class AdvanceTaskService < BaseService
     extend T::Sig
 
+    PACKING = "packing"
     PACKED = "packed"
     ORDER_NOT_TOLD = "order-service could not be told this parcel is packed, so no courier has been sent yet. " \
                      "Set the task to packed again to re-send the report."
@@ -55,6 +56,11 @@ module Fulfillment
         return failure("a #{current} task cannot be moved to #{new_status}")
       end
 
+      if current == PACKING && new_status == PACKED
+        remaining = task_repository.lines_remaining(task_id: task.id)
+        return failure(unscanned(remaining)) unless remaining.zero?
+      end
+
       updated = task_repository.update_status(
         merchant_id: merchant_id, task_id: task_id, status: new_status, from: current
       )
@@ -78,6 +84,12 @@ module Fulfillment
 
     private
 
+    sig { params(remaining: Integer).returns(String) }
+    def unscanned(remaining)
+      lines = remaining == 1 ? "1 line of this task has" : "#{remaining} lines of this task have"
+      "#{lines} not been scanned; scan every line before the parcel is packed"
+    end
+
     sig { params(task: FulfillmentTask).returns(T::Hash[Symbol, T.untyped]) }
     def notify_order(task)
       merchant = task.merchant
@@ -97,7 +109,9 @@ module Fulfillment
         fulfillment_task_id: task.id
       )
     rescue StandardError => e
-      Rails.logger.error("[Order] task #{task.id} is packed but telling order-service raised #{e.class}: #{e.message}")
+      Rails.logger.error(
+        "[Order] task #{task.id} is packed but telling order-service raised #{e.class}: #{e.message}"
+      )
       { success: false, error: ORDER_NOT_TOLD, dispatch_ref: "" }
     end
   end

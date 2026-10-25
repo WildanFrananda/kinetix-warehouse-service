@@ -51,7 +51,7 @@ module Rpc
       merchant = merchant_for(req.merchant_principal_id)
       return refuse_cancel("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
 
-      task_id = T.let(Integer(req.task_id, exception: false), T.nilable(Integer))
+      task_id = Kinetix::IntegerParam.id(req.task_id)
       return refuse_cancel("UNKNOWN_TASK", "task_id is not a number this warehouse could have issued") unless task_id
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
@@ -77,7 +77,7 @@ module Rpc
 
       return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing") if req.awb_number.strip.empty?
 
-      task_id = T.let(Integer(req.fulfillment_task_id, exception: false), T.nilable(Integer))
+      task_id = Kinetix::IntegerParam.id(req.fulfillment_task_id)
       return refuse_awb("UNKNOWN_TASK", "fulfillment_task_id is not a number this warehouse could have issued") unless task_id
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)

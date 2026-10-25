@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
-      resources :fulfillment_tasks, only: [] do
+      resources :fulfillment_tasks, only: [ :index ] do
         collection do
           get :queue
         end

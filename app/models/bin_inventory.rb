@@ -4,6 +4,8 @@
 class BinInventory < ApplicationRecord
   extend T::Sig
 
+  MAX_QUANTITY = Kinetix::IntegerParam::MAX_INT32
+
   belongs_to :warehouse_bin
 
   validates :sku, presence: true

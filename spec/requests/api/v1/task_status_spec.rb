@@ -67,7 +67,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       move(task, "packed")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("received")
       expect(order.packed).to be_empty
     end
@@ -77,7 +77,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       move(task, "packed")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("cancelled")
       expect(order.packed).to be_empty, "a refunded order must not be sent a courier"
     end
@@ -87,7 +87,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       move(task, "cancelled")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("received")
     end
 
@@ -96,7 +96,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       move(task, "received")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("packed")
     end
   end
@@ -108,7 +108,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
       scan(task, "GAMIS-RED-M")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("cancelled")
     end
   end

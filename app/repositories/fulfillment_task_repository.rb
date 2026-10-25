@@ -72,4 +72,19 @@ class FulfillmentTaskRepository < BaseRepository
 
     find_by_id(merchant_id: merchant_id, id: task_id)
   end
+
+  sig { override.params(task_id: Integer, line_id: Integer).returns(T::Boolean) }
+  def mark_line_scanned(task_id:, line_id:)
+    now = Time.current
+    marked = FulfillmentTaskLine
+      .where(id: line_id, fulfillment_task_id: task_id, scanned_at: nil)
+      .update_all(scanned_at: now, updated_at: now)
+
+    marked == 1
+  end
+
+  sig { override.params(task_id: Integer).returns(Integer) }
+  def lines_remaining(task_id:)
+    FulfillmentTaskLine.where(fulfillment_task_id: task_id, scanned_at: nil).count
+  end
 end

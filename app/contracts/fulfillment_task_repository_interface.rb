@@ -29,4 +29,10 @@ module FulfillmentTaskRepositoryInterface
     ).returns(T.nilable(FulfillmentTask))
   end
   def update_status(merchant_id:, task_id:, status:, from: nil); end
+
+  sig { abstract.params(task_id: Integer, line_id: Integer).returns(T::Boolean) }
+  def mark_line_scanned(task_id:, line_id:); end
+
+  sig { abstract.params(task_id: Integer).returns(Integer) }
+  def lines_remaining(task_id:); end
 end

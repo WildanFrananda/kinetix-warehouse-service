@@ -44,7 +44,7 @@ RSpec.describe "Api::V1::Returns", type: :request do
     it "refuses a return with no stated reason" do
       post "/api/v1/fulfillment_tasks/#{task.id}/returns", params: { reason: "  " }, headers: valid_headers
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(relay.opened).to be_empty
     end
 
@@ -129,8 +129,33 @@ RSpec.describe "Api::V1::Returns", type: :request do
       post "/api/v1/returns/RMA-20260921-ABCD1234/received",
            params: { bin_code: "A-01-1" }, headers: valid_headers
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(relay.received).to be_empty
+    end
+
+    [ "0x10", "0b11", "1_000", " 3", "3 " ].each do |quantity|
+      it "refuses the quantity #{quantity.inspect}, which is not a whole number written in plain digits" do
+        post "/api/v1/returns/RMA-20260921-ABCD1234/received",
+             params: { bin_code: "A-01-1", lines: [ { sku: "GAMIS-RED-M", quantity: quantity } ] }.to_json,
+             headers: valid_headers.merge("Content-Type" => "application/json")
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(relay.received).to be_empty
+      end
+    end
+
+    context "with a quantity order's contract cannot carry" do
+      let(:relay) { Order::GrpcClient.new(host: "127.0.0.1:1") }
+
+      it "refuses it with 422 before building order's request, rather than failing with a 500" do
+        lines = [ { sku: "GAMIS-RED-M", quantity: 2_147_483_648 } ]
+
+        post "/api/v1/returns/RMA-20260921-ABCD1234/received",
+             params: { bin_code: "A-01-1", lines: lines }.to_json,
+             headers: valid_headers.merge("Content-Type" => "application/json")
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
     end
 
     it "returns 401 when no token is presented" do

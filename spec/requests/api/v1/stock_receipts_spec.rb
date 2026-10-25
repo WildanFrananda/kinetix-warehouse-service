@@ -81,7 +81,7 @@ RSpec.describe "Api::V1::StockReceipts", type: :request do
                      merchant_principal_id: owner },
            headers: admin
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(WarehouseBin.count).to eq(1)
     end
 

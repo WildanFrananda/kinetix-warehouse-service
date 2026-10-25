@@ -20,6 +20,11 @@ Container.register(:task_queue_service) do
     task_repository: Container[:fulfillment_task_repository]
   )
 end
+Container.register(:task_lookup_service) do
+  Fulfillment::TaskLookupService.new(
+    task_repository: Container[:fulfillment_task_repository]
+  )
+end
 
 Container.register(:order_grpc_client) { Order::GrpcClient.new }
 Container.register(:identity_grpc_client) { Identity::GrpcClient.new }

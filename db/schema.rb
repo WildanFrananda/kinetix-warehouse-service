@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,6 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
     t.datetime "created_at", null: false
     t.bigint "fulfillment_task_id", null: false
     t.integer "quantity"
+    t.datetime "scanned_at"
     t.string "sku"
     t.datetime "updated_at", null: false
     t.index ["fulfillment_task_id"], name: "index_fulfillment_task_lines_on_fulfillment_task_id"
@@ -76,7 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
     t.datetime "created_at", null: false
     t.string "idempotency_key", limit: 255, null: false
     t.uuid "merchant_principal_id", null: false
-    t.string "note"
+    t.string "note", limit: 1000
     t.integer "quantity_after", null: false
     t.integer "quantity_before", null: false
     t.integer "quantity_delta", null: false
@@ -118,7 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
     t.datetime "created_at", null: false
     t.string "idempotency_key", limit: 255, null: false
     t.uuid "merchant_principal_id"
-    t.string "note"
+    t.string "note", limit: 1000
     t.integer "quantity", null: false
     t.uuid "received_by_principal_id", null: false
     t.string "sku", null: false
@@ -146,11 +147,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_100004) do
   end
 
   create_table "warehouse_bins", force: :cascade do |t|
-    t.string "bin_code", null: false
+    t.string "bin_code", limit: 64, null: false
     t.datetime "created_at", null: false
     t.integer "shelf_level", default: 1, null: false
     t.datetime "updated_at", null: false
-    t.string "zone", null: false
+    t.string "zone", limit: 64, null: false
     t.index ["bin_code"], name: "index_warehouse_bins_on_bin_code", unique: true
   end
 

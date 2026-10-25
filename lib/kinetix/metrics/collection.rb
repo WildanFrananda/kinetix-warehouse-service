@@ -33,6 +33,9 @@ module Kinetix
       sig { returns(Counter) }
       attr_reader :grpc_client_calls
 
+      sig { returns(Counter) }
+      attr_reader :admin_actions
+
       sig { params(service: String, version: String).void }
       def initialize(service: SERVICE, version: Collection.version)
         @registry = T.let(Registry.new, Registry)
@@ -64,6 +67,15 @@ module Kinetix
           Counter
         )
 
+        @admin_actions = T.let(
+          Counter.new(
+            name: "kinetix_admin_actions_total",
+            help: "Actions taken by an admin, by action and whether they were done, refused or failed.",
+            label_names: %w[action outcome]
+          ),
+          Counter
+        )
+
         @build_info = T.let(
           Gauge.new(
             name: "kinetix_build_info",
@@ -76,6 +88,7 @@ module Kinetix
         @registry.register(@http_requests)
         @registry.register(@http_request_duration)
         @registry.register(@grpc_client_calls)
+        @registry.register(@admin_actions)
         @registry.register(@build_info)
 
         @build_info.set({ "service" => service, "version" => version }, 1.0)

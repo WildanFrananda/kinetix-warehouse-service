@@ -18,6 +18,7 @@ module Kinetix
   end
 end
 
+require_relative "metrics/admin_actions"
 require_relative "metrics/grpc_client_recorder"
 require_relative "metrics/grpc_server_interceptor"
 require_relative "metrics/http_middleware"

@@ -1,6 +1,7 @@
 # typed: false
 
 require_relative "../../lib/kinetix/metrics"
+require_relative "../../lib/kinetix/metrics/admin_actions"
 require_relative "../../lib/kinetix/metrics/grpc_client_recorder"
 
 Rails.application.config.to_prepare do
@@ -12,4 +13,6 @@ Rails.application.config.to_prepare do
   ].each do |peer, grpc_method|
     Kinetix::Metrics::GrpcClientRecorder.declare(peer: peer, grpc_method: grpc_method)
   end
+
+  Kinetix::Metrics::AdminActions.declare
 end

@@ -4,10 +4,16 @@ module Fulfillment
   class VerifyScanService < BaseService
     extend T::Sig
 
+    PACKED = "packed"
+
     class ResultData < T::Struct
       const :fulfillment_task_id, Integer
       const :order_number, String
-      const :matched_sku, String
+      const :matched, String
+      const :matched_code, String
+      const :matched_sku, T.nilable(String)
+      const :line_already_scanned, T::Boolean
+      const :lines_remaining, Integer
       const :new_status, String
       const :message, String
       const :order_notified, T::Boolean
@@ -44,16 +50,22 @@ module Fulfillment
       task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
       return not_found("Fulfillment task ##{task_id} not found for this merchant") unless task
 
-      matched_line = task.fulfillment_task_lines.find { |line| line.sku.to_s.casecmp?(clean_code) }
-      awb_match = task.shipping_label&.awb_number&.casecmp?(clean_code)
-      order_number_match = task.order_number.to_s.casecmp?(clean_code)
-
-      unless matched_line || awb_match || order_number_match
+      match = ScanMatch.find(task, clean_code)
+      unless match
         expected = task.fulfillment_task_lines.map(&:sku).join(", ")
         return failure("✖ SKU MISMATCH! Scanned '#{clean_code}' does not match expected SKU (#{expected})")
       end
 
-      advance(merchant_id: merchant_id, task: task, matched_line: matched_line)
+      status = task.status
+      unless TaskTransitions.scannable?(status)
+        return failure("this task is #{status}; there is nothing left to scan")
+      end
+
+      line = match.line
+      already = !line.nil? && !task_repository.mark_line_scanned(task_id: task.id, line_id: line.id)
+      remaining = task_repository.lines_remaining(task_id: task.id)
+
+      settle(merchant_id: merchant_id, task: task, match: match, already: already, remaining: remaining)
     end
 
     private
@@ -62,32 +74,68 @@ module Fulfillment
       params(
         merchant_id: Integer,
         task: FulfillmentTask,
-        matched_line: T.nilable(FulfillmentTaskLine)
+        match: ScanMatch,
+        already: T::Boolean,
+        remaining: Integer
       ).returns(BaseService::Result)
     end
-    def advance(merchant_id:, task:, matched_line:)
-      current = task.status
-      new_status = Fulfillment::TaskTransitions.next_on_scan(current)
-      return failure("this task is #{current}; there is nothing left to scan") if new_status.nil?
+    def settle(merchant_id:, task:, match:, already:, remaining:)
+      status = task.status
+      packed = T.let(nil, T.nilable(AdvanceTaskService::ResultData))
 
-      moved = advance_task_service.call(merchant_id: merchant_id, task_id: task.id, new_status: new_status)
-      return moved if moved.failure?
+      TaskTransitions.steps_on_scan(from: status, lines_remaining: remaining).each do |step|
+        moved = advance_task_service.call(merchant_id: merchant_id, task_id: task.id, new_status: step)
+        if moved.success?
+          packed = T.cast(moved.data, AdvanceTaskService::ResultData) if step == PACKED
+          status = step
+          next
+        end
 
-      advanced = T.cast(moved.data, AdvanceTaskService::ResultData)
-      matched_sku = matched_line ? matched_line.sku.to_s : advanced.order_number
+        now = task_repository.find_by_id(merchant_id: merchant_id, id: task.id)&.status
+        return moved unless now && TaskTransitions.reached?(now, step)
+
+        status = now
+      end
 
       success(
         ResultData.new(
-          fulfillment_task_id: advanced.id,
-          order_number: advanced.order_number,
-          matched_sku: matched_sku,
-          new_status: advanced.status,
-          message: "✓ MATCHED! #{matched_sku} verified.",
-          order_notified: advanced.order_notified,
-          notify_error: advanced.notify_error,
-          dispatch_ref: advanced.dispatch_ref
+          fulfillment_task_id: task.id,
+          order_number: T.must(task.order_number),
+          matched: match.kind,
+          matched_code: match.code,
+          matched_sku: match.line ? match.code : nil,
+          line_already_scanned: already,
+          lines_remaining: remaining,
+          new_status: status,
+          message: message(
+            match.code,
+            already: already,
+            remaining: remaining,
+            status: status,
+            packed: !packed.nil?
+          ),
+          order_notified: packed ? packed.order_notified : false,
+          notify_error: packed&.notify_error,
+          dispatch_ref: packed&.dispatch_ref
         )
       )
+    end
+
+    sig do
+      params(
+        code: String,
+        already: T::Boolean,
+        remaining: Integer,
+        status: String,
+        packed: T::Boolean
+      ).returns(String)
+    end
+    def message(code, already:, remaining:, status:, packed:)
+      head = already ? "#{code} was already scanned." : "✓ MATCHED! #{code} verified."
+      return "#{head} Every line is scanned; the parcel is packed." if packed
+      return "#{head} The parcel is packed." if status == PACKED
+
+      "#{head} #{remaining} #{remaining == 1 ? 'line' : 'lines'} left to scan."
     end
   end
 end

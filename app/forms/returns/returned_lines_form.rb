@@ -4,6 +4,12 @@ module Returns
   class ReturnedLinesForm
     extend T::Sig
 
+    QUANTITIES = T.let(1..Kinetix::IntegerParam::MAX_INT32, T::Range[Integer])
+    QUANTITY_PROBLEM = T.let(
+      "Every line needs a whole quantity from 1 to #{QUANTITIES.end}, written in digits",
+      String
+    )
+
     sig { params(raw: T.untyped).void }
     def initialize(raw)
       @raw = T.let(raw, T.untyped)
@@ -23,7 +29,7 @@ module Returns
       entries = @raw.is_a?(Array) ? @raw : []
 
       entries.map do |line|
-        { sku: line[:sku].to_s, quantity: Integer(line[:quantity].to_s, exception: false) }
+        { sku: line[:sku], quantity: Kinetix::IntegerParam.parse(line[:quantity], signed: false) }
       end
     end
 
@@ -31,19 +37,26 @@ module Returns
     def problem
       found = lines
       return "Name at least one SKU that came back" if found.empty?
-      return "Every line needs a SKU" if found.any? { |line| line[:sku].strip.empty? }
-      return "Every line needs a whole quantity of at least 1" unless found.all? { |line| countable?(line[:quantity]) }
+      return "Every line needs a SKU, written as a string" unless found.all? { |line| named?(line[:sku]) }
+      return QUANTITY_PROBLEM unless found.all? { |line| countable?(line[:quantity]) }
 
       nil
     end
 
     private
 
+    sig { params(sku: T.untyped).returns(T::Boolean) }
+    def named?(sku)
+      return false unless sku.is_a?(String)
+
+      !sku.strip.empty? && !sku.include?("\u0000")
+    end
+
     sig { params(quantity: T.untyped).returns(T::Boolean) }
     def countable?(quantity)
       return false unless quantity.is_a?(Integer)
 
-      quantity >= 1
+      QUANTITIES.cover?(quantity)
     end
   end
 end
