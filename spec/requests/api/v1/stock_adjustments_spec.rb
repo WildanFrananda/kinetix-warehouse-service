@@ -93,7 +93,7 @@ RSpec.describe "Api::V1::StockAdjustments", type: :request do
     it "refuses a reason it does not know rather than storing free text" do
       post_adjustment(headers: admin, reason: "BECAUSE")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(StockAdjustment.count).to eq(0)
     end
 
@@ -125,7 +125,7 @@ RSpec.describe "Api::V1::StockAdjustments", type: :request do
                      idempotency_key: "K", merchant_principal_id: owner },
            headers: admin
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(StockAdjustment.count).to eq(0)
     end
   end

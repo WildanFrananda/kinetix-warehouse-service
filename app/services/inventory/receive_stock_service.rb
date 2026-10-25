@@ -10,10 +10,16 @@ module Inventory
     BIN_NOT_FOUND = "BIN_NOT_FOUND"
     INVALID_QUANTITY = "INVALID_QUANTITY"
     INVALID_SKU = "INVALID_SKU"
+    INVALID_IDEMPOTENCY_KEY = "INVALID_IDEMPOTENCY_KEY"
+    INVALID_BIN_CODE = "INVALID_BIN_CODE"
+    INVALID_NOTE = "INVALID_NOTE"
+    STOCK_LIMIT_EXCEEDED = "STOCK_LIMIT_EXCEEDED"
     INVALID_MERCHANT_PRINCIPAL = "INVALID_MERCHANT_PRINCIPAL"
     UNKNOWN_MERCHANT = "UNKNOWN_MERCHANT"
     IDEMPOTENCY_KEY_CONFLICT = "IDEMPOTENCY_KEY_CONFLICT"
     WRONG_OWNER = "WRONG_OWNER"
+
+    QUANTITIES = T.let(1..BinInventory::MAX_QUANTITY, T::Range[Integer])
 
     class Result < T::Struct
       const :receipt, T.nilable(StockReceipt)
@@ -27,7 +33,7 @@ module Inventory
       params(
         bin_code: String,
         sku: String,
-        quantity: Integer,
+        quantity: T.nilable(Integer),
         idempotency_key: String,
         received_by_principal_id: String,
         merchant_principal_id: String,
@@ -57,11 +63,15 @@ module Inventory
 
     sig { returns(Result) }
     def call
-      return failure(INVALID_QUANTITY) if @quantity <= 0
+      quantity = @quantity
+      return failure(INVALID_QUANTITY) if quantity.nil? || !QUANTITIES.cover?(quantity)
+      return failure(INVALID_IDEMPOTENCY_KEY) unless StockIdentifiers.idempotency_key?(@idempotency_key)
 
       owner = Kinetix::PrincipalId.canonical(@merchant_principal_id)
       return failure(INVALID_MERCHANT_PRINCIPAL) if owner.nil?
       return failure(INVALID_SKU) unless StockIdentifiers.sku?(@sku)
+      return failure(INVALID_BIN_CODE) unless StockIdentifiers.bin_code?(@bin_code)
+      return failure(INVALID_NOTE) unless note_fits?
 
       existing = stored_receipt(owner)
       return replay(existing) if existing
@@ -72,13 +82,13 @@ module Inventory
       bin = WarehouseBin.find_by(bin_code: @bin_code)
       return failure(BIN_NOT_FOUND) if bin.nil?
 
-      book(bin, T.must(standing.merchant.principal_id))
+      book(bin, T.must(standing.merchant.principal_id), quantity)
     end
 
     private
 
-    sig { params(bin: WarehouseBin, owner: String).returns(Result) }
-    def book(bin, owner)
+    sig { params(bin: WarehouseBin, owner: String, quantity: Integer).returns(Result) }
+    def book(bin, owner, quantity)
       receipt = T.let(nil, T.nilable(StockReceipt))
       on_hand = T.let(0, Integer)
 
@@ -102,13 +112,16 @@ module Inventory
 
         inventory.update!(merchant_principal_id: owner) if recorded_owner.blank?
 
-        inventory.update!(quantity: inventory.quantity.to_i + @quantity)
-        on_hand = inventory.quantity.to_i
+        after = inventory.quantity.to_i + quantity
+        raise StockLimitExceeded if after > BinInventory::MAX_QUANTITY
+
+        inventory.update!(quantity: after)
+        on_hand = after
 
         receipt = StockReceipt.create!(
           warehouse_bin: bin,
           sku: @sku,
-          quantity: @quantity,
+          quantity: quantity,
           idempotency_key: @idempotency_key,
           received_by_principal_id: @received_by_principal_id,
           merchant_principal_id: owner,
@@ -119,12 +132,20 @@ module Inventory
       Result.new(receipt: receipt, bin_code: bin.bin_code, quantity_on_hand: on_hand, replayed: false, error: nil)
     rescue WrongOwner
       failure(WRONG_OWNER)
+    rescue StockLimitExceeded
+      failure(STOCK_LIMIT_EXCEEDED)
     rescue ActiveRecord::RecordNotUnique => e
       replay_after_race(owner, e)
     rescue ActiveRecord::RecordInvalid => e
       raise unless e.record.is_a?(StockReceipt) && e.record.errors.of_kind?(:idempotency_key, :taken)
 
       replay_after_race(owner, e)
+    end
+
+    sig { returns(T::Boolean) }
+    def note_fits?
+      note = @note
+      note.nil? || note.length <= StockReceipt::MAX_NOTE_LENGTH
     end
 
     sig { params(owner: String).returns(T.nilable(StockReceipt)) }

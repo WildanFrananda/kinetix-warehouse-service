@@ -49,7 +49,7 @@ RSpec.describe "Api::V1::Merchants#update", type: :request do
   it "refuses an hour that is not one" do
     set_cutoff(25)
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(merchant.reload.cutoff_hour).to eq(14)
   end
 
@@ -57,14 +57,14 @@ RSpec.describe "Api::V1::Merchants#update", type: :request do
     # to_i turns "banana" into 0, which is a valid hour and the wrong answer.
     set_cutoff("banana")
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(merchant.reload.cutoff_hour).to eq(14)
   end
 
   it "refuses a missing value" do
     patch "/api/v1/merchants/#{merchant.id}", params: {}, headers: headers
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(merchant.reload.cutoff_hour).to eq(14)
   end
 end

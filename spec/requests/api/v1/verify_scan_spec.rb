@@ -90,28 +90,20 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
   end
 
   describe "a matching scan" do
-    it "advances a received task to packing and says what matched" do
+    it "packs a one-line task, since that scan has matched every line, and says what matched" do
       scan("GAMIS-RED-M")
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
+      expect(json["matched"]).to eq("sku")
+      expect(json["matched_code"]).to eq("GAMIS-RED-M")
       expect(json["matched_sku"]).to eq("GAMIS-RED-M")
-      expect(json["new_status"]).to eq("packing")
-      expect(task.reload.status).to eq("packing")
-    end
-
-    it "advances a packing task to packed on the second scan" do
-      scan("GAMIS-RED-M")
-      scan("GAMIS-RED-M")
-
-      expect(JSON.parse(response.body)["new_status"]).to eq("packed")
+      expect(json["lines_remaining"]).to eq(0)
+      expect(json["new_status"]).to eq("packed")
       expect(task.reload.status).to eq("packed")
     end
 
     it "tells order once the scan packs the parcel, so a courier is dispatched" do
-      scan("GAMIS-RED-M")
-      expect(order.packed).to be_empty
-
       scan("GAMIS-RED-M")
 
       expect(order.packed).to eq([ task.order_number ])
@@ -120,27 +112,154 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       expect(json["dispatch_ref"]).to eq("DISPATCH-1")
     end
 
-    it "re-sends the report when a packed parcel is scanned again" do
-      task.update!(status: "packed")
-
-      scan("GAMIS-RED-M")
-
-      expect(response).to have_http_status(:ok)
-      expect(order.packed).to eq([ task.order_number ])
-    end
-
-    it "accepts the order number as well as the SKU, because both are on the paperwork" do
-      scan(task.order_number)
-
-      expect(response).to have_http_status(:ok)
-      expect(task.reload.status).to eq("packing")
-    end
-
     it "does not care about the case the scanner reports" do
       scan("gamis-red-m")
 
       expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["matched_code"]).to eq("GAMIS-RED-M")
+      expect(task.reload.status).to eq("packed")
+    end
+  end
+
+  describe "a task of two lines" do
+    let!(:second) { create(:fulfillment_task_line, fulfillment_task: task, sku: "HIJAB-BLK-L") }
+
+    it "stays packing after the first matching scan and is packed only after the second" do
+      scan("GAMIS-RED-M")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["new_status"]).to eq("packing")
+      expect(response.parsed_body["lines_remaining"]).to eq(1)
+      expect(response.parsed_body["message"]).to include("1 line left")
       expect(task.reload.status).to eq("packing")
+      expect(order.packed).to be_empty
+
+      scan("HIJAB-BLK-L")
+
+      expect(response.parsed_body["new_status"]).to eq("packed")
+      expect(response.parsed_body["lines_remaining"]).to eq(0)
+      expect(response.parsed_body["order_notified"]).to be(true)
+      expect(task.reload.status).to eq("packed")
+      expect(order.packed).to eq([ task.order_number ])
+    end
+
+    it "counts a line once, however often it is scanned" do
+      scan("GAMIS-RED-M")
+      scan("GAMIS-RED-M")
+
+      expect(response).to have_http_status(:ok)
+      expect(task.reload.status).to eq("packing")
+      expect(order.packed).to be_empty
+      json = response.parsed_body
+      expect(json["line_already_scanned"]).to be(true)
+      expect(json["lines_remaining"]).to eq(1)
+      expect(json["new_status"]).to eq("packing")
+      expect(json["order_notified"]).to be(false)
+    end
+
+    it "records which line each scan matched" do
+      scan("HIJAB-BLK-L")
+
+      expect(second.reload.scanned_at).to be_present
+      expect(line.reload.scanned_at).to be_nil
+    end
+
+    it "is not packed by scanning its order number, which matches no line" do
+      scan("GAMIS-RED-M")
+      scan(task.order_number)
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json["matched"]).to eq("order_number")
+      expect(json["matched_sku"]).to be_nil
+      expect(json["lines_remaining"]).to eq(1)
+      expect(task.reload.status).to eq("packing")
+    end
+
+    it "cannot be set packed by hand while a line is unscanned" do
+      scan("GAMIS-RED-M")
+
+      patch "/api/v1/fulfillment_tasks/#{task.id}/status", params: { status: "packed" }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body["error"]).to include("1 line")
+      expect(task.reload.status).to eq("packing")
+      expect(order.packed).to be_empty
+    end
+
+    it "packs a task whose last line another scan matched without packing it, and tells order once" do
+      scan("GAMIS-RED-M")
+      FulfillmentTaskLine.where(id: second.id).update_all(scanned_at: Time.current)
+
+      scan("HIJAB-BLK-L")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["new_status"]).to eq("packed")
+      expect(response.parsed_body["line_already_scanned"]).to be(true)
+      expect(order.packed).to eq([ task.order_number ])
+    end
+  end
+
+  describe "a scan of a packed parcel" do
+    before do
+      scan("GAMIS-RED-M")
+      order.packed.clear
+    end
+
+    it "changes nothing and does not report the parcel to order again" do
+      scan("GAMIS-RED-M")
+
+      expect(response).to have_http_status(:ok)
+      expect(order.packed).to be_empty
+      json = response.parsed_body
+      expect(json["new_status"]).to eq("packed")
+      expect(json["line_already_scanned"]).to be(true)
+      expect(json["lines_remaining"]).to eq(0)
+      expect(json["order_notified"]).to be(false)
+    end
+
+    it "names the tracking number as what matched, not the order number" do
+      create(:shipping_label, fulfillment_task: task, awb_number: "KNX-20261022-TRACK001", reprint_count: 0)
+
+      scan("KNX-20261022-TRACK001")
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json["matched"]).to eq("tracking_number")
+      expect(json["matched_code"]).to eq("KNX-20261022-TRACK001")
+      expect(json["matched_sku"]).to be_nil
+      expect(json["message"]).not_to include(task.order_number)
+      expect(order.packed).to be_empty
+    end
+
+    it "keeps it on the queue until its label is printed, and prints it" do
+      create(:shipping_label, fulfillment_task: task, awb_number: "KNX-20261022-TRACK002", reprint_count: 0)
+
+      get "/api/v1/fulfillment_tasks/queue", headers: headers
+      expect(response.parsed_body.map { |card| card["id"] }).to eq([ task.id ])
+      expect(response.parsed_body.first["lines"].first["scanned"]).to be(true)
+
+      post "/api/v1/fulfillment_tasks/#{task.id}/label", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["print_count"]).to eq(1)
+
+      get "/api/v1/fulfillment_tasks/queue", headers: headers
+      expect(response.parsed_body).to be_empty
+    end
+  end
+
+  describe "the order number" do
+    it "starts packing, because it is on the paperwork, but matches no line" do
+      scan(task.order_number)
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json["matched"]).to eq("order_number")
+      expect(json["matched_code"]).to eq(task.order_number)
+      expect(json["matched_sku"]).to be_nil
+      expect(json["lines_remaining"]).to eq(1)
+      expect(task.reload.status).to eq("packing")
+      expect(order.packed).to be_empty
     end
   end
 
@@ -148,7 +267,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
     it "refuses it and leaves the task where it was" do
       scan("SOMETHING-ELSE")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to include("GAMIS-RED-M")
       expect(task.reload.status).to eq("received")
     end
@@ -156,7 +275,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
     it "refuses a blank code rather than treating it as a match" do
       scan("   ")
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("received")
     end
   end

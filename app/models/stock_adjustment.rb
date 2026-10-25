@@ -12,6 +12,8 @@ class StockAdjustment < ApplicationRecord
 
   REASONS = T.let([ DAMAGE, SHRINKAGE, MISCOUNT, RETURN_TO_SUPPLIER, EXPIRY ].freeze, T::Array[String])
 
+  MAX_NOTE_LENGTH = 1000
+
   belongs_to :warehouse_bin
 
   validates :sku, presence: true
@@ -20,4 +22,5 @@ class StockAdjustment < ApplicationRecord
   validates :merchant_principal_id, presence: true
   validates :reason, inclusion: { in: REASONS }
   validates :quantity_delta, numericality: { only_integer: true, other_than: 0 }
+  validates :note, length: { maximum: MAX_NOTE_LENGTH }
 end

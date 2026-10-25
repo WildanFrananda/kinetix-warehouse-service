@@ -81,14 +81,14 @@ RSpec.describe "how requests this service cannot act on are answered", type: :re
     it "refuses a line with no quantity it can count" do
       receive_return([ { sku: "GAMIS-RED-M", quantity: "two" } ])
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(relay.received).to be_empty
     end
 
     it "refuses a line with no sku" do
       receive_return([ { sku: " ", quantity: 1 } ])
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(relay.received).to be_empty
     end
   end

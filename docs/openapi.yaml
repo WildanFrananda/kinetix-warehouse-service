@@ -14,6 +14,37 @@ servers:
 security:
   - identityToken: []
 paths:
+  /fulfillment_tasks:
+    get:
+      summary: Find the seller's task for an order number, whatever its state
+      description: >-
+        For opening a return: a task leaves the queue once its label is printed, and a return is opened by
+        task id. Answers a list, empty when the caller's merchant has no task for that order; another
+        merchant's task for the same order number is never answered. Cancelled and printed tasks are
+        included.
+      tags: [seller]
+      parameters:
+        - in: query
+          name: order_number
+          required: true
+          description: Matched exactly, after surrounding spaces are taken off
+          schema: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: The tasks for that order number (at most one per merchant)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TaskRecord' }
+        '400':
+          description: '`order_number` is missing, blank, not a single string, or holds a NUL character'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Refusal' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotASeller' }
+        '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /fulfillment_tasks/queue:
     get:
       summary: The seller's work left to do
@@ -36,8 +67,10 @@ paths:
     patch:
       summary: Move a task forward
       description: >-
-        `received → packing → packed`, one step at a time. Setting `packed` again re-sends the report to
-        order. Reaching `packed` tells order, which dispatches a courier.
+        `received → packing → packed`, one step at a time. A `packing` task becomes `packed` only once
+        every line has been matched by a scan; until then the move is refused with how many lines are
+        left. Setting `packed` again re-sends the report to order. Reaching `packed` tells order, which
+        dispatches a courier.
       tags: [seller]
       parameters:
         - $ref: '#/components/parameters/TaskId'
@@ -84,10 +117,14 @@ paths:
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /fulfillment_tasks/{id}/verify_scan:
     post:
-      summary: Scan a parcel, which moves its task one step forward
+      summary: Scan a parcel's line, order number or tracking number
       description: >-
-        A SKU on the task, its order number or its tracking number matches. The scan takes the same
-        steps as setting the status, and a scan that packs the parcel tells order.
+        A SKU on the task, its order number or its tracking number matches; anything else is refused.
+        A SKU marks its line scanned, once: scanning a line again changes nothing. The first matching
+        scan of a `received` task moves it to `packing`; the task becomes `packed` when its last line is
+        scanned, and that scan tells order. The order number and the tracking number match no line, so
+        they never pack a parcel. A scan of a `packed` parcel changes nothing and does not report it to
+        order again; set the status to `packed` for that.
       tags: [seller]
       parameters:
         - $ref: '#/components/parameters/TaskId'
@@ -102,7 +139,7 @@ paths:
                 scanned_code: { type: string }
       responses:
         '200':
-          description: The scan matched and the task moved
+          description: The scan matched; `new_status` is where the task is now
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ScanResult' }
@@ -120,7 +157,8 @@ paths:
         - in: path
           name: fulfillment_task_id
           required: true
-          schema: { type: integer }
+          description: ASCII digits only; any other spelling names no task and is 404
+          schema: { type: integer, minimum: 1 }
       requestBody:
         required: true
         content:
@@ -129,7 +167,7 @@ paths:
               type: object
               required: [reason]
               properties:
-                reason: { type: string }
+                reason: { type: string, minLength: 1 }
       responses:
         '201':
           description: Order opened the return
@@ -165,7 +203,7 @@ paths:
               type: object
               required: [bin_code, lines]
               properties:
-                bin_code: { type: string }
+                bin_code: { type: string, maxLength: 64 }
                 lines:
                   type: array
                   minItems: 1
@@ -174,7 +212,7 @@ paths:
                     required: [sku, quantity]
                     properties:
                       sku: { type: string }
-                      quantity: { type: integer, minimum: 1 }
+                      quantity: { type: integer, minimum: 1, maximum: 2147483647 }
       responses:
         '200':
           description: Order recorded the goods
@@ -230,6 +268,7 @@ paths:
         '400': { $ref: '#/components/responses/UnreadableBody' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/MerchantNotFound' }
         '422': { $ref: '#/components/responses/Refused' }
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
     put:
@@ -243,6 +282,7 @@ paths:
         '400': { $ref: '#/components/responses/UnreadableBody' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotASeller' }
+        '404': { $ref: '#/components/responses/MerchantNotFound' }
         '422': { $ref: '#/components/responses/Refused' }
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /bins:
@@ -257,9 +297,13 @@ paths:
               type: object
               required: [bin_code, zone]
               properties:
-                bin_code: { type: string }
-                zone: { type: string }
-                shelf_level: { type: integer }
+                bin_code: { type: string, minLength: 1, maxLength: 64 }
+                zone: { type: string, minLength: 1, maxLength: 64 }
+                shelf_level:
+                  type: integer
+                  minimum: 0
+                  maximum: 2147483647
+                  description: A JSON integer or a string of digits; left as it is when absent, null or empty
       responses:
         '201':
           description: The bin was created
@@ -291,12 +335,16 @@ paths:
               type: object
               required: [bin_code, sku, quantity, idempotency_key, merchant_principal_id]
               properties:
-                bin_code: { type: string }
+                bin_code: { type: string, maxLength: 64 }
                 sku: { type: string, minLength: 1, maxLength: 128 }
-                quantity: { type: integer, minimum: 1 }
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 2147483647
+                  description: A JSON integer or a string of digits; `true`, `2.9` or `"12abc"` are refused
                 idempotency_key: { type: string, maxLength: 255 }
                 merchant_principal_id: { type: string, format: uuid }
-                note: { type: string }
+                note: { type: string, maxLength: 1000 }
       responses:
         '201':
           description: The goods were booked
@@ -312,7 +360,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotStaff' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Refused' }
+        '422': { $ref: '#/components/responses/StockRefused' }
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /stock_adjustments:
     post:
@@ -326,13 +374,18 @@ paths:
               type: object
               required: [bin_code, sku, quantity_delta, reason, idempotency_key, merchant_principal_id]
               properties:
-                bin_code: { type: string }
+                bin_code: { type: string, maxLength: 64 }
                 sku: { type: string }
-                quantity_delta: { type: integer, not: { enum: [0] } }
+                quantity_delta:
+                  type: integer
+                  minimum: -2147483648
+                  maximum: 2147483647
+                  not: { enum: [0] }
+                  description: A JSON integer or a string of digits with an optional sign
                 reason: { type: string, enum: [DAMAGE, SHRINKAGE, MISCOUNT, RETURN_TO_SUPPLIER, EXPIRY] }
                 idempotency_key: { type: string, maxLength: 255 }
                 merchant_principal_id: { type: string, format: uuid }
-                note: { type: string }
+                note: { type: string, maxLength: 1000 }
       responses:
         '201':
           description: The adjustment was made
@@ -348,7 +401,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotStaff' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/Refused' }
+        '422': { $ref: '#/components/responses/StockRefused' }
 components:
   securitySchemes:
     identityToken:
@@ -360,13 +413,16 @@ components:
       in: path
       name: id
       required: true
-      schema: { type: integer }
+      description: ASCII digits only; any other spelling (`12abc`, `+12`, `0x10`, ` 12`) names no task and is 404
+      schema: { type: integer, minimum: 1 }
     MerchantId:
       in: path
       name: id
       required: true
-      description: The `id` from `GET /merchants/me`.
-      schema: { type: integer }
+      description: >-
+        The `id` from `GET /merchants/me`, in ASCII digits only; any other spelling names no merchant and is
+        404
+      schema: { type: integer, minimum: 1 }
   requestBodies:
     Cutoff:
       required: true
@@ -397,12 +453,32 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
     TaskNotFound:
-      description: The caller's merchant has no task with that id
+      description: The caller's merchant has no task with that id, or the id is not written in digits
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    MerchantNotFound:
+      description: The id is not written in digits, so it names no merchant
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
     Refused:
-      description: The request was understood and refused; `error` says why
+      description: >-
+        The request was understood and refused; `error` says why. A string field sent as another JSON type
+        (a number, a boolean, a list, an object) or holding a NUL character is refused here, `error` naming
+        the field, before anything is read or written.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    StockRefused:
+      description: >-
+        The request was understood and refused; `error` says why. Coded refusals carry a `message`:
+        `INVALID_QUANTITY` / `INVALID_DELTA` (not a whole number in range), `INVALID_IDEMPOTENCY_KEY`
+        (longer than 255 characters), `INVALID_BIN_CODE` (longer than 64 characters), `INVALID_NOTE` (longer
+        than 1000 characters), `STOCK_LIMIT_EXCEEDED` (the bin would hold more than 2147483647 units of the
+        sku), `UNKNOWN_MERCHANT`. A string field sent as another JSON type or holding a NUL character is
+        `INVALID_<FIELD>` (`INVALID_SKU`, `INVALID_MERCHANT_PRINCIPAL_ID`, `INVALID_REASON`, …). Nothing was
+        written.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
@@ -468,6 +544,9 @@ components:
         bin_location:
           type: string
           description: The bin the order's stock was reserved from; empty when no reservation names one
+        scanned:
+          type: boolean
+          description: Whether a scan has matched this line
     TaskCard:
       type: object
       properties:
@@ -491,12 +570,30 @@ components:
         order_notified: { type: boolean }
         notify_error: { type: string, nullable: true }
         dispatch_ref: { type: string, nullable: true }
+    TaskRecord:
+      type: object
+      properties:
+        id: { type: integer }
+        order_number: { type: string }
+        status: { type: string, enum: [received, packing, packed, cancelled] }
+        same_day_cutoff_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        tracking_number: { type: string, nullable: true }
+        label_print_count: { type: integer }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/TaskLine' }
     ScanResult:
       type: object
       properties:
         fulfillment_task_id: { type: integer }
         order_number: { type: string }
-        matched_sku: { type: string }
+        matched: { type: string, enum: [sku, order_number, tracking_number] }
+        matched_code: { type: string, description: The SKU, order number or tracking number as stored }
+        matched_sku: { type: string, nullable: true, description: The line's SKU; null unless a SKU matched }
+        line_already_scanned: { type: boolean }
+        lines_remaining: { type: integer, description: Lines of the task no scan has matched yet }
         new_status: { type: string }
         message: { type: string }
         order_notified: { type: boolean }

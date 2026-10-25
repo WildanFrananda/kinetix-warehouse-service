@@ -92,6 +92,6 @@ RSpec.describe "Api::V1::Bins", type: :request do
   it "refuses a bin with no code" do
     create_bin(code: "")
 
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
   end
 end

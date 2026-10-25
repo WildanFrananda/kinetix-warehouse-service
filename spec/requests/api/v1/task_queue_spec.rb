@@ -82,7 +82,9 @@ RSpec.describe "Api::V1::FulfillmentTasks#queue", type: :request do
 
       card = queue.find { |item| item["order_number"] == "ORD-PICK" }
 
-      expect(card["lines"]).to eq([ { "sku" => "GAMIS-RED-M", "quantity" => 2, "bin_location" => "Z-09-3" } ])
+      expect(card["lines"]).to eq(
+        [ { "sku" => "GAMIS-RED-M", "quantity" => 2, "bin_location" => "Z-09-3", "scanned" => false } ]
+      )
     end
   end
 end

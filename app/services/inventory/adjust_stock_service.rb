@@ -18,6 +18,12 @@ module Inventory
     WOULD_CUT_RESERVED = "WOULD_CUT_RESERVED"
     INVALID_MERCHANT_PRINCIPAL = "INVALID_MERCHANT_PRINCIPAL"
     IDEMPOTENCY_KEY_CONFLICT = "IDEMPOTENCY_KEY_CONFLICT"
+    INVALID_IDEMPOTENCY_KEY = "INVALID_IDEMPOTENCY_KEY"
+    INVALID_BIN_CODE = "INVALID_BIN_CODE"
+    INVALID_NOTE = "INVALID_NOTE"
+    STOCK_LIMIT_EXCEEDED = "STOCK_LIMIT_EXCEEDED"
+
+    DELTAS = T.let(Kinetix::IntegerParam::MIN_INT32..Kinetix::IntegerParam::MAX_INT32, T::Range[Integer])
 
     class Result < T::Struct
       const :adjustment, T.nilable(StockAdjustment)
@@ -32,7 +38,7 @@ module Inventory
       params(
         bin_code: String,
         sku: String,
-        quantity_delta: Integer,
+        quantity_delta: T.nilable(Integer),
         reason: String,
         idempotency_key: String,
         adjusted_by_principal_id: String,
@@ -40,8 +46,16 @@ module Inventory
         note: T.nilable(String)
       ).void
     end
-    def initialize(bin_code:, sku:, quantity_delta:, reason:, idempotency_key:,
-                   adjusted_by_principal_id:, merchant_principal_id:, note: nil)
+    def initialize(
+      bin_code:,
+      sku:,
+      quantity_delta:,
+      reason:,
+      idempotency_key:,
+      adjusted_by_principal_id:,
+      merchant_principal_id:,
+      note: nil
+    )
       @bin_code = bin_code
       @sku = sku
       @quantity_delta = quantity_delta
@@ -54,8 +68,12 @@ module Inventory
 
     sig { returns(Result) }
     def call
-      return failure(INVALID_DELTA) if @quantity_delta.zero?
+      delta = @quantity_delta
+      return failure(INVALID_DELTA) if delta.nil? || delta.zero? || !DELTAS.cover?(delta)
       return failure(UNKNOWN_REASON) unless StockAdjustment::REASONS.include?(@reason)
+      return failure(INVALID_IDEMPOTENCY_KEY) unless StockIdentifiers.idempotency_key?(@idempotency_key)
+      return failure(INVALID_BIN_CODE) unless StockIdentifiers.bin_code?(@bin_code)
+      return failure(INVALID_NOTE) unless note_fits?
 
       owner = Kinetix::PrincipalId.canonical(@merchant_principal_id)
       return failure(INVALID_MERCHANT_PRINCIPAL) if owner.nil?
@@ -66,13 +84,13 @@ module Inventory
       bin = WarehouseBin.find_by(bin_code: @bin_code)
       return failure(BIN_NOT_FOUND) if bin.nil?
 
-      adjust(bin, owner)
+      adjust(bin, owner, delta)
     end
 
     private
 
-    sig { params(bin: WarehouseBin, owner: String).returns(Result) }
-    def adjust(bin, owner)
+    sig { params(bin: WarehouseBin, owner: String, delta: Integer).returns(Result) }
+    def adjust(bin, owner, delta)
       adjustment = T.let(nil, T.nilable(StockAdjustment))
       on_hand = T.let(0, Integer)
       reserved = T.let(0, Integer)
@@ -87,8 +105,9 @@ module Inventory
 
         before = inventory.quantity.to_i
         reserved = inventory.reserved_quantity.to_i
-        after = before + @quantity_delta
+        after = before + delta
         raise WouldCutReserved if after < reserved
+        raise StockLimitExceeded if after > BinInventory::MAX_QUANTITY
 
         inventory.update!(quantity: after)
         on_hand = after
@@ -97,7 +116,7 @@ module Inventory
           warehouse_bin: bin,
           sku: @sku,
           merchant_principal_id: owner,
-          quantity_delta: @quantity_delta,
+          quantity_delta: delta,
           reason: @reason,
           note: @note,
           idempotency_key: @idempotency_key,
@@ -123,12 +142,20 @@ module Inventory
       failure(WRONG_OWNER)
     rescue WouldCutReserved
       failure(WOULD_CUT_RESERVED, on_hand: current_quantity, reserved: current_reserved)
+    rescue StockLimitExceeded
+      failure(STOCK_LIMIT_EXCEEDED)
     rescue ActiveRecord::RecordNotUnique => e
       replay_after_race(owner, e)
     rescue ActiveRecord::RecordInvalid => e
       raise unless e.record.is_a?(StockAdjustment) && e.record.errors.of_kind?(:idempotency_key, :taken)
 
       replay_after_race(owner, e)
+    end
+
+    sig { returns(T::Boolean) }
+    def note_fits?
+      note = @note
+      note.nil? || note.length <= StockAdjustment::MAX_NOTE_LENGTH
     end
 
     sig { params(owner: String).returns(T.nilable(StockAdjustment)) }

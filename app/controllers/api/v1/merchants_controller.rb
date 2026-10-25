@@ -26,26 +26,31 @@ module Api
         merchant = require_trading_merchant!
         return if merchant.nil?
 
-        if merchant.id != params[:id].to_i
+        id = Kinetix::IntegerParam.id(params[:id])
+        if id.nil?
+          render json: { error: "Merchant not found" }, status: :not_found
+          return
+        end
+
+        if merchant.id != id
           render json: { error: "Forbidden: that merchant is not yours" }, status: :forbidden
           return
         end
 
         raw = params[:cutoff_hour]
         if raw.blank?
-          render json: { error: "cutoff_hour is required" }, status: :unprocessable_entity
+          render json: { error: "cutoff_hour is required" }, status: :unprocessable_content
           return
         end
 
         unless raw.to_s.match?(/\A[0-9]{1,2}\z/)
-          render json: { error: "cutoff_hour must be a whole number of hours" },
-                 status: :unprocessable_entity
+          render json: { error: "cutoff_hour must be a whole number of hours" }, status: :unprocessable_content
           return
         end
 
         cutoff_hour = raw.to_i
         unless (0..23).cover?(cutoff_hour)
-          render json: { error: "cutoff_hour must be between 0 and 23" }, status: :unprocessable_entity
+          render json: { error: "cutoff_hour must be between 0 and 23" }, status: :unprocessable_content
           return
         end
 

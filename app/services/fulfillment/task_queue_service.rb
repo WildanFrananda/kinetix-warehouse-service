@@ -6,12 +6,6 @@ module Fulfillment
 
     PACKED = "packed"
 
-    class TaskLineData < T::Struct
-      const :sku, String
-      const :quantity, Integer
-      const :bin_location, String
-    end
-
     class TaskCardData < T::Struct
       const :id, Integer
       const :order_number, String
@@ -59,16 +53,7 @@ module Fulfillment
         created_at: task.created_at,
         tracking_number: task.shipping_label&.awb_number,
         sla_urgency: task.status == PACKED ? PACKED : urgency_for(cutoff, now),
-        lines: task.fulfillment_task_lines.map { |line| build_line(line) }
-      )
-    end
-
-    sig { params(line: FulfillmentTaskLine).returns(TaskLineData) }
-    def build_line(line)
-      TaskLineData.new(
-        sku: T.must(line.sku),
-        quantity: T.must(line.quantity),
-        bin_location: line.bin_location.to_s
+        lines: task.fulfillment_task_lines.map { |line| TaskLineData.of(line) }
       )
     end
 
