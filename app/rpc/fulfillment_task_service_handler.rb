@@ -7,6 +7,9 @@ module Rpc
   class FulfillmentTaskServiceHandler < Fulfillment::V1::FulfillmentTaskService::Service
     extend T::Sig
 
+    AWB_TAKEN = "that tracking number is already on another parcel"
+    NO_MERCHANT = "no merchant in this warehouse is linked to that principal"
+
     sig { void }
     def initialize
       super
@@ -19,13 +22,16 @@ module Rpc
       ).returns(Fulfillment::V1::CreateFulfillmentTaskResponse)
     end
     def create_fulfillment_task(req, _call)
-      merchant = merchant_for(req.merchant_principal_id)
-      return refuse_create("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
+      Rpc::StringLimits.refuse_longer!("order_number", [ req.order_number ], StockOperation::MAX_ORDER_NUMBER_LENGTH)
+      Rpc::StringLimits.refuse_longer!("lines.sku", req.lines.map(&:sku), StockOperation::MAX_SKU_LENGTH)
 
-      form = Fulfillment::CreateTaskForm.new(
-        order_number: req.order_number,
-        lines: req.lines.map { |line| Fulfillment::CreateTaskForm::LineInput.new(sku: line.sku, quantity: line.quantity) }
-      )
+      merchant = merchant_for(req.merchant_principal_id)
+      return refuse_create("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
+
+      lines = req.lines.map do |line|
+        Fulfillment::CreateTaskForm::LineInput.new(sku: line.sku, quantity: line.quantity)
+      end
+      form = Fulfillment::CreateTaskForm.new(order_number: req.order_number, lines: lines)
 
       service = T.let(Container[:create_task_service], Fulfillment::CreateTaskService)
       result = service.call(merchant_id: merchant.id, form: form)
@@ -49,7 +55,7 @@ module Rpc
     end
     def cancel_fulfillment_task(req, _call)
       merchant = merchant_for(req.merchant_principal_id)
-      return refuse_cancel("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
+      return refuse_cancel("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
 
       task_id = Kinetix::IntegerParam.id(req.task_id)
       return refuse_cancel("UNKNOWN_TASK", "task_id is not a number this warehouse could have issued") unless task_id
@@ -72,13 +78,19 @@ module Rpc
       ).returns(Fulfillment::V1::RecordCourierAwbResponse)
     end
     def record_courier_awb(req, _call)
-      merchant = merchant_for(req.merchant_principal_id)
-      return refuse_awb("UNKNOWN_MERCHANT", "no merchant in this warehouse is linked to that principal") unless merchant
+      Rpc::StringLimits.refuse_longer!("awb_number", [ req.awb_number ], ShippingLabel::MAX_AWB_LENGTH)
 
-      return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing") if req.awb_number.strip.empty?
+      merchant = merchant_for(req.merchant_principal_id)
+      return refuse_awb("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
+
+      if req.awb_number.strip.empty?
+        return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing")
+      end
 
       task_id = Kinetix::IntegerParam.id(req.fulfillment_task_id)
-      return refuse_awb("UNKNOWN_TASK", "fulfillment_task_id is not a number this warehouse could have issued") unless task_id
+      unless task_id
+        return refuse_awb("UNKNOWN_TASK", "fulfillment_task_id is not a number this warehouse could have issued")
+      end
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
       task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
@@ -97,8 +109,12 @@ module Rpc
       end
 
       Fulfillment::V1::RecordCourierAwbResponse.new(accepted: true, already_recorded: false)
+    rescue ActiveRecord::RecordNotUnique
+      refuse_awb("AWB_REFUSED", AWB_TAKEN)
     rescue ActiveRecord::RecordInvalid => e
-      refuse_awb("AWB_REFUSED", e.message)
+      raise unless e.record&.errors&.of_kind?(:awb_number, :taken)
+
+      refuse_awb("AWB_REFUSED", AWB_TAKEN)
     end
 
     private

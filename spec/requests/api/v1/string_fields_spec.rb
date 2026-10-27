@@ -152,7 +152,7 @@ RSpec.describe "string fields sent as another JSON type", type: :request do
       allow(Container).to receive(:[]).with(:order_grpc_client).and_return(relay)
 
       not_strings("A-01-1").each do |value|
-        post "/api/v1/returns/RMA-1/received",
+        post "/api/v1/returns/RMA-20261027-0A1B2C3D/received",
              params: { bin_code: value, lines: [ { sku: "GAMIS-RED-M", quantity: 1 } ] }.to_json,
              headers: seller
 
@@ -167,7 +167,7 @@ RSpec.describe "string fields sent as another JSON type", type: :request do
       allow(Container).to receive(:[]).with(:order_grpc_client).and_return(relay)
 
       not_strings("GAMIS-RED-M").each do |value|
-        post "/api/v1/returns/RMA-1/received",
+        post "/api/v1/returns/RMA-20261027-0A1B2C3D/received",
              params: { bin_code: "A-01-1", lines: [ { sku: value, quantity: 1 } ] }.to_json,
              headers: seller
 
@@ -242,7 +242,7 @@ RSpec.describe "string fields sent as another JSON type", type: :request do
     it "is refused in a returned line's sku, and tells order nothing" do
       allow(Container).to receive(:[]).with(:order_grpc_client).and_return(relay)
 
-      post "/api/v1/returns/RMA-1/received",
+      post "/api/v1/returns/RMA-20261027-0A1B2C3D/received",
            params: { bin_code: "A-01-1", lines: [ { sku: "GAMIS\u0000RED-M", quantity: 1 } ] }.to_json,
            headers: seller
 

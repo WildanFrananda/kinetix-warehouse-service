@@ -13,6 +13,16 @@ does. When order cannot be reached the task stays packed and `notify_error` says
 transport's own text goes to the log only. On the returns routes an unreachable order is `503
 ORDER_UNAVAILABLE`, and a refusal order gave stays `502 RETURN_NOT_RECORDED` with order's reason.
 
+Order's gRPC status decides the answer (2026-10-27, `Order::GrpcClient#ask`): unreachable, `UNAVAILABLE`,
+`RESOURCE_EXHAUSTED` are `503 ORDER_UNAVAILABLE` (the call did not reach order: nothing recorded);
+`DEADLINE_EXCEEDED` is `503 ORDER_TIMEOUT` (order may have recorded it; the client repeats the request, which
+order answers once and then with `already_open` / `already_recorded`); `NOT_FOUND` `404 ORDER_NOT_FOUND`;
+`INVALID_ARGUMENT` `422 ORDER_INVALID_REQUEST`; `FAILED_PRECONDITION`/`ALREADY_EXISTS` `409 ORDER_CONFLICT`
+(the stock routes' status for a state conflict); the rest, and an answer holding a NUL, `502 ORDER_FAILED`,
+all in fixed words. `PERMISSION_DENIED` is `502`, not `403`: at order v1.4.3 it comes only from order's mesh
+allow list refusing warehouse itself, which the seller cannot fix; order's business refusals arrive in the
+answer's `error`, as `RETURN_NOT_RECORDED`.
+
 `cancelled` is not a merchant's to set or to leave. Order cancels a task after it has released the
 stock and refunded the buyer; a merchant reaching `cancelled` would leave order waiting on a parcel,
 and a merchant leaving it would send order a "packed" report for an order the buyer has been
@@ -49,6 +59,12 @@ what is fit to sell with a stock receipt (the coordinator's decision of 2026-10-
 task id, and a task leaves the queue once its label is printed, so `GET /fulfillment_tasks?order_number=`
 finds the caller's own task for an order whatever its state, cancelled and printed included. It is the
 merchant's, as opening a return is: identity must know the merchant, nothing more.
+
+What is relayed is checked first (2026-10-27): a `return_number` not in order's format
+(`RMA-<yyyymmdd>-<8 upper-case hex>`) is `404 Return not found`; a reason over 500 UTF-16 units (order's
+column, which order would cut) or a returned SKU over 128 is `422`; whitespace-only values are refused by
+Unicode's rule, as order's `IsNullOrWhiteSpace` reads them. No `bin_code` is relayed as `nil`, the field left
+unset; contract v1.7.0's `string bin_code` has no presence, so order still reads `""` and stores `NULL`.
 
 ## Merchant standing
 
@@ -112,6 +128,9 @@ string to order as a return reason; Postgres cannot store a NUL, and pg raised `
 a UUID stays `400` as before. `GET /fulfillment_tasks?order_number=` is a query, and stays `400` for anything
 but one string.
 
+A scanned code is at most 128 characters, the longest SKU, else `422` before matching (2026-10-27); it is
+never stored.
+
 A bin code is at most 64 characters, a zone 64, a receipt's or adjustment's note 1000: room for any code a
 label printer prints and a paragraph of explanation. They are `varchar(n)` since migration 20261022184035, so
 no path writes more; Postgres and Ruby both count characters, not bytes. The code checks first: a bin's
@@ -132,6 +151,31 @@ UNION ALL
 SELECT 'stock_adjustments.note', max(char_length(note)), count(*) FILTER (WHERE char_length(note) > 1000)
 FROM stock_adjustments;
 ```
+
+## Strings over gRPC
+
+`Kinetix::NulRefusalInterceptor`, innermost in `GrpcServer` (after the allow list), answers a request with a
+NUL in any string field `INVALID_ARGUMENT "<field> must not contain a NUL character"` (2026-10-27); pg used to
+raise and Ruby gRPC sent `UNKNOWN` with the exception's text. `bytes` fields, binary in Ruby, are left alone.
+
+A string from order that reaches the database is length-checked first (`Rpc::StringLimits`, `INVALID_ARGUMENT
+"<field> must be at most N characters"`): an order number 64, a SKU 128 (the stock ledger's limits), a
+tracking number 64 (order's `awb_number` column). Their columns stay unbounded: gRPC is their only writer. A
+principal or task id never reaches the database unless it is a UUID or digits, and `ReserveStock` /
+`ReleaseStock` keep their own `INVALID_ARGUMENT` refusals in the answer.
+
+No gRPC error carries an exception's text (2026-10-27). `Kinetix::ErrorStatusInterceptor`, inside the request
+id interceptor, passes a deliberate status through and turns anything else into `UNAVAILABLE "warehouse could
+not reach its database; try again shortly"` (a `Kinetix::DatabaseOutage`) or `INTERNAL "warehouse failed while
+handling this call"`, logging the exception under the request id. Ruby gRPC used to send `UNKNOWN "<class>:
+<message>"`, the database's host name included. `AWB_REFUSED` says `that tracking number is already on another
+parcel` instead of the validation message.
+
+## The database unreachable
+
+A request that cannot reach Postgres is `503 DATABASE_UNAVAILABLE`, `Retry-After: 15`, as in catalog, order
+and review (2026-10-27); `Kinetix::DatabaseOutage` counts connection failures only (a full pool included),
+so a query error stays `500`. The message does not claim nothing was written: a commit may have landed.
 
 ## The packing clock
 
@@ -168,6 +212,14 @@ time. Until 2026-10-19 every request with an unknown `kid` fetched the JWKS, so 
 made identity answer once per request. A JWKS that cannot be fetched is `KeysUnavailable`, answered `503
 IDENTITY_UNAVAILABLE`; it used to escape as a 500, and it is never a `401`, which would tell a signed-in user
 their token is bad when identity simply did not answer.
+
+## Tests
+
+The suite passes in random order (checked 2026-10-27 with eight seeds; `.rspec` and both CIs still run in
+defined order). A spec that runs a migration inside its example includes the shared context `a migration runs
+inside each example`, which resets the models' column information before and after: a column type changed
+under the test transaction left prepared statements whose result type no longer matched, and the next example
+to reuse one failed with `PreparedStatementCacheExpired`.
 
 ## Type checking
 

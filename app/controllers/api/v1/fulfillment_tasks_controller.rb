@@ -83,12 +83,15 @@ module Api
         return if task_id.nil?
         return if refuse_unusable_strings(%i[scanned_code], coded: false)
 
+        scanned_code = string_param(:scanned_code).to_s
+        limit = Fulfillment::VerifyScanService::MAX_CODE_LENGTH
+        if scanned_code.length > limit
+          render json: { error: "scanned_code must be at most #{limit} characters" }, status: :unprocessable_content
+          return
+        end
+
         service = T.let(Container[:verify_scan_service], Fulfillment::VerifyScanService)
-        result = service.call(
-          merchant_id: merchant.id,
-          task_id: task_id,
-          scanned_code: string_param(:scanned_code).to_s
-        )
+        result = service.call(merchant_id: merchant.id, task_id: task_id, scanned_code: scanned_code)
 
         render_result(result)
       end

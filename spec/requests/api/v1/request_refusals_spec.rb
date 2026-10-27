@@ -59,7 +59,7 @@ RSpec.describe "how requests this service cannot act on are answered", type: :re
     end
 
     def receive_return(lines)
-      post "/api/v1/returns/RMA-1/received",
+      post "/api/v1/returns/RMA-20261027-0A1B2C3D/received",
            params: { bin_code: "A-01-1", lines: lines }.to_json,
            headers: seller.merge("Content-Type" => "application/json")
     end

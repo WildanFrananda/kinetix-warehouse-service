@@ -5,6 +5,8 @@ require "rails_helper"
 require Rails.root.join("db/migrate/20261022184035_bin_codes_zones_and_notes_have_limits").to_s
 
 RSpec.describe BinCodesZonesAndNotesHaveLimits do
+  include_context "a migration runs inside each example"
+
   let(:connection) { ActiveRecord::Base.connection }
   let(:staff) { "aaaaaaaa-3333-4333-8444-555555555555" }
   let(:owner) { "bbbbbbbb-3333-4333-8444-555555555555" }

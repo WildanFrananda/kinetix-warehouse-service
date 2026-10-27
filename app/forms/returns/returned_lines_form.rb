@@ -9,6 +9,7 @@ module Returns
       "Every line needs a whole quantity from 1 to #{QUANTITIES.end}, written in digits",
       String
     )
+    SKU_TOO_LONG = T.let("Every line's SKU must be at most #{StockOperation::MAX_SKU_LENGTH} characters", String)
 
     sig { params(raw: T.untyped).void }
     def initialize(raw)
@@ -38,6 +39,7 @@ module Returns
       found = lines
       return "Name at least one SKU that came back" if found.empty?
       return "Every line needs a SKU, written as a string" unless found.all? { |line| named?(line[:sku]) }
+      return SKU_TOO_LONG unless found.all? { |line| line[:sku].length <= StockOperation::MAX_SKU_LENGTH }
       return QUANTITY_PROBLEM unless found.all? { |line| countable?(line[:quantity]) }
 
       nil
@@ -49,7 +51,7 @@ module Returns
     def named?(sku)
       return false unless sku.is_a?(String)
 
-      !sku.strip.empty? && !sku.include?("\u0000")
+      !BlankText.blank?(sku) && !sku.include?("\u0000")
     end
 
     sig { params(quantity: T.untyped).returns(T::Boolean) }

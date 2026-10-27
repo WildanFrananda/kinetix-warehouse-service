@@ -5,6 +5,7 @@ module Fulfillment
     extend T::Sig
 
     PACKED = "packed"
+    MAX_CODE_LENGTH = StockOperation::MAX_SKU_LENGTH
 
     class ResultData < T::Struct
       const :fulfillment_task_id, Integer

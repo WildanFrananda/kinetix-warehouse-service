@@ -5,6 +5,8 @@ require "grpc"
 require "grpc_reflection"
 require_relative "kinetix/service_identity"
 require_relative "kinetix/peer_authorization_interceptor"
+require_relative "kinetix/error_status_interceptor"
+require_relative "kinetix/nul_refusal_interceptor"
 require_relative "kinetix/request_id_interceptor"
 require_relative "kinetix/metrics"
 require "fulfillment/v1/fulfillment_services_pb"
@@ -28,7 +30,9 @@ class GrpcServer
       interceptors: [
         metrics_interceptor,
         Kinetix::RequestIdInterceptor.new,
-        Kinetix::PeerAuthorizationInterceptor.new
+        Kinetix::ErrorStatusInterceptor.new,
+        Kinetix::PeerAuthorizationInterceptor.new,
+        Kinetix::NulRefusalInterceptor.new
       ]
     )
     server.add_http2_port("0.0.0.0:#{port}", identity.server_credentials)
