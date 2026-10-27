@@ -21,7 +21,7 @@ module Order
         merchant_principal_id: String,
         return_number: String,
         lines: T::Array[T::Hash[Symbol, T.untyped]],
-        bin_code: String,
+        bin_code: T.nilable(String),
         received_at: Time
       ).returns(T::Hash[Symbol, T.untyped])
     end

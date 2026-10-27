@@ -44,6 +44,8 @@ module Fulfillment
       params(merchant_id: Integer, task_id: Integer, new_status: String).returns(BaseService::Result)
     end
     def call(merchant_id:, task_id:, new_status:)
+      return failure("status is required: name the state to move the task to") if new_status.strip.empty?
+
       unless FulfillmentTask::STATUSES.include?(new_status)
         return failure("#{new_status} is not a state this warehouse can put a task in")
       end

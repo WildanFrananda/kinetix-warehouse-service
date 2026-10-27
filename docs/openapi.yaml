@@ -70,7 +70,8 @@ paths:
         `received → packing → packed`, one step at a time. A `packing` task becomes `packed` only once
         every line has been matched by a scan; until then the move is refused with how many lines are
         left. Setting `packed` again re-sends the report to order. Reaching `packed` tells order, which
-        dispatches a courier.
+        dispatches a courier. A missing or blank `status` is refused with `status is required: name the
+        state to move the task to`.
       tags: [seller]
       parameters:
         - $ref: '#/components/parameters/TaskId'
@@ -120,6 +121,7 @@ paths:
       summary: Scan a parcel's line, order number or tracking number
       description: >-
         A SKU on the task, its order number or its tracking number matches; anything else is refused.
+        A code longer than 128 characters, the longest SKU warehouse keeps, is refused before it is read.
         A SKU marks its line scanned, once: scanning a line again changes nothing. The first matching
         scan of a `received` task moves it to `packing`; the task becomes `packed` when its last line is
         scanned, and that scan tells order. The order number and the tracking number match no line, so
@@ -136,7 +138,7 @@ paths:
               type: object
               required: [scanned_code]
               properties:
-                scanned_code: { type: string }
+                scanned_code: { type: string, maxLength: 128 }
       responses:
         '200':
           description: The scan matched; `new_status` is where the task is now
@@ -152,6 +154,13 @@ paths:
   /fulfillment_tasks/{fulfillment_task_id}/returns:
     post:
       summary: Open a return with order for a task's order
+      description: >-
+        The reason is at most 500 characters, which is what order keeps; a character outside the Basic
+        Multilingual Plane (an emoji) counts as two, as order counts it. A reason of whitespace only, Unicode
+        spaces included, is refused. An error status from order is answered in warehouse's own words:
+        `ORDER_NOT_FOUND` (404), `ORDER_INVALID_REQUEST` (422), `ORDER_CONFLICT` (409), `ORDER_FAILED` (502),
+        `ORDER_UNAVAILABLE` (503, nothing recorded), `ORDER_TIMEOUT` (503, outcome unknown; repeat the request,
+        which answers `already_open` when order did record it).
       tags: [seller]
       parameters:
         - in: path
@@ -167,7 +176,7 @@ paths:
               type: object
               required: [reason]
               properties:
-                reason: { type: string, minLength: 1 }
+                reason: { type: string, minLength: 1, maxLength: 500 }
       responses:
         '201':
           description: Order opened the return
@@ -182,28 +191,42 @@ paths:
         '400': { $ref: '#/components/responses/UnreadableBody' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotASeller' }
-        '404': { $ref: '#/components/responses/TaskNotFound' }
-        '422': { $ref: '#/components/responses/Refused' }
+        '404':
+          description: >-
+            The caller's merchant has no task with that id, or the id is not written in digits; or
+            `ORDER_NOT_FOUND`, order's own not-found status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Refusal' }
+        '409': { $ref: '#/components/responses/OrderConflict' }
+        '422': { $ref: '#/components/responses/ReturnRefused' }
         '502': { $ref: '#/components/responses/OrderRefused' }
         '503': { $ref: '#/components/responses/DependencyUnavailable' }
   /returns/{return_number}/received:
     post:
       summary: Report returned goods back on a shelf
+      description: >-
+        The return number is read before anything else but the caller's standing: one not in order's
+        format names no return and is `404 Return not found`, and order is not asked. `bin_code` may be
+        left out or `null` when the goods went into no bin; order then records no bin. A `bin_code` of
+        whitespace only is refused. A line's SKU is at most 128 characters. An error status from order is
+        answered as on opening a return.
       tags: [seller]
       parameters:
         - in: path
           name: return_number
           required: true
-          schema: { type: string }
+          description: Order's format, `RMA-<yyyymmdd>-<8 upper-case hex digits>`
+          schema: { type: string, pattern: '^RMA-[0-9]{8}-[0-9A-F]{8}$' }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [bin_code, lines]
+              required: [lines]
               properties:
-                bin_code: { type: string, maxLength: 64 }
+                bin_code: { type: string, minLength: 1, maxLength: 64, nullable: true }
                 lines:
                   type: array
                   minItems: 1
@@ -211,7 +234,7 @@ paths:
                     type: object
                     required: [sku, quantity]
                     properties:
-                      sku: { type: string }
+                      sku: { type: string, minLength: 1, maxLength: 128 }
                       quantity: { type: integer, minimum: 1, maximum: 2147483647 }
       responses:
         '200':
@@ -230,7 +253,15 @@ paths:
               schema: { $ref: '#/components/schemas/Refusal' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotASeller' }
-        '422': { $ref: '#/components/responses/Refused' }
+        '404':
+          description: >-
+            `Return not found`: the return number is not in order's format; or `ORDER_NOT_FOUND`, order's own
+            not-found status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Refusal' }
+        '409': { $ref: '#/components/responses/OrderConflict' }
+        '422': { $ref: '#/components/responses/ReturnRefused' }
         '502': { $ref: '#/components/responses/OrderRefused' }
         '503': { $ref: '#/components/responses/DependencyUnavailable' }
   /merchants/me:
@@ -319,6 +350,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/NotStaff' }
         '422': { $ref: '#/components/responses/Refused' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
   /stock_receipts:
     post:
       summary: Book goods in
@@ -402,6 +434,7 @@ paths:
         '403': { $ref: '#/components/responses/NotStaff' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/StockRefused' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
 components:
   securitySchemes:
     identityToken:
@@ -499,13 +532,44 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
+    ReturnRefused:
+      description: >-
+        The request was understood and refused; `error` says why, as for any refusal. Or
+        `ORDER_INVALID_REQUEST`: order answered `INVALID_ARGUMENT`, so nothing was recorded and sending the
+        same request again will not help.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    OrderConflict:
+      description: >-
+        `ORDER_CONFLICT`: order answered `FAILED_PRECONDITION` or `ALREADY_EXISTS`, refusing the request
+        because of the state its records are in; nothing was recorded
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
     OrderRefused:
-      description: '`RETURN_NOT_RECORDED`: order answered and refused; `message` is order''s reason'
+      description: >-
+        `RETURN_NOT_RECORDED`: order answered and refused; `message` is order's reason. Or `ORDER_FAILED`:
+        order answered any other error status (its own failure, or a refusal of warehouse itself on order's
+        mesh allow list), or an answer warehouse cannot use; whether order recorded anything is not known,
+        and sending the same request again is safe. Order's own words are never passed on.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
     IdentityUnavailable:
-      description: '`IDENTITY_UNAVAILABLE`: identity could not be asked, so nothing was applied'
+      description: >-
+        `IDENTITY_UNAVAILABLE`: identity could not be asked, so nothing was applied. Or
+        `DATABASE_UNAVAILABLE`: warehouse could not reach its database, so the request could not be completed
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    DatabaseUnavailable:
+      description: >-
+        `DATABASE_UNAVAILABLE`: warehouse could not reach its database, so the request could not be
+        completed
       headers:
         Retry-After:
           schema: { type: integer }
@@ -513,7 +577,11 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
     DependencyUnavailable:
-      description: '`IDENTITY_UNAVAILABLE` or `ORDER_UNAVAILABLE`: a service this call needs did not answer'
+      description: >-
+        `IDENTITY_UNAVAILABLE`; `ORDER_UNAVAILABLE` (order could not be reached, or answered `UNAVAILABLE` or
+        `RESOURCE_EXHAUSTED`: nothing was recorded); `ORDER_TIMEOUT` (order did not answer within 5 seconds:
+        whether it recorded the request is not known, and repeating it is safe because order answers
+        `already_open` / `already_recorded`); or `DATABASE_UNAVAILABLE`. Try again after `Retry-After`
       headers:
         Retry-After:
           schema: { type: integer }

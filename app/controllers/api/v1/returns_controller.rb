@@ -8,6 +8,9 @@ module Api
       include ApiErrorHandling
       include ApiStringParams
 
+      RETURN_NOT_FOUND = "Return not found"
+      BLANK_BIN_CODE = "bin_code must name the bin the goods went into, or be left out"
+
       sig { void }
       def create
         merchant = require_api_merchant!
@@ -18,8 +21,9 @@ module Api
         return if refuse_unusable_strings(%i[reason], coded: false)
 
         reason = string_param(:reason).to_s
-        if reason.strip.empty?
-          render json: { error: "Reason cannot be blank" }, status: :unprocessable_content
+        problem = Returns::ReturnReason.problem(reason)
+        if problem
+          render json: { error: problem }, status: :unprocessable_content
           return
         end
 
@@ -45,10 +49,21 @@ module Api
       def received
         merchant = require_api_merchant!
         return if merchant.nil?
+
+        return_number = Returns::ReturnNumber.read(params[:return_number])
+        if return_number.nil?
+          render json: { error: RETURN_NOT_FOUND }, status: :not_found
+          return
+        end
         return if refuse_unusable_strings(%i[bin_code], coded: false)
 
-        bin_code = string_param(:bin_code).to_s
-        if bin_code.length > WarehouseBin::MAX_CODE_LENGTH
+        bin_code = string_param(:bin_code)
+        if bin_code && Returns::BlankText.blank?(bin_code)
+          render json: { error: BLANK_BIN_CODE }, status: :unprocessable_content
+          return
+        end
+
+        if bin_code && bin_code.length > WarehouseBin::MAX_CODE_LENGTH
           render(
             json: { error: "bin_code must be at most #{WarehouseBin::MAX_CODE_LENGTH} characters" },
             status: :unprocessable_content
@@ -74,7 +89,7 @@ module Api
         relay = T.let(Container[:order_grpc_client], Order::ReturnRelay)
         result = relay.return_goods_received(
           merchant_principal_id: T.must(merchant.principal_id),
-          return_number: params[:return_number].to_s,
+          return_number: return_number,
           lines: form.lines,
           bin_code: bin_code,
           received_at: Time.current.utc
@@ -82,7 +97,7 @@ module Api
 
         if result[:accepted]
           render json: {
-            return_number: params[:return_number].to_s,
+            return_number: return_number,
             already_recorded: result[:already_recorded]
           }, status: :ok
         else

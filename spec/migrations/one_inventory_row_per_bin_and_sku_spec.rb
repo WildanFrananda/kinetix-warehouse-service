@@ -5,6 +5,8 @@ require "rails_helper"
 require Rails.root.join("db/migrate/20261021100003_one_inventory_row_per_bin_and_sku").to_s
 
 RSpec.describe OneInventoryRowPerBinAndSku do
+  include_context "a migration runs inside each example"
+
   let(:connection) { ActiveRecord::Base.connection }
   let(:owner) { "aaaaaaaa-2222-4333-8444-555555555555" }
   let(:other) { "bbbbbbbb-2222-4333-8444-555555555555" }

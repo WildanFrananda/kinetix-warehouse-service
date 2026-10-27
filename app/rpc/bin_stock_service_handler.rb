@@ -30,6 +30,8 @@ module Rpc
       ).returns(Fulfillment::V1::CheckBinStockResponse)
     end
     def check_bin_stock(req, _call)
+      Rpc::StringLimits.refuse_longer!("sku", [ req.sku ], StockOperation::MAX_SKU_LENGTH)
+
       merchant = merchant_for(req.merchant_principal_id)
       return NOT_FOUND_STOCK if merchant.nil?
 
@@ -57,6 +59,8 @@ module Rpc
         raise GRPC::InvalidArgument,
               "asked about #{skus.length} skus; this call answers at most #{MAX_BATCH_SKUS}"
       end
+
+      Rpc::StringLimits.refuse_longer!("skus", skus, StockOperation::MAX_SKU_LENGTH)
 
       merchant = merchant_for(req.merchant_principal_id)
 

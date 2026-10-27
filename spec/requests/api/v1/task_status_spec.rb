@@ -99,6 +99,18 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(task.reload.status).to eq("packed")
     end
+
+    [ {}, { status: "" }, { status: "   " } ].each do |body|
+      it "says the status is missing for #{body.inspect}, rather than quoting an empty value" do
+        task = create(:fulfillment_task, merchant: merchant, status: "received")
+
+        patch "/api/v1/fulfillment_tasks/#{task.id}/status", params: body, headers: headers
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body).to eq("error" => "status is required: name the state to move the task to")
+        expect(task.reload.status).to eq("received")
+      end
+    end
   end
 
   describe "moving a task by scanning it" do

@@ -152,7 +152,7 @@ RSpec.describe "how long a bin code, a zone and a note may be", type: :request d
     end
 
     it "refuses a bin code no bin can have, and tells order nothing" do
-      post "/api/v1/returns/RMA-1/received",
+      post "/api/v1/returns/RMA-20261027-0A1B2C3D/received",
            params: { bin_code: "B" * 65, lines: [ { sku: "SKU-1", quantity: 1 } ] }.to_json,
            headers: bearer(access_token(principal_id: owner)).merge(json)
 

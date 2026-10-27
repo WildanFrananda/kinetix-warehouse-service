@@ -3,6 +3,8 @@
 class ShippingLabel < ApplicationRecord
   extend T::Sig
 
+  MAX_AWB_LENGTH = 64
+
   belongs_to :fulfillment_task
 
   validates :awb_number, presence: true, uniqueness: true
