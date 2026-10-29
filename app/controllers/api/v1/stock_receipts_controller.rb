@@ -9,8 +9,17 @@ module Api
       include ApiStaffAuthorization
       include ApiAdminAudit
       include ApiStringParams
+      include ApiLedgerQuery
 
       STRING_FIELDS = T.let(%i[idempotency_key merchant_principal_id bin_code sku note].freeze, T::Array[Symbol])
+
+      sig { void }
+      def index
+        return unless require_staff!
+
+        page = ledger.receipts(filter: stock_filter, before: query_id(:before), limit: page_limit)
+        render(json: { receipts: page.items.map { |row| receipt_row(row) }, next_before_id: page.last_shown&.id })
+      end
 
       sig { void }
       def create
@@ -21,6 +30,20 @@ module Api
       end
 
       private
+
+      sig { params(row: StockReceipt).returns(T::Hash[Symbol, T.untyped]) }
+      def receipt_row(row)
+        {
+          id: row.id,
+          bin_code: T.must(row.warehouse_bin).bin_code,
+          sku: row.sku,
+          merchant_principal_id: row.merchant_principal_id,
+          quantity: row.quantity,
+          note: row.note,
+          received_by_principal_id: row.received_by_principal_id,
+          created_at: row.created_at
+        }
+      end
 
       sig { void }
       def receive

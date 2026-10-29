@@ -9,8 +9,17 @@ module Api
       include ApiStaffAuthorization
       include ApiAdminAudit
       include ApiStringParams
+      include ApiLedgerQuery
 
       SHELF_LEVELS = T.let(0..Kinetix::IntegerParam::MAX_INT32, T::Range[Integer])
+
+      sig { void }
+      def index
+        return unless require_staff!
+
+        page = ledger.bins(after: query_text(:after, WarehouseBin::MAX_CODE_LENGTH), limit: page_limit)
+        render(json: { bins: page.items.map(&:serialize), next_after: page.last_shown&.bin_code })
+      end
 
       sig { void }
       def create
