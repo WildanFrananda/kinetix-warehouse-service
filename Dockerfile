@@ -6,10 +6,6 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim@sha256:58479f164d5947f852da27a443
 
 WORKDIR /rails
 
-# `upgrade` as well as `install`: the base image is pinned by digest for reproducibility, and a pinned
-# digest by definition stops receiving Debian's security updates. The image scan in CI fails the build on a
-# CRITICAL that has a fix available, and this is where that fix is applied — the pin still decides which
-# Ruby ships, the upgrade only patches what Debian has already fixed.
 RUN apt-get update -qq && \
     apt-get upgrade -qq --no-install-recommends -y && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
@@ -19,7 +15,7 @@ RUN apt-get update -qq && \
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development" \
+    BUNDLE_WITHOUT="development:test" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so"
 
 FROM base AS build
@@ -35,16 +31,16 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile -j 1 --gemfile
 
-# Copy application code
 COPY . .
 
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-# No assets:precompile: this service renders no pages, ships no JavaScript and carries no stylesheet,
-# so propshaft is not installed and the task does not exist. It used to run here because the service
-# served its own admin dashboard.
 
-FROM base
+FROM base AS final
+
+RUN apt-get update -qq && \
+    apt-get upgrade -qq --no-install-recommends -y && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash
