@@ -241,11 +241,24 @@ for days, because the layer came from an older build. The `final` stage therefor
 upgrade`, and the build passes `no-cache-filters: final`, as review's does: that stage is rebuilt every time, the
 bundle and the code stay cached.
 
-The image installs no test gems (`BUNDLE_WITHOUT="development:test"`). With `development` alone, capybara,
+The image installs no test gems (`BUNDLE_WITHOUT`, a build argument, `development:test` by default). With `development` alone, capybara,
 selenium-webdriver, rspec and the rest shipped in production, and the same scan failed on the Rust `zip` crate inside
 selenium-webdriver's `selenium-manager` binary (CVE-2026-115905). Checked on a local build the same day: `libbrotli1
 1.1.0-2+deb13u1`, no test gem in the bundle, `rails runner` in production eager-loads the app, and Trivy 0.70.0 with
 CI's settings (CRITICAL, fixed only, `.trivyignore`) finds nothing.
+
+The lab runs the image with `RAILS_ENV=development` (infra `compose.yaml`), production with `production`. Without the
+test group that crashed the lab at boot: `Bundler.require(:default, :development)` still walks `dotenv-rails`
+(development and test), fails to load it, falls back to `dotenv/rails` from the `dotenv` gem that kamal pulls in, and
+`Dotenv.instrumenter=` is not there (`NoMethodError` in `config/application.rb`, the container restarting). So the lab
+builds both warehouse services with `BUNDLE_WITHOUT: development`, as the image was before; production's
+`rails runner` was checked in production mode and is unaffected. capybara and selenium-webdriver are used by no spec.
+
+In development Rails' host authorization admits only the hosts listed in `config/environments/development.rb`:
+`localhost`, the two service names and, since 2026-10-29, `kinetix-api-gateway`. The backoffice reaches warehouse through
+the edge, which calls the gateway by that name, and Kong passes it on as `Host`; without it the lab answered every
+backoffice call with Rails' HTML 403 ("Blocked hosts: kinetix-api-gateway") while calls through `localhost` worked.
+Production sets no `config.hosts`, so it never applied there.
 
 ## Tests
 
