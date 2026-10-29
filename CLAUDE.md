@@ -232,6 +232,21 @@ made identity answer once per request. A JWKS that cannot be fetched is `KeysUna
 IDENTITY_UNAVAILABLE`; it used to escape as a 500, and it is never a `401`, which would tell a signed-in user
 their token is bad when identity simply did not answer.
 
+## The image
+
+The base image is pinned by digest, so Debian's security fixes reach the image only through `apt-get upgrade`. The
+base stage upgrades, but `build-and-push.yml` builds with the GitHub Actions layer cache, and a cached `RUN` never runs
+again: on 2026-10-29 the scan failed on `libbrotli1` (CVE-2026-111497) although `trixie-security` had carried the fix
+for days, because the layer came from an older build. The `final` stage therefore starts with its own `apt-get
+upgrade`, and the build passes `no-cache-filters: final`, as review's does: that stage is rebuilt every time, the
+bundle and the code stay cached.
+
+The image installs no test gems (`BUNDLE_WITHOUT="development:test"`). With `development` alone, capybara,
+selenium-webdriver, rspec and the rest shipped in production, and the same scan failed on the Rust `zip` crate inside
+selenium-webdriver's `selenium-manager` binary (CVE-2026-115905). Checked on a local build the same day: `libbrotli1
+1.1.0-2+deb13u1`, no test gem in the bundle, `rails runner` in production eager-loads the app, and Trivy 0.70.0 with
+CI's settings (CRITICAL, fixed only, `.trivyignore`) finds nothing.
+
 ## Tests
 
 The suite passes in random order (checked 2026-10-27 with eight seeds; `.rspec` and both CIs still run in
