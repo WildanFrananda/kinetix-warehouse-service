@@ -194,7 +194,7 @@ work left: tasks to pack, and packed tasks whose label has not been printed.
 
 ## Admin audit
 
-Every admin action over HTTP (bin upsert, stock receipt, stock adjustment; the only admin-only routes) runs
+Every admin action over HTTP (bin upsert, stock receipt, stock adjustment; the only admin-only writes) runs
 inside `ApiAdminAudit#audit_admin_action`, after `require_staff!`, so a non-admin turned away is not an
 admin action. Once the action has answered, one INFO line `admin_action actor=<sub> action=<action>
 target="<bin>/<sku>" outcome=<outcome> request_id=<id>` is logged and `kinetix_admin_actions_total{action,
@@ -203,6 +203,25 @@ controller's own `rescue_from` handler first, so the outcome is the status the c
 body is `refused`, identity down is `failed`). The target is JSON-quoted, so a bin code cannot forge the
 fields after it. The counter is pre-published at zero for every action and outcome by the metrics
 initializer, in both processes, as the gRPC client series are. gRPC calls are not audited.
+
+## Stock reads
+
+The backoffice reads stock through four admin-only `GET`s (2026-10-29): `/bins` (each bin with
+`sku_count`, the SKUs holding at least one unit, and the units of every SKU together), `/bins/stock` (one
+row per bin and SKU, rows at zero included), `/stock_receipts` and `/stock_adjustments` (the ledger,
+newest first). They are reads, not admin actions, so `audit_admin_action` does not wrap them. They live
+under the three paths the gateway already routes through its staff gate (`warehouse-bins-staff-route` and
+the two stock routes match by prefix), so no gateway change was needed; a new top-level path would have
+gone through the open `warehouse-route` instead.
+
+Paging is keyset, never offset: bins by `bin_code` (`after`, answered `next_after`), stock rows by id
+ascending (`after`, `next_after_id`), the ledger by id descending (`before`, `next_before_id`).
+`Inventory::Page` asks the repository for one row more than the limit, so the cursor is null exactly when
+the page is the last, a full last page included. The filters (`sku`, `bin_code`, `merchant_principal_id`)
+combine and are exact. A query parameter that cannot be read is `400 INVALID_<PARAMETER>` with a
+`message`, raised as `ApiLedgerQuery::BadQuery` and rendered by its own `rescue_from`, after the caller's
+role is checked: an array (`sku[]=`), an empty or over-long string, a NUL, a merchant that is no UUID, a
+cursor or limit not in digits. The limit is 1 to 100, 50 when absent.
 
 ## Identity's signing keys
 

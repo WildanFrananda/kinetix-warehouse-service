@@ -20,9 +20,10 @@ Rails.application.routes.draw do
           get :me
         end
       end
-      resources :bins, only: [ :create ]
-      resources :stock_receipts, only: [ :create ]
-      resources :stock_adjustments, only: [ :create ]
+      get "bins/stock", to: "bin_stock#index"
+      resources :bins, only: [ :index, :create ]
+      resources :stock_receipts, only: [ :index, :create ]
+      resources :stock_adjustments, only: [ :index, :create ]
     end
   end
 

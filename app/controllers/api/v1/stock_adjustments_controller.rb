@@ -9,8 +9,19 @@ module Api
       include ApiStaffAuthorization
       include ApiAdminAudit
       include ApiStringParams
+      include ApiLedgerQuery
 
       STRING_FIELDS = T.let(%i[idempotency_key merchant_principal_id bin_code sku reason note].freeze, T::Array[Symbol])
+
+      sig { void }
+      def index
+        return unless require_staff!
+
+        page = ledger.adjustments(filter: stock_filter, before: query_id(:before), limit: page_limit)
+        render(
+          json: { adjustments: page.items.map { |row| adjustment_row(row) }, next_before_id: page.last_shown&.id }
+        )
+      end
 
       sig { void }
       def create
@@ -21,6 +32,23 @@ module Api
       end
 
       private
+
+      sig { params(row: StockAdjustment).returns(T::Hash[Symbol, T.untyped]) }
+      def adjustment_row(row)
+        {
+          id: row.id,
+          bin_code: T.must(row.warehouse_bin).bin_code,
+          sku: row.sku,
+          merchant_principal_id: row.merchant_principal_id,
+          quantity_delta: row.quantity_delta,
+          quantity_before: row.quantity_before,
+          quantity_after: row.quantity_after,
+          reason: row.reason,
+          note: row.note,
+          adjusted_by_principal_id: row.adjusted_by_principal_id,
+          created_at: row.created_at
+        }
+      end
 
       sig { void }
       def adjust

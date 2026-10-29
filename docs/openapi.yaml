@@ -317,6 +317,34 @@ paths:
         '422': { $ref: '#/components/responses/Refused' }
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /bins:
+    get:
+      summary: List the bins by code, with the SKUs each holds and its units
+      tags: [staff]
+      parameters:
+        - in: query
+          name: after
+          description: The `next_after` of the previous page; the list starts after this bin code
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of bins, ordered by `bin_code`
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bins:
+                    type: array
+                    items: { $ref: '#/components/schemas/BinTotals' }
+                  next_after:
+                    type: string
+                    nullable: true
+                    description: Send as `after` for the next page; null on the last page
+        '400': { $ref: '#/components/responses/BadQuery' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
     post:
       summary: Create a bin, or update the one with that code
       tags: [staff]
@@ -351,7 +379,70 @@ paths:
         '403': { $ref: '#/components/responses/NotStaff' }
         '422': { $ref: '#/components/responses/Refused' }
         '503': { $ref: '#/components/responses/DatabaseUnavailable' }
+  /bins/stock:
+    get:
+      summary: List the stock of each bin and SKU
+      description: >-
+        One row per bin and SKU, rows at zero included, in the order they were first booked. The filters
+        combine; none lists the whole warehouse.
+      tags: [staff]
+      parameters:
+        - $ref: '#/components/parameters/SkuFilter'
+        - $ref: '#/components/parameters/BinCodeFilter'
+        - $ref: '#/components/parameters/MerchantFilter'
+        - in: query
+          name: after
+          description: The `next_after_id` of the previous page
+          schema: { type: integer, minimum: 1 }
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of stock rows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stock:
+                    type: array
+                    items: { $ref: '#/components/schemas/StockRow' }
+                  next_after_id:
+                    type: integer
+                    nullable: true
+                    description: Send as `after` for the next page; null on the last page
+        '400': { $ref: '#/components/responses/BadQuery' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
   /stock_receipts:
+    get:
+      summary: List the stock receipts, newest first
+      tags: [staff]
+      parameters:
+        - $ref: '#/components/parameters/SkuFilter'
+        - $ref: '#/components/parameters/BinCodeFilter'
+        - $ref: '#/components/parameters/MerchantFilter'
+        - $ref: '#/components/parameters/BeforeId'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of receipts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receipts:
+                    type: array
+                    items: { $ref: '#/components/schemas/ReceiptEntry' }
+                  next_before_id:
+                    type: integer
+                    nullable: true
+                    description: Send as `before` for the next page; null on the last page
+        '400': { $ref: '#/components/responses/BadQuery' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
     post:
       summary: Book goods in
       description: >-
@@ -395,6 +486,34 @@ paths:
         '422': { $ref: '#/components/responses/StockRefused' }
         '503': { $ref: '#/components/responses/IdentityUnavailable' }
   /stock_adjustments:
+    get:
+      summary: List the stock adjustments, newest first
+      tags: [staff]
+      parameters:
+        - $ref: '#/components/parameters/SkuFilter'
+        - $ref: '#/components/parameters/BinCodeFilter'
+        - $ref: '#/components/parameters/MerchantFilter'
+        - $ref: '#/components/parameters/BeforeId'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of adjustments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adjustments:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdjustmentEntry' }
+                  next_before_id:
+                    type: integer
+                    nullable: true
+                    description: Send as `before` for the next page; null on the last page
+        '400': { $ref: '#/components/responses/BadQuery' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/NotStaff' }
+        '503': { $ref: '#/components/responses/DatabaseUnavailable' }
     post:
       summary: Write stock off, or correct a count
       tags: [staff]
@@ -456,6 +575,31 @@ components:
         The `id` from `GET /merchants/me`, in ASCII digits only; any other spelling names no merchant and is
         404
       schema: { type: integer, minimum: 1 }
+    Limit:
+      in: query
+      name: limit
+      description: Rows per page, 1 to 100, written in digits; 50 when absent
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+    SkuFilter:
+      in: query
+      name: sku
+      description: Only this SKU, matched exactly
+      schema: { type: string, minLength: 1, maxLength: 128 }
+    BinCodeFilter:
+      in: query
+      name: bin_code
+      description: Only this bin; a code that names no bin finds nothing
+      schema: { type: string, minLength: 1, maxLength: 64 }
+    MerchantFilter:
+      in: query
+      name: merchant_principal_id
+      description: Only this merchant's goods, a UUID in either case
+      schema: { type: string, format: uuid }
+    BeforeId:
+      in: query
+      name: before
+      description: The `next_before_id` of the previous page
+      schema: { type: integer, minimum: 1 }
   requestBodies:
     Cutoff:
       required: true
@@ -512,6 +656,15 @@ components:
         sku), `UNKNOWN_MERCHANT`. A string field sent as another JSON type or holding a NUL character is
         `INVALID_<FIELD>` (`INVALID_SKU`, `INVALID_MERCHANT_PRINCIPAL_ID`, `INVALID_REASON`, …). Nothing was
         written.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Refusal' }
+    BadQuery:
+      description: >-
+        A query parameter could not be read: `error` is `INVALID_<PARAMETER>` (`INVALID_LIMIT`,
+        `INVALID_SKU`, `INVALID_BIN_CODE`, `INVALID_MERCHANT_PRINCIPAL_ID`, `INVALID_AFTER`,
+        `INVALID_BEFORE`) and `message` says what it must be. A parameter given twice, as a list or holding
+        a NUL character is refused the same way.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Refusal' }
@@ -688,6 +841,55 @@ components:
         bin_code: { type: string }
         zone: { type: string }
         shelf_level: { type: integer }
+    BinTotals:
+      type: object
+      properties:
+        id: { type: integer }
+        bin_code: { type: string }
+        zone: { type: string }
+        shelf_level: { type: integer }
+        sku_count: { type: integer, description: SKUs with at least one unit in the bin }
+        quantity: { type: integer, description: Units in the bin, every SKU together }
+        reserved_quantity: { type: integer, description: Of those, units held for orders }
+        updated_at: { type: string, format: date-time, description: When the bin itself last changed }
+    StockRow:
+      type: object
+      properties:
+        id: { type: integer }
+        bin_code: { type: string }
+        zone: { type: string }
+        shelf_level: { type: integer }
+        sku: { type: string }
+        merchant_principal_id: { type: string, format: uuid, nullable: true }
+        quantity: { type: integer, description: Units on the shelf }
+        reserved_quantity: { type: integer, description: Units held for orders }
+        available_quantity: { type: integer, description: Units free to sell, never below zero }
+        updated_at: { type: string, format: date-time }
+    ReceiptEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        bin_code: { type: string }
+        sku: { type: string }
+        merchant_principal_id: { type: string, format: uuid, nullable: true }
+        quantity: { type: integer }
+        note: { type: string, nullable: true }
+        received_by_principal_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+    AdjustmentEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        bin_code: { type: string }
+        sku: { type: string }
+        merchant_principal_id: { type: string, format: uuid }
+        quantity_delta: { type: integer }
+        quantity_before: { type: integer }
+        quantity_after: { type: integer }
+        reason: { type: string, enum: [DAMAGE, SHRINKAGE, MISCOUNT, RETURN_TO_SUPPLIER, EXPIRY] }
+        note: { type: string, nullable: true }
+        adjusted_by_principal_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
     Receipt:
       type: object
       properties:

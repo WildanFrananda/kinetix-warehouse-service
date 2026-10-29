@@ -6,6 +6,7 @@ Container.register(:merchant_repository) { MerchantRepository.new }
 Container.register(:fulfillment_task_repository) { FulfillmentTaskRepository.new }
 Container.register(:stock_reservation_repository) { StockReservationRepository.new }
 Container.register(:shipping_label_repository) { ShippingLabelRepository.new }
+Container.register(:stock_ledger_repository) { StockLedgerRepository.new }
 
 Container.register(:create_task_service) do
   Fulfillment::CreateTaskService.new(
@@ -24,6 +25,10 @@ Container.register(:task_lookup_service) do
   Fulfillment::TaskLookupService.new(
     task_repository: Container[:fulfillment_task_repository]
   )
+end
+
+Container.register(:stock_ledger_service) do
+  Inventory::StockLedgerService.new(repository: Container[:stock_ledger_repository])
 end
 
 Container.register(:order_grpc_client) { Order::GrpcClient.new }
