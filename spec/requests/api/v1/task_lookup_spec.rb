@@ -8,7 +8,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#index, finding a task by its order num
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-4333-8444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
 
   def find(order_number, with: headers)
@@ -17,7 +17,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#index, finding a task by its order num
 
   describe "a task that has left the queue" do
     let!(:task) do
-      create(:fulfillment_task, merchant: merchant, order_number: "ORD-SHIPPED-1", status: "packed")
+      create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-SHIPPED-1", status: "packed")
     end
 
     before do
@@ -60,7 +60,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#index, finding a task by its order num
   end
 
   it "finds a cancelled task too, whatever its state" do
-    task = create(:fulfillment_task, merchant: merchant, order_number: "ORD-CANCELLED-1", status: "cancelled")
+    task = create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-CANCELLED-1", status: "cancelled")
 
     find("ORD-CANCELLED-1")
 
@@ -79,7 +79,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#index, finding a task by its order num
   end
 
   it "does not find another merchant's task for the same order number" do
-    create(:fulfillment_task, merchant: create(:merchant), order_number: "ORD-THEIRS-1")
+    create(:fulfillment_task, fulfillment_setting: create(:fulfillment_setting), order_number: "ORD-THEIRS-1")
 
     find("ORD-THEIRS-1")
 

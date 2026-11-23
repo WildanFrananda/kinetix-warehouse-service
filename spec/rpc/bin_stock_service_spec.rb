@@ -9,8 +9,8 @@ RSpec.describe Rpc::BinStockServiceHandler do
   let(:handler) { described_class.new }
   let(:principal) { "aaaaaaaa-1111-2222-3333-444444444444" }
 
-  let!(:merchant) do
-    Merchant.create!(cutoff_hour: 14, principal_id: principal)
+  let!(:setting) do
+    FulfillmentSetting.create!(cutoff_hour: 14, merchant_principal_id: principal)
   end
 
   let!(:bin) { WarehouseBin.create!(bin_code: "A-01", zone: "A", shelf_level: 1) }
@@ -81,7 +81,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
     it "does not answer with another merchant's stock" do
       other = "bbbbbbbb-1111-2222-3333-444444444444"
-      Merchant.create!(cutoff_hour: 14, principal_id: other)
+      FulfillmentSetting.create!(cutoff_hour: 14, merchant_principal_id: other)
       BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-SHARED", quantity: 99, reserved_quantity: 0,
         merchant_principal_id: other
@@ -336,10 +336,10 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "refuses a merchant asking for stock that is not theirs" do
-      thief = Merchant.create!(cutoff_hour: 14,
-        principal_id: "dddddddd-0000-0000-0000-000000000000")
+      thief = FulfillmentSetting.create!(cutoff_hour: 14,
+        merchant_principal_id: "dddddddd-0000-0000-0000-000000000000")
 
-      res = reserve(quantity: 2, principal_id: thief.principal_id)
+      res = reserve(quantity: 2, principal_id: thief.merchant_principal_id)
 
       expect(res.success).to be(false)
       expect(res.error.error_code).to eq("NOT_THIS_MERCHANTS_STOCK")
@@ -358,22 +358,22 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "gives each merchant its own row for the same order number, and never shares a hold" do
-      other = Merchant.create!(cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000")
+      other = FulfillmentSetting.create!(cutoff_hour: 14,
+        merchant_principal_id: "cccccccc-0000-0000-0000-000000000000")
       theirs = BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
-        merchant_principal_id: other.principal_id
+        merchant_principal_id: other.merchant_principal_id
       )
 
       reserve(quantity: 3, key: "K-A")
-      res = reserve(quantity: 3, key: "K-B", sku: "SKU-OTHER", principal_id: other.principal_id)
+      res = reserve(quantity: 3, key: "K-B", sku: "SKU-OTHER", principal_id: other.merchant_principal_id)
 
       expect(res.success).to be(true)
       expect(inventory.reload.reserved_quantity).to eq(3)
       expect(theirs.reload.reserved_quantity).to eq(3)
       expect(StockReservation.where(order_number: "ORD-1").count).to eq(2)
-      expect(StockReservation.where(merchant_id: merchant.id).pluck(:quantity)).to eq([ 3 ])
-      expect(StockReservation.where(merchant_id: other.id).pluck(:quantity)).to eq([ 3 ])
+      expect(StockReservation.where(merchant_principal_id: setting.merchant_principal_id).pluck(:quantity)).to eq([ 3 ])
+      expect(StockReservation.where(merchant_principal_id: other.merchant_principal_id).pluck(:quantity)).to eq([ 3 ])
     end
 
     it "records only the attempt that moved the counter as applied" do
@@ -392,22 +392,22 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "gives each merchant its own replay row when both derive the same key" do
-      other = Merchant.create!(cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000")
+      other = FulfillmentSetting.create!(cutoff_hour: 14,
+        merchant_principal_id: "cccccccc-0000-0000-0000-000000000000")
       theirs = BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-OTHER", quantity: 10, reserved_quantity: 0,
-        merchant_principal_id: other.principal_id
+        merchant_principal_id: other.merchant_principal_id
       )
 
       reserve(quantity: 3)
-      res = reserve(quantity: 3, sku: "SKU-OTHER", principal_id: other.principal_id)
+      res = reserve(quantity: 3, sku: "SKU-OTHER", principal_id: other.merchant_principal_id)
 
       expect(res.success).to be(true)
       expect(inventory.reload.reserved_quantity).to eq(3)
       expect(theirs.reload.reserved_quantity).to eq(3)
       expect(StockOperation.pluck(:idempotency_key))
         .to contain_exactly("reserve:ORD-1:SKU-1", "reserve:ORD-1:SKU-OTHER")
-      expect(StockOperation.pluck(:merchant_id)).to contain_exactly(merchant.id, other.id)
+      expect(StockOperation.pluck(:merchant_principal_id)).to contain_exactly(setting.merchant_principal_id, other.merchant_principal_id)
     end
 
     it "still refuses one merchant's own key reused for a different request" do
@@ -451,7 +451,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
       second.update!(reserved_quantity: 4)
       legacy = StockReservation.create!(
-        merchant: merchant, order_number: "ORD-LEGACY", sku: "SKU-LEGACY", quantity: 4
+        fulfillment_setting: setting, order_number: "ORD-LEGACY", sku: "SKU-LEGACY", quantity: 4
       )
       legacy.update_column(:bin_inventory_id, nil)
 
@@ -466,7 +466,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
     it "credits a guessed bin the units that no live hold on it claims" do
       legacy = StockReservation.create!(
-        merchant: merchant, order_number: "ORD-LEGACY-2", sku: "SKU-1", quantity: 3
+        fulfillment_setting: setting, order_number: "ORD-LEGACY-2", sku: "SKU-1", quantity: 3
       )
       legacy.update_column(:bin_inventory_id, nil)
       inventory.update!(reserved_quantity: 3)
@@ -538,21 +538,21 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "cannot release, and cannot poison, another merchant's pair" do
-      other = Merchant.create!(cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000")
+      other = FulfillmentSetting.create!(cutoff_hour: 14,
+        merchant_principal_id: "cccccccc-0000-0000-0000-000000000000")
       reserve(quantity: 3)
 
-      res = release(principal_id: other.principal_id)
+      res = release(principal_id: other.merchant_principal_id)
 
       expect(res.success).to be(true)
       expect(res.already_released).to be(true)
       expect(inventory.reload.reserved_quantity).to eq(3)
 
-      mine = StockReservation.find_by(merchant_id: merchant.id, order_number: "ORD-1")
+      mine = StockReservation.find_by(merchant_principal_id: setting.merchant_principal_id, order_number: "ORD-1")
       expect(mine.released_at).to be_nil
       expect(mine.quantity).to eq(3)
 
-      theirs = StockReservation.find_by(merchant_id: other.id, order_number: "ORD-1")
+      theirs = StockReservation.find_by(merchant_principal_id: other.merchant_principal_id, order_number: "ORD-1")
       expect(theirs.quantity).to eq(0)
       expect(theirs.released_at).to be_present
 
@@ -563,9 +563,9 @@ RSpec.describe Rpc::BinStockServiceHandler do
     end
 
     it "still lets a merchant reserve a pair another merchant has already tombstoned" do
-      other = Merchant.create!(cutoff_hour: 14,
-        principal_id: "cccccccc-0000-0000-0000-000000000000")
-      release(order_number: "ORD-CROSS", principal_id: other.principal_id)
+      other = FulfillmentSetting.create!(cutoff_hour: 14,
+        merchant_principal_id: "cccccccc-0000-0000-0000-000000000000")
+      release(order_number: "ORD-CROSS", principal_id: other.merchant_principal_id)
 
       res = reserve(quantity: 3, order_number: "ORD-CROSS")
 
@@ -653,7 +653,7 @@ RSpec.describe Rpc::BinStockServiceHandler do
 
     it "does not answer with another merchant's stock" do
       other = "bbbbbbbb-1111-2222-3333-444444444444"
-      Merchant.create!(cutoff_hour: 14, principal_id: other)
+      FulfillmentSetting.create!(cutoff_hour: 14, merchant_principal_id: other)
       BinInventory.create!(
         warehouse_bin: bin, sku: "SKU-ELSEWHERE", quantity: 99, reserved_quantity: 0,
         merchant_principal_id: other

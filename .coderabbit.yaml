@@ -1,0 +1,33 @@
+language: "en-US"
+reviews:
+  profile: "assertive"
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "development"
+  path_filters:
+    - "!sorbet/rbi/gems/**"
+    - "!sorbet/rbi/annotations/**"
+  path_instructions:
+    - path: "app/**"
+      instructions: |
+        - Enforce `# typed: strict` and complete Sorbet `sig` type annotations on every file in `app/` (0 Sorbet type errors allowed).
+        - Enforce the layered architecture (`Controller -> Service -> Repository -> Model`) and constructor/DI container wiring without business logic in controllers.
+        - Flag any hardcoded fallback secrets, default environment URLs, static/legacy merchant API keys, or mocked/dummy production logic.
+        - Flag verbose or redundant step-by-step tutorial comments; keep code self-documenting and 100% English.
+    - path: "app/models/**"
+      instructions: |
+        - Models are persistence-only (`ActiveRecord`): flag any business logic, external I/O, or side-effect callbacks.
+    - path: "app/rpc/**"
+      instructions: |
+        - Verify gRPC handlers align with generated Protobuf stubs, map domain refusals cleanly, and execute stock reservations inside explicit PostgreSQL transactions with pessimistic row-level locking (`FOR UPDATE`).
+    - path: "db/migrate/**"
+      instructions: |
+        - Verify migrations remain reversible where practical, enforce database-level constraints (`NULL`, `CHECK`, foreign keys, unique indexes), and key merchant-owned tables on `merchant_principal_id` referencing `fulfillment_settings`.
+    - path: "spec/**"
+      instructions: |
+        - Verify RSpec unit, request, concurrency, and gRPC specs cover edge cases, race conditions, and error states cleanly without weakening assertions or hardcoding real secrets.
+chat:
+  auto_reply: true

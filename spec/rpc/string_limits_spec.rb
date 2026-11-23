@@ -7,8 +7,8 @@ RSpec.describe "how long a string another service sends over gRPC may be" do
   include_context "warehouse serves gRPC over mTLS"
 
   let(:principal) { "cccccccc-1111-4222-8333-888888888888" }
-  let!(:merchant) { create(:merchant, principal_id: principal) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, order_number: "ORD-LONG-1", status: "packed") }
+  let!(:setting) { create(:fulfillment_setting, merchant_principal_id: principal) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: setting, order_number: "ORD-LONG-1", status: "packed") }
 
   def line(sku)
     Fulfillment::V1::FulfillmentTaskLine.new(sku: sku, quantity: 1)

@@ -55,8 +55,9 @@ RSpec.describe "what a client sees when warehouse cannot reach its database", ty
 
   it "keeps a failure that is not the database's connection a 500" do
     failing = Class.new(Fulfillment::TaskQueueService) do
-      def call(merchant_id:)
-        ActiveRecord::Base.connection.select_value("SELECT 1 / (#{merchant_id} - #{merchant_id})")
+      def call(merchant_principal_id:)
+        _ = merchant_principal_id
+        ActiveRecord::Base.connection.select_value("SELECT 1 / 0")
       end
     end
     queue = failing.new(task_repository: Container[:fulfillment_task_repository])
@@ -68,6 +69,6 @@ RSpec.describe "what a client sees when warehouse cannot reach its database", ty
     expect(response.parsed_body["error"]).to eq("INTERNAL_ERROR")
     expect(response.headers["Retry-After"]).to be_nil
   ensure
-    Merchant.delete_all
+    FulfillmentSetting.delete_all
   end
 end

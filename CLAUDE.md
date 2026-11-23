@@ -68,7 +68,7 @@ unset; contract v1.7.0's `string bin_code` has no presence, so order still reads
 
 ## Merchant standing
 
-Identity is asked on every seller request; the local `merchants` row is a key that tasks and stock hang
+Identity is asked on every seller request; the local `fulfillment_settings` row is a key that tasks and stock hang
 on, never the answer (the user's ruling of 2026-10-18, `kinetix-infrastructure/docs/MERCHANT-SUSPENSION.md`
 §2: no cache, no first-sight row). `ApiAuthentication#require_api_standing!` refuses a token whose role is
 not `seller` with `403 NOT_A_SELLER` without asking identity (pricing does the same); a freshly approved
@@ -81,7 +81,7 @@ buyers paid for; changing how the store runs (the cutoff hour) needs `may_sell`,
 MERCHANT_NOT_TRADING`. "Identity knows it" stands in for `may_fulfil` until that field exists (suspension
 plan D1); swap it in `require_api_merchant!` then.
 
-A row is created in one place, `MerchantRepository#project`, after identity vouches: by a seller's
+A row is created in one place, `FulfillmentSettingRepository#project`, after identity vouches: by a seller's
 request, or when staff book stock for a merchant (`Inventory::ReceiveStockService`; identity must know the
 owner, or `422 UNKNOWN_MERCHANT`). gRPC only looks rows up, so stock booked for a merchant can be reserved
 by order at once. gRPC never asks about standing: new sales stop at order's checkout.

@@ -416,23 +416,35 @@ class FulfillmentTask
   end
 
   module GeneratedAssociationMethods
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
-    def build_merchant(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentSetting) }
+    def build_fulfillment_setting(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::ShippingLabel) }
     def build_shipping_label(*args, &blk); end
 
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
-    def create_merchant(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentSetting) }
+    def create_fulfillment_setting(*args, &blk); end
 
-    sig { params(args: T.untyped, blk: T.untyped).returns(::Merchant) }
-    def create_merchant!(*args, &blk); end
+    sig { params(args: T.untyped, blk: T.untyped).returns(::FulfillmentSetting) }
+    def create_fulfillment_setting!(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::ShippingLabel) }
     def create_shipping_label(*args, &blk); end
 
     sig { params(args: T.untyped, blk: T.untyped).returns(::ShippingLabel) }
     def create_shipping_label!(*args, &blk); end
+
+    sig { returns(T.nilable(::FulfillmentSetting)) }
+    def fulfillment_setting; end
+
+    sig { params(value: T.nilable(::FulfillmentSetting)).void }
+    def fulfillment_setting=(value); end
+
+    sig { returns(T::Boolean) }
+    def fulfillment_setting_changed?; end
+
+    sig { returns(T::Boolean) }
+    def fulfillment_setting_previously_changed?; end
 
     sig { returns(T::Array[T.untyped]) }
     def fulfillment_task_line_ids; end
@@ -448,26 +460,14 @@ class FulfillmentTask
     sig { params(value: T::Enumerable[::FulfillmentTaskLine]).void }
     def fulfillment_task_lines=(value); end
 
-    sig { returns(T.nilable(::Merchant)) }
-    def merchant; end
-
-    sig { params(value: T.nilable(::Merchant)).void }
-    def merchant=(value); end
-
-    sig { returns(T::Boolean) }
-    def merchant_changed?; end
-
-    sig { returns(T::Boolean) }
-    def merchant_previously_changed?; end
-
-    sig { returns(T.nilable(::Merchant)) }
-    def reload_merchant; end
+    sig { returns(T.nilable(::FulfillmentSetting)) }
+    def reload_fulfillment_setting; end
 
     sig { returns(T.nilable(::ShippingLabel)) }
     def reload_shipping_label; end
 
     sig { void }
-    def reset_merchant; end
+    def reset_fulfillment_setting; end
 
     sig { void }
     def reset_shipping_label; end
@@ -768,50 +768,50 @@ class FulfillmentTask
     sig { void }
     def id_will_change!; end
 
-    sig { returns(::Integer) }
-    def merchant_id; end
+    sig { returns(::String) }
+    def merchant_principal_id; end
 
-    sig { params(value: ::Integer).returns(::Integer) }
-    def merchant_id=(value); end
+    sig { params(value: ::String).returns(::String) }
+    def merchant_principal_id=(value); end
 
     sig { returns(T::Boolean) }
-    def merchant_id?; end
+    def merchant_principal_id?; end
 
-    sig { returns(T.nilable(::Integer)) }
-    def merchant_id_before_last_save; end
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_before_last_save; end
 
     sig { returns(T.untyped) }
-    def merchant_id_before_type_cast; end
+    def merchant_principal_id_before_type_cast; end
 
     sig { returns(T::Boolean) }
-    def merchant_id_came_from_user?; end
+    def merchant_principal_id_came_from_user?; end
 
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def merchant_id_change; end
+    sig { returns(T.nilable([::String, ::String])) }
+    def merchant_principal_id_change; end
 
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def merchant_id_change_to_be_saved; end
-
-    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def merchant_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
-
-    sig { returns(T.nilable(::Integer)) }
-    def merchant_id_in_database; end
-
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def merchant_id_previous_change; end
+    sig { returns(T.nilable([::String, ::String])) }
+    def merchant_principal_id_change_to_be_saved; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def merchant_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def merchant_principal_id_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable(::Integer)) }
-    def merchant_id_previously_was; end
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_in_database; end
 
-    sig { returns(T.nilable(::Integer)) }
-    def merchant_id_was; end
+    sig { returns(T.nilable([::String, ::String])) }
+    def merchant_principal_id_previous_change; end
+
+    sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
+    def merchant_principal_id_previously_changed?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_previously_was; end
+
+    sig { returns(T.nilable(::String)) }
+    def merchant_principal_id_was; end
 
     sig { void }
-    def merchant_id_will_change!; end
+    def merchant_principal_id_will_change!; end
 
     sig { returns(T.nilable(::String)) }
     def order_number; end
@@ -868,7 +868,7 @@ class FulfillmentTask
     def restore_id_value!; end
 
     sig { void }
-    def restore_merchant_id!; end
+    def restore_merchant_principal_id!; end
 
     sig { void }
     def restore_order_number!; end
@@ -945,11 +945,11 @@ class FulfillmentTask
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def saved_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
-    sig { returns(T.nilable([::Integer, ::Integer])) }
-    def saved_change_to_merchant_id; end
+    sig { returns(T.nilable([::String, ::String])) }
+    def saved_change_to_merchant_principal_id; end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def saved_change_to_merchant_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def saved_change_to_merchant_principal_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { returns(T.nilable([T.nilable(::String), T.nilable(::String)])) }
     def saved_change_to_order_number; end
@@ -1075,7 +1075,7 @@ class FulfillmentTask
     def will_save_change_to_id_value?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
-    def will_save_change_to_merchant_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
+    def will_save_change_to_merchant_principal_id?(from: T.unsafe(nil), to: T.unsafe(nil)); end
 
     sig { params(from: T.untyped, to: T.untyped).returns(T::Boolean) }
     def will_save_change_to_order_number?(from: T.unsafe(nil), to: T.unsafe(nil)); end

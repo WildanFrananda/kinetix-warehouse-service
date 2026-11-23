@@ -37,12 +37,15 @@ module Labels
 
     sig do
       params(
-        merchant_id: Integer,
+        merchant_principal_id: String,
         fulfillment_task_id: Integer
       ).returns(BaseService::Result)
     end
-    def call(merchant_id:, fulfillment_task_id:)
-      task = task_repository.find_by_id(merchant_id: merchant_id, id: fulfillment_task_id)
+    def call(merchant_principal_id:, fulfillment_task_id:)
+      task = task_repository.find_by_id(
+        merchant_principal_id: merchant_principal_id,
+        id: fulfillment_task_id
+      )
       return not_found("Fulfillment task not found") unless task
       return failure("This task was cancelled by order; its parcel is not shipped") if task.status == CANCELLED
 

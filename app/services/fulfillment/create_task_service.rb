@@ -12,8 +12,8 @@ module Fulfillment
       const :already_created, T::Boolean
     end
 
-    sig { returns(MerchantRepositoryInterface) }
-    attr_reader :merchant_repository
+    sig { returns(FulfillmentSettingRepositoryInterface) }
+    attr_reader :setting_repository
 
     sig { returns(FulfillmentTaskRepositoryInterface) }
     attr_reader :task_repository
@@ -26,36 +26,40 @@ module Fulfillment
 
     sig do
       params(
-        merchant_repository: MerchantRepositoryInterface,
+        setting_repository: FulfillmentSettingRepositoryInterface,
         task_repository: FulfillmentTaskRepositoryInterface,
         reservation_repository: StockReservationRepositoryInterface,
         time_zone: ActiveSupport::TimeZone
       ).void
     end
     def initialize(
-      merchant_repository: T.let(Container[:merchant_repository], MerchantRepositoryInterface),
+      setting_repository: T.let(Container[:fulfillment_setting_repository], FulfillmentSettingRepositoryInterface),
       task_repository: T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface),
       reservation_repository: T.let(Container[:stock_reservation_repository], StockReservationRepositoryInterface),
       time_zone: T.let(Rails.configuration.x.platform_time_zone, ActiveSupport::TimeZone)
     )
       super()
-      @merchant_repository = merchant_repository
+      @setting_repository = setting_repository
       @task_repository = task_repository
       @reservation_repository = reservation_repository
       @time_zone = time_zone
     end
 
-    sig { params(merchant_id: Integer, form: CreateTaskForm).returns(BaseService::Result) }
-    def call(merchant_id:, form:)
+    sig { params(merchant_principal_id: String, form: CreateTaskForm).returns(BaseService::Result) }
+    def call(merchant_principal_id:, form:)
       return failure(form.errors.join(", ")) unless form.valid?
 
-      merchant = merchant_repository.find_by_id(merchant_id)
-      return failure("Merchant not found") unless merchant
+      setting = setting_repository.find_by_principal_id(merchant_principal_id)
+      return failure("Merchant not found") unless setting
 
-      existing = task_repository.find_by_order_number(merchant_id: merchant_id, order_number: form.order_number)
+      principal = setting.merchant_principal_id
+      existing = task_repository.find_by_order_number(
+        merchant_principal_id: principal,
+        order_number: form.order_number
+      )
       return success(describe(existing, already_created: true)) if existing
 
-      task = create_task(merchant_id: merchant_id, merchant: merchant, form: form)
+      task = create_task(setting: setting, form: form)
 
       success(describe(task, already_created: false))
     end
@@ -64,17 +68,20 @@ module Fulfillment
 
     sig do
       params(
-        merchant_id: Integer,
-        merchant: Merchant,
+        setting: FulfillmentSetting,
         form: CreateTaskForm
       ).returns(FulfillmentTask)
     end
-    def create_task(merchant_id:, merchant:, form:)
-      cutoff_at = calculate_cutoff_at(merchant.cutoff_hour)
-      bins = reservation_repository.held_bin_codes(merchant_id: merchant_id, order_number: form.order_number)
+    def create_task(setting:, form:)
+      principal = setting.merchant_principal_id
+      cutoff_at = calculate_cutoff_at(setting.cutoff_hour)
+      bins = reservation_repository.held_bin_codes(
+        merchant_principal_id: principal,
+        order_number: form.order_number
+      )
 
       task_repository.create(
-        merchant_id: merchant_id,
+        merchant_principal_id: principal,
         attributes: {
           order_number: form.order_number,
           status: "received",

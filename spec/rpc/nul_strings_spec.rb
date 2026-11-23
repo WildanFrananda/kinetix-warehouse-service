@@ -7,8 +7,8 @@ RSpec.describe "a NUL in a string another service sends over gRPC" do
   include_context "warehouse serves gRPC over mTLS"
 
   let(:principal) { "cccccccc-1111-4222-8333-666666666666" }
-  let!(:merchant) { create(:merchant, principal_id: principal) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, order_number: "ORD-NUL-1", status: "packed") }
+  let!(:setting) { create(:fulfillment_setting, merchant_principal_id: principal) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: setting, order_number: "ORD-NUL-1", status: "packed") }
 
   def create_request(**fields)
     Fulfillment::V1::CreateFulfillmentTaskRequest.new(

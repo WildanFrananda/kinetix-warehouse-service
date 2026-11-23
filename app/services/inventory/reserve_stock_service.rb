@@ -15,10 +15,10 @@ module Inventory
     QUANTITY_MISMATCH = "RESERVATION_QUANTITY_MISMATCH"
 
     sig do
-      params(merchant: Merchant, order_number: String, sku: String, quantity: Integer).void
+      params(setting: FulfillmentSetting, order_number: String, sku: String, quantity: Integer).void
     end
-    def initialize(merchant:, order_number:, sku:, quantity:)
-      @merchant = merchant
+    def initialize(setting:, order_number:, sku:, quantity:)
+      @setting = setting
       @order_number = order_number
       @sku = sku
       @quantity = quantity
@@ -33,7 +33,7 @@ module Inventory
       begin
         StockReservation.transaction(requires_new: true) do
           reservation = StockReservation.create!(
-            merchant: @merchant, order_number: @order_number, sku: @sku, quantity: @quantity
+            fulfillment_setting: @setting, order_number: @order_number, sku: @sku, quantity: @quantity
           )
         end
       rescue ActiveRecord::RecordNotUnique
@@ -49,8 +49,11 @@ module Inventory
 
     sig { returns(T.nilable(StockReservation)) }
     def locked_reservation
-      StockReservation.lock("FOR UPDATE")
-                      .find_by(merchant_id: @merchant.id, order_number: @order_number, sku: @sku)
+      StockReservation.lock("FOR UPDATE").find_by(
+        merchant_principal_id: @setting.merchant_principal_id,
+        order_number: @order_number,
+        sku: @sku
+      )
     rescue ActiveRecord::LockWaitTimeout
       raise LedgerTimeout
     end
@@ -86,7 +89,7 @@ module Inventory
       bins = BinInventory.where(sku: @sku).order(:id).lock("FOR UPDATE").to_a
       return refuse(SKU_NOT_STOCKED, "no bin in this warehouse carries #{@sku}") if bins.empty?
 
-      owned = bins.select { |b| b.merchant_principal_id == @merchant.principal_id }
+      owned = bins.select { |b| b.merchant_principal_id == @setting.merchant_principal_id }
       if owned.empty?
         unowned = bins.any? { |b| b.merchant_principal_id.blank? }
         if unowned

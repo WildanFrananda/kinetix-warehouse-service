@@ -147,7 +147,7 @@ RSpec.describe "how long a bin code, a zone and a note may be", type: :request d
     let(:relay) { FakeReturnRelay.new }
 
     before do
-      create(:merchant, principal_id: owner)
+      create(:fulfillment_setting, merchant_principal_id: owner)
       allow(Container).to receive(:[]).with(:order_grpc_client).and_return(relay)
     end
 

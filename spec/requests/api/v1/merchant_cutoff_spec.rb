@@ -9,7 +9,7 @@ RSpec.describe "Api::V1::Merchants#update", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id, cutoff_hour: 14) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id, cutoff_hour: 14) }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
 
   def set_cutoff(value, id: merchant.id, with: headers)
@@ -39,7 +39,7 @@ RSpec.describe "Api::V1::Merchants#update", type: :request do
   end
 
   it "refuses to change another merchant's record" do
-    other = create(:merchant, cutoff_hour: 9)
+    other = create(:fulfillment_setting, cutoff_hour: 9)
     set_cutoff(17, id: other.id)
 
     expect(response).to have_http_status(:forbidden)

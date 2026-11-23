@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -28,6 +28,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
     t.index ["warehouse_bin_id"], name: "index_bin_inventories_on_warehouse_bin_id"
   end
 
+  create_table "fulfillment_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "cutoff_hour", default: 12, null: false
+    t.uuid "merchant_principal_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["merchant_principal_id"], name: "index_fulfillment_settings_on_merchant_principal_id", unique: true
+    t.check_constraint "cutoff_hour >= 0 AND cutoff_hour <= 23", name: "fulfillment_settings_cutoff_hour_is_an_hour"
+  end
+
   create_table "fulfillment_task_lines", force: :cascade do |t|
     t.string "bin_location"
     t.datetime "created_at", null: false
@@ -41,24 +50,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
 
   create_table "fulfillment_tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "merchant_id", null: false
+    t.uuid "merchant_principal_id", null: false
     t.string "order_number"
     t.datetime "same_day_cutoff_at"
     t.string "status", null: false
     t.datetime "updated_at", null: false
-    t.index ["merchant_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_id_and_order_number", unique: true
-    t.index ["merchant_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_id_and_same_day_cutoff_at"
-    t.index ["merchant_id"], name: "index_fulfillment_tasks_on_merchant_id"
+    t.index ["merchant_principal_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_and_order_number", unique: true
+    t.index ["merchant_principal_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_and_same_day_cutoff_at"
+    t.index ["merchant_principal_id"], name: "index_fulfillment_tasks_on_merchant_principal_id"
     t.check_constraint "status::text = ANY (ARRAY['received'::character varying::text, 'packing'::character varying::text, 'packed'::character varying::text, 'cancelled'::character varying::text])", name: "fulfillment_tasks_status_is_a_packing_state"
-  end
-
-  create_table "merchants", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "cutoff_hour", default: 12, null: false
-    t.uuid "principal_id"
-    t.datetime "updated_at", null: false
-    t.index ["principal_id"], name: "index_merchants_on_principal_id", unique: true
-    t.check_constraint "cutoff_hour >= 0 AND cutoff_hour <= 23", name: "merchants_cutoff_hour_is_an_hour"
   end
 
   create_table "shipping_labels", force: :cascade do |t|
@@ -99,7 +99,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
     t.string "first_request_id", default: "", null: false
     t.string "idempotency_key", limit: 255, null: false
     t.string "last_replay_request_id"
-    t.bigint "merchant_id", null: false
+    t.uuid "merchant_principal_id", null: false
     t.string "operation", limit: 16, null: false
     t.string "order_number", limit: 64, null: false
     t.integer "quantity", null: false
@@ -110,8 +110,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
     t.string "sku", limit: 128, null: false
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_stock_operations_on_created_at"
-    t.index ["merchant_id", "operation", "idempotency_key"], name: "index_stock_operations_on_merchant_operation_and_key", unique: true
-    t.index ["merchant_id"], name: "index_stock_operations_on_merchant_id"
+    t.index ["merchant_principal_id", "operation", "idempotency_key"], name: "index_stock_operations_on_merchant_operation_and_key", unique: true
+    t.index ["merchant_principal_id"], name: "index_stock_operations_on_merchant_principal_id"
     t.index ["order_number"], name: "index_stock_operations_on_order_number"
   end
 
@@ -134,15 +134,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
   create_table "stock_reservations", force: :cascade do |t|
     t.bigint "bin_inventory_id"
     t.datetime "created_at", null: false
-    t.bigint "merchant_id", null: false
+    t.uuid "merchant_principal_id", null: false
     t.string "order_number", limit: 64, null: false
     t.integer "quantity", null: false
     t.datetime "released_at"
     t.string "sku", limit: 128, null: false
     t.datetime "updated_at", null: false
     t.index ["bin_inventory_id"], name: "index_stock_reservations_on_bin_inventory_id"
-    t.index ["merchant_id", "order_number", "sku"], name: "index_stock_reservations_on_merchant_order_and_sku", unique: true
-    t.index ["merchant_id"], name: "index_stock_reservations_on_merchant_id"
+    t.index ["merchant_principal_id", "order_number", "sku"], name: "index_stock_reservations_on_merchant_order_and_sku", unique: true
+    t.index ["merchant_principal_id"], name: "index_stock_reservations_on_merchant_principal_id"
     t.index ["sku"], name: "index_stock_reservations_on_sku"
   end
 
@@ -157,10 +157,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_184035) do
 
   add_foreign_key "bin_inventories", "warehouse_bins"
   add_foreign_key "fulfillment_task_lines", "fulfillment_tasks"
-  add_foreign_key "fulfillment_tasks", "merchants"
+  add_foreign_key "fulfillment_tasks", "fulfillment_settings", column: "merchant_principal_id", primary_key: "merchant_principal_id"
   add_foreign_key "shipping_labels", "fulfillment_tasks"
   add_foreign_key "stock_adjustments", "warehouse_bins"
-  add_foreign_key "stock_operations", "merchants"
+  add_foreign_key "stock_operations", "fulfillment_settings", column: "merchant_principal_id", primary_key: "merchant_principal_id"
   add_foreign_key "stock_receipts", "warehouse_bins"
-  add_foreign_key "stock_reservations", "merchants"
+  add_foreign_key "stock_reservations", "fulfillment_settings", column: "merchant_principal_id", primary_key: "merchant_principal_id"
 end

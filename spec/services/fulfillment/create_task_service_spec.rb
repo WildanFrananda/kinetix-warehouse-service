@@ -4,11 +4,11 @@ require "rails_helper"
 
 RSpec.describe Fulfillment::CreateTaskService do
   let(:jakarta) { ActiveSupport::TimeZone["Asia/Jakarta"] }
-  let!(:merchant) { create(:merchant, cutoff_hour: 14) }
+  let!(:setting) { create(:fulfillment_setting, cutoff_hour: 14) }
 
   def create_task(order_number: "ORD-CUTOFF", time_zone: jakarta)
     service = described_class.new(
-      merchant_repository: MerchantRepository.new,
+      setting_repository: FulfillmentSettingRepository.new,
       task_repository: FulfillmentTaskRepository.new,
       reservation_repository: StockReservationRepository.new,
       time_zone: time_zone
@@ -18,7 +18,7 @@ RSpec.describe Fulfillment::CreateTaskService do
       lines: [ Fulfillment::CreateTaskForm::LineInput.new(sku: "SKU-1", quantity: 1) ]
     )
 
-    service.call(merchant_id: merchant.id, form: form)
+    service.call(merchant_principal_id: setting.merchant_principal_id, form: form)
   end
 
   it "reads the merchant's cutoff hour on the platform's clock, not on UTC's" do

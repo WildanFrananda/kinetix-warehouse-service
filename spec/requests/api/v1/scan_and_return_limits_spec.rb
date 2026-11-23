@@ -8,8 +8,8 @@ RSpec.describe "how long a scanned code and a return's reason may be, and a bin 
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-999999999999" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, order_number: "ORD-LIMITS-1", status: "received") }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-LIMITS-1", status: "received") }
   let(:headers) { bearer(access_token(principal_id: principal_id)).merge("Content-Type" => "application/json") }
   let(:relay) { FakeReturnRelay.new }
 

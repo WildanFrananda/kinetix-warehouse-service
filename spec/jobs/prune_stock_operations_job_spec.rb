@@ -4,15 +4,15 @@
 require "rails_helper"
 
 RSpec.describe PruneStockOperationsJob do
-  let(:merchant) do
-    Merchant.create!(cutoff_hour: 14,
-      principal_id: "eeeeeeee-1111-2222-3333-444444444444")
+  let(:setting) do
+    FulfillmentSetting.create!(cutoff_hour: 14,
+      merchant_principal_id: "eeeeeeee-1111-2222-3333-444444444444")
   end
 
   def operation(created_at:, conflict_count: 0, key:)
     StockOperation.create!(
       operation: StockOperation::RESERVE, idempotency_key: key,
-      request_digest: "d" * 64, merchant: merchant, order_number: "ORD-P", sku: "SKU-P",
+      request_digest: "d" * 64, fulfillment_setting: setting, order_number: "ORD-P", sku: "SKU-P",
       quantity: 1, response: "", conflict_count: conflict_count, created_at: created_at
     )
   end

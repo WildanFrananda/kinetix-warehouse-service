@@ -58,17 +58,17 @@ module Inventory
         operation: String,
         key: String,
         digest: String,
-        merchant: Merchant,
+        setting: FulfillmentSetting,
         order_number: String,
         sku: String,
         quantity: Integer
       ).void
     end
-    def initialize(operation:, key:, digest:, merchant:, order_number:, sku:, quantity:)
+    def initialize(operation:, key:, digest:, setting:, order_number:, sku:, quantity:)
       @operation = operation
       @key = key
       @digest = digest
-      @merchant = merchant
+      @setting = setting
       @order_number = order_number
       @sku = sku
       @quantity = quantity
@@ -123,7 +123,7 @@ module Inventory
         operation: @operation,
         idempotency_key: @key,
         request_digest: @digest,
-        merchant: @merchant,
+        fulfillment_setting: @setting,
         order_number: @order_number,
         sku: @sku,
         quantity: @quantity,
@@ -138,7 +138,9 @@ module Inventory
     def replay
       StockOperation.transaction(requires_new: true) do
         record = StockOperation.lock("FOR UPDATE").find_by(
-          merchant_id: @merchant.id, operation: @operation, idempotency_key: @key
+          merchant_principal_id: @setting.merchant_principal_id,
+          operation: @operation,
+          idempotency_key: @key
         )
 
         next retry_later(IN_PROGRESS, "the original attempt is no longer on record") if record.nil?
@@ -181,7 +183,7 @@ module Inventory
     sig { params(record: StockOperation).returns(T::Boolean) }
     def still_held?(record)
       reservation = StockReservation.lock("FOR UPDATE").find_by(
-        merchant_id: record.merchant_id,
+        merchant_principal_id: record.merchant_principal_id,
         order_number: record.order_number,
         sku: record.sku
       )

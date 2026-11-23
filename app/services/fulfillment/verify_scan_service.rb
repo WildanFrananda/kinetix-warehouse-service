@@ -43,12 +43,12 @@ module Fulfillment
       @advance_task_service = advance_task_service
     end
 
-    sig { params(merchant_id: Integer, task_id: Integer, scanned_code: String).returns(BaseService::Result) }
-    def call(merchant_id:, task_id:, scanned_code:)
+    sig { params(merchant_principal_id: String, task_id: Integer, scanned_code: String).returns(BaseService::Result) }
+    def call(merchant_principal_id:, task_id:, scanned_code:)
       clean_code = scanned_code.strip
       return failure("Scanned barcode code cannot be blank") if clean_code.blank?
 
-      task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
+      task = task_repository.find_by_id(merchant_principal_id: merchant_principal_id, id: task_id)
       return not_found("Fulfillment task ##{task_id} not found for this merchant") unless task
 
       match = ScanMatch.find(task, clean_code)
@@ -66,33 +66,43 @@ module Fulfillment
       already = !line.nil? && !task_repository.mark_line_scanned(task_id: task.id, line_id: line.id)
       remaining = task_repository.lines_remaining(task_id: task.id)
 
-      settle(merchant_id: merchant_id, task: task, match: match, already: already, remaining: remaining)
+      settle(
+        merchant_principal_id: merchant_principal_id,
+        task: task,
+        match: match,
+        already: already,
+        remaining: remaining
+      )
     end
 
     private
 
     sig do
       params(
-        merchant_id: Integer,
+        merchant_principal_id: String,
         task: FulfillmentTask,
         match: ScanMatch,
         already: T::Boolean,
         remaining: Integer
       ).returns(BaseService::Result)
     end
-    def settle(merchant_id:, task:, match:, already:, remaining:)
+    def settle(merchant_principal_id:, task:, match:, already:, remaining:)
       status = task.status
       packed = T.let(nil, T.nilable(AdvanceTaskService::ResultData))
 
       TaskTransitions.steps_on_scan(from: status, lines_remaining: remaining).each do |step|
-        moved = advance_task_service.call(merchant_id: merchant_id, task_id: task.id, new_status: step)
+        moved = advance_task_service.call(
+          merchant_principal_id: merchant_principal_id,
+          task_id: task.id,
+          new_status: step
+        )
         if moved.success?
           packed = T.cast(moved.data, AdvanceTaskService::ResultData) if step == PACKED
           status = step
           next
         end
 
-        now = task_repository.find_by_id(merchant_id: merchant_id, id: task.id)&.status
+        now = task_repository.find_by_id(merchant_principal_id: merchant_principal_id, id: task.id)&.status
         return moved unless now && TaskTransitions.reached?(now, step)
 
         status = now

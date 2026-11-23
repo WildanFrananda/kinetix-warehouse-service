@@ -41,16 +41,16 @@ module Fulfillment
     end
 
     sig do
-      params(merchant_id: Integer, task_id: Integer, new_status: String).returns(BaseService::Result)
+      params(merchant_principal_id: String, task_id: Integer, new_status: String).returns(BaseService::Result)
     end
-    def call(merchant_id:, task_id:, new_status:)
+    def call(merchant_principal_id:, task_id:, new_status:)
       return failure("status is required: name the state to move the task to") if new_status.strip.empty?
 
       unless FulfillmentTask::STATUSES.include?(new_status)
         return failure("#{new_status} is not a state this warehouse can put a task in")
       end
 
-      task = task_repository.find_by_id(merchant_id: merchant_id, id: task_id)
+      task = task_repository.find_by_id(merchant_principal_id: merchant_principal_id, id: task_id)
       return not_found("Fulfillment task not found") unless task
 
       current = task.status
@@ -64,7 +64,7 @@ module Fulfillment
       end
 
       updated = task_repository.update_status(
-        merchant_id: merchant_id, task_id: task_id, status: new_status, from: current
+        merchant_principal_id: merchant_principal_id, task_id: task_id, status: new_status, from: current
       )
       return failure("the task changed while this request was being handled; read it again") unless updated
 
@@ -94,8 +94,7 @@ module Fulfillment
 
     sig { params(task: FulfillmentTask).returns(T::Hash[Symbol, T.untyped]) }
     def notify_order(task)
-      merchant = task.merchant
-      principal = merchant&.principal_id
+      principal = task.merchant_principal_id
 
       if principal.blank?
         Rails.logger.error(

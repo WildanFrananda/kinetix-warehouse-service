@@ -4,15 +4,15 @@
 require "rails_helper"
 
 RSpec.describe Inventory::IdempotentOperation do
-  let!(:merchant) do
-    Merchant.create!(cutoff_hour: 14,
-      principal_id: "eeeeeeee-1111-2222-3333-444444444444")
+  let!(:setting) do
+    FulfillmentSetting.create!(cutoff_hour: 14,
+      merchant_principal_id: "eeeeeeee-1111-2222-3333-444444444444")
   end
 
   def gate(operation: StockOperation::RESERVE, key: "K-1")
     described_class.new(
       operation: operation, key: key, digest: StockOperation.digest_of([ operation, key ]),
-      merchant: merchant, order_number: "ORD-G", sku: "SKU-G", quantity: 2
+      setting: setting, order_number: "ORD-G", sku: "SKU-G", quantity: 2
     )
   end
 

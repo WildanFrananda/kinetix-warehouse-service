@@ -82,7 +82,7 @@ module Inventory
       bin = WarehouseBin.find_by(bin_code: @bin_code)
       return failure(BIN_NOT_FOUND) if bin.nil?
 
-      book(bin, T.must(standing.merchant.principal_id), quantity)
+      book(bin, standing.setting.merchant_principal_id, quantity)
     end
 
     private

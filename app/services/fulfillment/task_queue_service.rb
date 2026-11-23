@@ -28,11 +28,11 @@ module Fulfillment
       @task_repository = task_repository
     end
 
-    sig { params(merchant_id: Integer).returns(BaseService::Result) }
-    def call(merchant_id:)
+    sig { params(merchant_principal_id: String).returns(BaseService::Result) }
+    def call(merchant_principal_id:)
       now = Time.current
 
-      cards = task_repository.open_work(merchant_id: merchant_id).map do |task|
+      cards = task_repository.open_work(merchant_principal_id: merchant_principal_id).map do |task|
         build_card(task, now)
       end
 

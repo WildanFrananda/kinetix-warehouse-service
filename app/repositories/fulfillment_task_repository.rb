@@ -12,38 +12,44 @@ class FulfillmentTaskRepository < BaseRepository
     super(FulfillmentTask)
   end
 
-  sig { override.params(merchant_id: Integer, id: Integer).returns(T.nilable(FulfillmentTask)) }
-  def find_by_id(merchant_id:, id:)
-    T.cast(model.find_by(merchant_id: merchant_id, id: id), T.nilable(FulfillmentTask))
+  sig { override.params(merchant_principal_id: String, id: Integer).returns(T.nilable(FulfillmentTask)) }
+  def find_by_id(merchant_principal_id:, id:)
+    T.cast(model.find_by(merchant_principal_id: merchant_principal_id, id: id), T.nilable(FulfillmentTask))
   end
 
-  sig { override.params(merchant_id: Integer, order_number: String).returns(T.nilable(FulfillmentTask)) }
-  def find_by_order_number(merchant_id:, order_number:)
-    T.cast(model.find_by(merchant_id: merchant_id, order_number: order_number), T.nilable(FulfillmentTask))
+  sig { override.params(merchant_principal_id: String, order_number: String).returns(T.nilable(FulfillmentTask)) }
+  def find_by_order_number(merchant_principal_id:, order_number:)
+    T.cast(
+      model.find_by(merchant_principal_id: merchant_principal_id, order_number: order_number),
+      T.nilable(FulfillmentTask)
+    )
   end
 
   sig do
     override.params(
-      merchant_id: Integer,
+      merchant_principal_id: String,
       attributes: T::Hash[Symbol, T.anything],
       lines: T::Array[T::Hash[Symbol, T.anything]]
     ).returns(FulfillmentTask)
   end
-  def create(merchant_id:, attributes:, lines:)
+  def create(merchant_principal_id:, attributes:, lines:)
     model.transaction do
-      task = T.cast(model.create!(attributes.merge(merchant_id: merchant_id)), FulfillmentTask)
+      task = T.cast(
+        model.create!(attributes.merge(merchant_principal_id: merchant_principal_id)),
+        FulfillmentTask
+      )
       lines.each { |line| task.fulfillment_task_lines.create!(line) }
 
       task
     end
   end
 
-  sig { override.params(merchant_id: Integer).returns(T::Array[FulfillmentTask]) }
-  def open_work(merchant_id:)
+  sig { override.params(merchant_principal_id: String).returns(T::Array[FulfillmentTask]) }
+  def open_work(merchant_principal_id:)
     T.cast(
       model
         .left_joins(:shipping_label)
-        .where(merchant_id: merchant_id)
+        .where(merchant_principal_id: merchant_principal_id)
         .where(
           "fulfillment_tasks.status IN (:to_pack) OR " \
           "(fulfillment_tasks.status = :packed AND COALESCE(shipping_labels.print_count, 0) = 0)",
@@ -59,18 +65,18 @@ class FulfillmentTaskRepository < BaseRepository
 
   sig do
     override.params(
-      merchant_id: Integer, task_id: Integer, status: String, from: T.nilable(String)
+      merchant_principal_id: String, task_id: Integer, status: String, from: T.nilable(String)
     ).returns(T.nilable(FulfillmentTask))
   end
-  def update_status(merchant_id:, task_id:, status:, from: nil)
+  def update_status(merchant_principal_id:, task_id:, status:, from: nil)
     return nil unless FulfillmentTask::STATUSES.include?(status)
 
-    scope = model.where(merchant_id: merchant_id, id: task_id)
+    scope = model.where(merchant_principal_id: merchant_principal_id, id: task_id)
     scope = scope.where(status: from) unless from.nil?
     moved = scope.update_all(status: status, updated_at: Time.current)
     return nil if moved.zero?
 
-    find_by_id(merchant_id: merchant_id, id: task_id)
+    find_by_id(merchant_principal_id: merchant_principal_id, id: task_id)
   end
 
   sig { override.params(task_id: Integer, line_id: Integer).returns(T::Boolean) }
