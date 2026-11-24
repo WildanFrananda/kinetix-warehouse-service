@@ -63,6 +63,7 @@ The platform serves **4 distinct operational user roles**, each requiring tailor
 - **`🚨 Emergency Halt`**: Instant warehouse override dispatch pause.
 
 ### 5.2 Module 2: Kinetix Matching Driver Radar (`/fleet_radar`)
+
 - Live GPS telemetry stream (latitude, longitude, speed in km/h, ETA countdown, call driver action).
 - Real-time driver status tracking for `dispatched`, `in_transit`, and `delivered` orders.
 

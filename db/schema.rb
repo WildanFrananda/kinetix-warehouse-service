@@ -55,8 +55,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_040000) do
     t.datetime "same_day_cutoff_at"
     t.string "status", null: false
     t.datetime "updated_at", null: false
-    t.index ["merchant_principal_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_and_order_number", unique: true
-    t.index ["merchant_principal_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_and_same_day_cutoff_at"
+    t.index ["merchant_principal_id", "order_number"], name: "index_fulfillment_tasks_on_merchant_principal_id_and_order", unique: true
+    t.index ["merchant_principal_id", "same_day_cutoff_at"], name: "index_fulfillment_tasks_on_merchant_principal_id_and_cutoff"
     t.index ["merchant_principal_id"], name: "index_fulfillment_tasks_on_merchant_principal_id"
     t.check_constraint "status::text = ANY (ARRAY['received'::character varying::text, 'packing'::character varying::text, 'packed'::character varying::text, 'cancelled'::character varying::text])", name: "fulfillment_tasks_status_is_a_packing_state"
   end

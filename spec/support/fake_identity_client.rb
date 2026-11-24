@@ -35,7 +35,7 @@ RSpec.shared_context "identity answers about merchants" do
 
   before do
     resolver = Merchants::ResolveService.new(
-      fulfillment_setting_repository: Container[:fulfillment_setting_repository],
+      setting_repository: Container[:fulfillment_setting_repository],
       identity_client: identity_client
     )
 
