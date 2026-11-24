@@ -7,8 +7,8 @@ require "fulfillment/v1/task_services_pb"
 RSpec.describe "task ids order sends over gRPC" do
   let(:handler) { Rpc::FulfillmentTaskServiceHandler.new }
   let(:principal) { "cccccccc-1111-4222-8333-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, status: "packed") }
+  let!(:setting) { create(:fulfillment_setting, merchant_principal_id: principal) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: setting, status: "packed") }
 
   def misspellings(id)
     [ "0x#{id.to_s(16)}", "0#{id.to_s(8)}", "0o#{id.to_s(8)}", "0b#{id.to_s(2)}", " #{id} ", "+#{id}" ]

@@ -7,8 +7,8 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, status: "received") }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, status: "received") }
   let!(:line) { create(:fulfillment_task_line, fulfillment_task: task, sku: "GAMIS-RED-M") }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
   let(:order) { FakePackedReport.new }
@@ -69,11 +69,11 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
       context "and identity vouches for it" do
         it "projects the merchant and lets the scan through" do
           other_principal = "99999999-9999-9999-9999-999999999999"
-          expect(Merchant.find_by(principal_id: other_principal)).to be_nil
+          expect(FulfillmentSetting.find_by(merchant_principal_id: other_principal)).to be_nil
 
           scan("GAMIS-RED-M", with: other)
 
-          expect(Merchant.find_by(principal_id: other_principal)).not_to be_nil
+          expect(FulfillmentSetting.find_by(merchant_principal_id: other_principal)).not_to be_nil
         end
       end
     end
@@ -282,8 +282,8 @@ RSpec.describe "Api::V1::FulfillmentTasks#verify_scan", type: :request do
 
   describe "whose task it is" do
     it "will not scan another merchant's task, even with a valid token" do
-      other_merchant = create(:merchant)
-      other_task = create(:fulfillment_task, merchant: other_merchant, status: "received")
+      other_merchant = create(:fulfillment_setting)
+      other_task = create(:fulfillment_task, fulfillment_setting: other_merchant, status: "received")
 
       post "/api/v1/fulfillment_tasks/#{other_task.id}/verify_scan",
            params: { scanned_code: "GAMIS-RED-M" }, headers: headers

@@ -7,7 +7,7 @@ RSpec.describe "how requests this service cannot act on are answered", type: :re
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-4333-8444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
   let(:seller) { bearer(access_token(principal_id: principal_id)) }
   let(:relay) { FakeReturnRelay.new }
   let(:order) { FakePackedReport.new }
@@ -28,7 +28,7 @@ RSpec.describe "how requests this service cannot act on are answered", type: :re
   end
 
   describe "a task that is not the caller's" do
-    let(:other_task) { create(:fulfillment_task, merchant: create(:merchant), status: "received") }
+    let(:other_task) { create(:fulfillment_task, fulfillment_setting: create(:fulfillment_setting), status: "received") }
 
     before { create(:fulfillment_task_line, fulfillment_task: other_task, sku: "GAMIS-RED-M") }
 

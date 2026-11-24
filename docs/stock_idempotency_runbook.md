@@ -5,7 +5,7 @@ with `psql` alone.
 
 ## The two tables, and why there are two
 
-`stock_reservations` is the ledger: one row per `(merchant_id, order_number, sku)`,
+`stock_reservations` is the ledger: one row per `(merchant_principal_id, order_number, sku)`,
 `released_at IS NULL` means held. It is business state and is **never pruned**. A zero-quantity row
 with `released_at` set is a *tombstone* — a release that arrived before the reserve it was undoing.
 It is what makes a released pair terminal, so deleting one re-opens the leak it was written to
@@ -19,7 +19,7 @@ one merchant sending a stray `ReleaseStock` wrote a tombstone that permanently d
 merchant an order number it had never used.
 
 `stock_operations` is the replay cache: one row per completed reserve or release attempt, holding
-the serialized reply in `response`. Unique on `(merchant_id, operation, idempotency_key)` — scoped
+the serialized reply in `response`. Unique on `(merchant_principal_id, operation, idempotency_key)` — scoped
 to the merchant for the same reason the ledger is. Most callers send no key, so the gate derives
 `"#{operation}:#{order_number}:#{sku}"`, which has no tenant in it; while that index was global the
 first merchant to use a pair claimed the key estate-wide and the second was refused
@@ -105,8 +105,8 @@ having three is that each one is TRUE of the statement that actually timed out.
 
 | `error_code` | The wait was on | Do |
 | --- | --- | --- |
-| `RESERVATION_IN_PROGRESS` | a **duplicate of this same request** — another connection holds an uncommitted `stock_operations` row under the same `(merchant_id, operation, idempotency_key)`. | Look for a caller retrying inside its own deadline, or for a reserve slow enough to be worth profiling. |
-| `STOCK_LEDGER_BUSY` | **another call for this same order and sku** — the `stock_reservations` row for this `(merchant_id, order_number, sku)`. Almost always the reserve this release is compensating, still uncommitted. | Expected under load and NOT a caller bug. Look at how long reserves are taking; the pair resolves itself as soon as the other side commits. |
+| `RESERVATION_IN_PROGRESS` | a **duplicate of this same request** — another connection holds an uncommitted `stock_operations` row under the same `(merchant_principal_id, operation, idempotency_key)`. | Look for a caller retrying inside its own deadline, or for a reserve slow enough to be worth profiling. |
+| `STOCK_LEDGER_BUSY` | **another call for this same order and sku** — the `stock_reservations` row for this `(merchant_principal_id, order_number, sku)`. Almost always the reserve this release is compensating, still uncommitted. | Expected under load and NOT a caller bug. Look at how long reserves are taking; the pair resolves itself as soon as the other side commits. |
 | `STOCK_LOCK_TIMEOUT` | **a different order** — one of the sku's `bin_inventories` rows, held by a transaction working on some other order. | Look at what else is contending for that sku. There is no duplicate; the caller that got this message has no bug. |
 
 Why three and not two. The ledger wait and the bin wait were collapsed into `STOCK_LOCK_TIMEOUT`
@@ -119,7 +119,7 @@ same pair one second behind it:
 
 ```
 ERROR:  canceling statement due to lock timeout
-STATEMENT:  INSERT INTO "stock_reservations" ("bin_inventory_id", "created_at", "merchant_id", ...
+STATEMENT:  INSERT INTO "stock_reservations" ("bin_inventory_id", "created_at", "merchant_principal_id", ...
 ```
 
 and `pg_blocking_pids` reported that INSERT waiting on a `ShareLock` on the **reserve's own
@@ -135,22 +135,22 @@ of them back together fails there.
 **1. The double-reserve invariant. Alert on any row.**
 
 ```sql
-SELECT merchant_id, order_number, sku, count(*)
+SELECT merchant_principal_id, order_number, sku, count(*)
 FROM stock_operations
 WHERE operation = 'reserve' AND applied
-GROUP BY merchant_id, order_number, sku
+GROUP BY merchant_principal_id, order_number, sku
 HAVING count(*) > 1;
 ```
 
-Two reserve operations that each MOVED the counter for one `(merchant_id, order_number, sku)` should
+Two reserve operations that each MOVED the counter for one `(merchant_principal_id, order_number, sku)` should
 be impossible: a second attempt is either replayed from the first's row, absorbed by the held ledger
 row, or refused as terminal. A row here means the dedupe did not hold, or the prune removed the
 first row and a very late duplicate then re-did the work.
 
-`merchant_id` is in the grouping because it is in the ledger's unique index. Two *different*
+`merchant_principal_id` is in the grouping because it is in the ledger's unique index. Two *different*
 merchants each holding their own `(ORD-X, SKU-Y)` is legitimate — order numbers are the caller's
 namespace and SKUs are the merchant's, so nothing stops them colliding — and grouping without
-`merchant_id` reports that correct state as a double reserve.
+`merchant_principal_id` reports that correct state as a double reserve.
 
 `AND applied` is load-bearing, not a filter for tidiness. Two committed reserve *rows* for one pair
 are legitimate — a caller that sends a second distinct key against a hold that already exists gets
@@ -181,20 +181,20 @@ world. Query 8 is the one that finds those.
 **3. Everything warehouse did for one order.**
 
 ```sql
-SELECT merchant_id, operation, idempotency_key, quantity, replay_count, replay_refused_count,
+SELECT merchant_principal_id, operation, idempotency_key, quantity, replay_count, replay_refused_count,
        conflict_count, first_request_id, last_replay_request_id, created_at
 FROM stock_operations
 WHERE order_number = :order_number
 ORDER BY created_at;
 ```
 
-`merchant_id` is selected, not filtered on: an order number is not unique across merchants, so read
+`merchant_principal_id` is selected, not filtered on: an order number is not unique across merchants, so read
 the column before concluding that two rows are two attempts at the same thing.
 
 **4. What that order holds right now.**
 
 ```sql
-SELECT merchant_id, sku, quantity, bin_inventory_id, released_at
+SELECT merchant_principal_id, sku, quantity, bin_inventory_id, released_at
 FROM stock_reservations
 WHERE order_number = :order_number;
 ```
@@ -233,20 +233,20 @@ look at the caller's deadline against how long `ReserveStock` actually takes.
 **7. Caller bugs. These rows are never pruned.**
 
 ```sql
-SELECT merchant_id, operation, idempotency_key, order_number, sku, conflict_count, created_at
+SELECT merchant_principal_id, operation, idempotency_key, order_number, sku, conflict_count, created_at
 FROM stock_operations
 WHERE conflict_count > 0
 ORDER BY conflict_count DESC;
 ```
 
 A conflict means one merchant sent one key for two different requests. Nothing was mutated in either
-direction — find the caller. `merchant_id` names it: keys are scoped per merchant, so two merchants
+direction — find the caller. `merchant_principal_id` names it: keys are scoped per merchant, so two merchants
 using the same key string is not a conflict and never produces a row here.
 
 **8. Stock held by nobody. Alert on any row.**
 
 ```sql
-SELECT id, merchant_id, order_number, sku, quantity, bin_inventory_id, created_at,
+SELECT id, merchant_principal_id, order_number, sku, quantity, bin_inventory_id, created_at,
        now() - created_at AS held_for
 FROM stock_reservations
 WHERE released_at IS NULL
@@ -261,7 +261,7 @@ anchors. Read the next section before acting on a row here.
 **9. Tombstones, i.e. releases that outran their reserves.**
 
 ```sql
-SELECT merchant_id, order_number, sku, created_at
+SELECT merchant_principal_id, order_number, sku, created_at
 FROM stock_reservations
 WHERE quantity = 0 AND released_at IS NOT NULL
 ORDER BY created_at DESC;
@@ -316,7 +316,7 @@ nothing, and both are normal:
   and query 2 is where the shortfall now shows.
 
 **Why this does not re-open the race the tombstone closes.** That race is closed by the EXISTENCE of
-a row for `(merchant_id, order_number, sku)`: a late reserve either collides with it on the unique
+a row for `(merchant_principal_id, order_number, sku)`: a late reserve either collides with it on the unique
 index or reads it and is refused `STOCK_RESERVATION_RELEASED`. Reclaiming sets `released_at` and
 **keeps the row**. Nothing here deletes a ledger row — not the report, not the operator task, not
 the prune, which touches `stock_operations` only. A reclaimed hold is terminal for a late reserve in

@@ -10,7 +10,9 @@ class StockOperation < ApplicationRecord
   MAX_ORDER_NUMBER_LENGTH = 64
   MAX_SKU_LENGTH = 128
 
-  belongs_to :merchant
+  belongs_to :fulfillment_setting,
+             primary_key: :merchant_principal_id,
+             foreign_key: :merchant_principal_id
 
   validates :operation, inclusion: { in: [ RESERVE, RELEASE ] }
   validates :idempotency_key, presence: true, length: { maximum: MAX_KEY_LENGTH }

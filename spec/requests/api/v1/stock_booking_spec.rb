@@ -40,7 +40,7 @@ RSpec.describe "booking stock for a merchant", type: :request do
 
   describe "a merchant this service has never seen" do
     it "is projected when its goods are booked, so order can reserve them" do
-      expect(Merchant.find_by(principal_id: owner)).to be_nil
+      expect(FulfillmentSetting.find_by(merchant_principal_id: owner)).to be_nil
 
       book(quantity: 5)
       expect(response).to have_http_status(:created)
@@ -56,7 +56,7 @@ RSpec.describe "booking stock for a merchant", type: :request do
       )
 
       expect(reply.success).to be(true)
-      expect(Merchant.find_by(principal_id: owner)).not_to be_nil
+      expect(FulfillmentSetting.find_by(merchant_principal_id: owner)).not_to be_nil
     end
 
     context "when identity knows no merchant with that principal" do

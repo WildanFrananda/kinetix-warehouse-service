@@ -55,7 +55,7 @@ RSpec.describe "what another service sees when warehouse fails a gRPC call" do
 
   context "when a handler fails for any other reason" do
     let(:broken) do
-      Class.new(MerchantRepository) do
+      Class.new(FulfillmentSettingRepository) do
         def find_by_principal_id(_principal_id)
           raise "row 42 on pgsql-node is corrupt"
         end
@@ -64,7 +64,7 @@ RSpec.describe "what another service sees when warehouse fails a gRPC call" do
 
     before do
       allow(Container).to receive(:[]).and_call_original
-      allow(Container).to receive(:[]).with(:merchant_repository).and_return(broken.new)
+      allow(Container).to receive(:[]).with(:fulfillment_setting_repository).and_return(broken.new)
     end
 
     it "answers INTERNAL in a fixed sentence, never the exception's class or text" do
@@ -94,10 +94,10 @@ RSpec.describe "what another service sees when warehouse fails a gRPC call" do
     end
 
     it "names a tracking number already on another parcel in fixed words, not a validation message" do
-      merchant = create(:merchant, principal_id: principal)
-      labelled = create(:fulfillment_task, merchant: merchant, status: "packed")
+      setting = create(:fulfillment_setting, merchant_principal_id: principal)
+      labelled = create(:fulfillment_task, fulfillment_setting: setting, status: "packed")
       create(:shipping_label, fulfillment_task: labelled, awb_number: "KNX-20261027-TAKEN")
-      task = create(:fulfillment_task, merchant: merchant, status: "packed")
+      task = create(:fulfillment_task, fulfillment_setting: setting, status: "packed")
 
       res = tasks.record_courier_awb(
         Fulfillment::V1::RecordCourierAwbRequest.new(

@@ -8,17 +8,17 @@ RSpec.describe FulfillmentTaskRepository do
 
   it "moves a task that is still where the caller saw it" do
     moved = repository.update_status(
-      merchant_id: task.merchant_id, task_id: task.id, status: "packing", from: "received"
+      merchant_principal_id: task.merchant_principal_id, task_id: task.id, status: "packing", from: "received"
     )
 
     expect(moved&.status).to eq("packing")
   end
 
   it "does not move a task that moved on since the caller read it" do
-    repository.update_status(merchant_id: task.merchant_id, task_id: task.id, status: "packing", from: "received")
+    repository.update_status(merchant_principal_id: task.merchant_principal_id, task_id: task.id, status: "packing", from: "received")
 
     second = repository.update_status(
-      merchant_id: task.merchant_id, task_id: task.id, status: "packing", from: "received"
+      merchant_principal_id: task.merchant_principal_id, task_id: task.id, status: "packing", from: "received"
     )
 
     expect(second).to be_nil
@@ -26,9 +26,9 @@ RSpec.describe FulfillmentTaskRepository do
   end
 
   it "does not move another merchant's task" do
-    other = create(:merchant)
+    other = create(:fulfillment_setting)
 
-    moved = repository.update_status(merchant_id: other.id, task_id: task.id, status: "packing")
+    moved = repository.update_status(merchant_principal_id: other.merchant_principal_id, task_id: task.id, status: "packing")
 
     expect(moved).to be_nil
     expect(task.reload.status).to eq("received")

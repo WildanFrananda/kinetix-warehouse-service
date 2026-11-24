@@ -8,8 +8,8 @@ RSpec.describe "ids in a path", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-4333-8444-777777777777" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id, cutoff_hour: 14) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, status: "received") }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id, cutoff_hour: 14) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, status: "received") }
   let!(:line) { create(:fulfillment_task_line, fulfillment_task: task, sku: "GAMIS-RED-M") }
   let!(:label) { create(:shipping_label, fulfillment_task: task, reprint_count: 0) }
   let(:seller) { bearer(access_token(principal_id: principal_id)) }
@@ -104,7 +104,7 @@ RSpec.describe "ids in a path", type: :request do
     end
 
     it "is still 403 when it is written in digits and is another merchant's" do
-      other = create(:merchant, cutoff_hour: 9)
+      other = create(:fulfillment_setting, cutoff_hour: 9)
 
       patch "/api/v1/merchants/#{other.id}", params: { cutoff_hour: 17 }, headers: seller
 

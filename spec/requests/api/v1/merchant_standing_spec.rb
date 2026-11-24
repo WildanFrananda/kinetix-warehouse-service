@@ -7,7 +7,7 @@ RSpec.describe "a merchant's standing is identity's answer on every request", ty
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-4333-8444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id, cutoff_hour: 14) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id, cutoff_hour: 14) }
   let(:seller) { bearer(access_token(principal_id: principal_id, role: "seller")) }
 
   def queue(with: seller)
@@ -99,7 +99,7 @@ RSpec.describe "a merchant's standing is identity's answer on every request", ty
       get "/api/v1/merchants/me", headers: bearer(access_token(principal_id: newcomer, role: "seller"))
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["id"]).to eq(Merchant.find_by(principal_id: newcomer).id)
+      expect(response.parsed_body["id"]).to eq(FulfillmentSetting.find_by(merchant_principal_id: newcomer).id)
     end
   end
 end

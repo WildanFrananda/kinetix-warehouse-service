@@ -101,8 +101,8 @@ RSpec.describe "string fields sent as another JSON type", type: :request do
   end
 
   describe "the seller's task routes" do
-    let!(:merchant) { create(:merchant, principal_id: owner) }
-    let!(:task) { create(:fulfillment_task, merchant: merchant, status: "received") }
+    let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: owner) }
+    let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, status: "received") }
     let(:order) { FakePackedReport.new }
     let(:relay) { FakeReturnRelay.new }
 
@@ -180,8 +180,8 @@ RSpec.describe "string fields sent as another JSON type", type: :request do
   end
 
   describe "a string with a NUL character, which the database cannot store" do
-    let!(:merchant) { create(:merchant, principal_id: owner) }
-    let!(:task) { create(:fulfillment_task, merchant: merchant, status: "received", order_number: "ORD-NUL-1") }
+    let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: owner) }
+    let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, status: "received", order_number: "ORD-NUL-1") }
     let(:relay) { FakeReturnRelay.new }
 
     before do

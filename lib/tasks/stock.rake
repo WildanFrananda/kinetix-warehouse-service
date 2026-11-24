@@ -8,12 +8,12 @@ namespace :stock do
     else
       puts "#{report.rows.size} hold(s) older than #{report.older_than_hours}h, " \
            "#{report.units} unit(s) frozen:"
-      puts format("%-8s %-24s %-20s %-9s %-9s %s", "ID", "ORDER", "SKU", "QTY", "MERCHANT", "HELD SINCE")
+      puts format("%-8s %-24s %-20s %-9s %-36s %s", "ID", "ORDER", "SKU", "QTY", "MERCHANT", "HELD SINCE")
       report.rows.each do |reservation|
         puts format(
-          "%-8s %-24s %-20s %-9s %-9s %s",
+          "%-8s %-24s %-20s %-9s %-36s %s",
           reservation.id, reservation.order_number, reservation.sku,
-          reservation.quantity, reservation.merchant_id, reservation.created_at
+          reservation.quantity, reservation.merchant_principal_id, reservation.created_at
         )
       end
       puts
@@ -41,7 +41,7 @@ namespace :stock do
       Inventory::IdempotentOperation.apply_lock_timeout!
 
       Inventory::ReleaseStockService.new(
-        merchant: reservation.merchant,
+        setting: reservation.fulfillment_setting,
         order_number: reservation.order_number,
         sku: reservation.sku
       ).call
@@ -55,7 +55,7 @@ namespace :stock do
     Rails.logger.warn(
       "stock.idem operator_release reservation_id=#{reservation.id} " \
       "order_number=#{reservation.order_number} sku=#{reservation.sku} " \
-      "merchant_id=#{reservation.merchant_id} quantity=#{reservation.quantity} " \
+      "merchant_principal_id=#{reservation.merchant_principal_id} quantity=#{reservation.quantity} " \
       "credited=#{credited} already_released_by_a_caller=#{beaten} " \
       "released_at=#{reservation.released_at}"
     )

@@ -4,7 +4,9 @@
 class StockReservation < ApplicationRecord
   extend T::Sig
 
-  belongs_to :merchant
+  belongs_to :fulfillment_setting,
+             primary_key: :merchant_principal_id,
+             foreign_key: :merchant_principal_id
   belongs_to :bin_inventory, optional: true
 
   validates :order_number, presence: true,

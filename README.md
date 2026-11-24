@@ -10,8 +10,8 @@ Enterprise Warehouse Order Management, Physical Bin Inventory Tracking, Packing,
    - `SessionsController` integrates with `Identity::GrpcClient` to authenticate warehouse staff via gRPC `IdentityService` (`:50052`), resolving identity sovereignty violations.
 2. **0 Sorbet Typecheck Errors**:
    - Resolved all 17 Sorbet typecheck errors (`bundle exec srb tc` ➔ **`No errors! Great job.`**). Aligned Protobuf class names (`CheckBinStockResponse`), fields (`req.quantity`), and keyword arguments (`success:`, `bin_location:`, `remaining_available:`).
-3. **Correct gRPC FleetPulse Target Port & Clean Dispatch**:
-   - Updated `FleetPulse::GrpcClient` default host configuration to `ENV.fetch("MATCHING_GRPC_HOST", "localhost:50053")` (matching the official gRPC port of `kinetix-matching-service`). Removed fake fallback driver mock data.
+3. **gRPC Order & Identity Integration**:
+   - `Identity::GrpcClient` (`:50052`) and `Order::GrpcClient` (`:50055`) communicate over mutual TLS gRPC with fail-fast environment configuration.
 4. **Real Physical Inventory Stock Queries**:
    - Eliminated `available_stock + 5` and fake 25 items fallback in `BinStockServiceHandler`. Returns exact physical inventory counts from `BinInventory` and `WarehouseBin` tables.
 5. **RSpec Test Suite Verification**:
@@ -25,8 +25,8 @@ Enterprise Warehouse Order Management, Physical Bin Inventory Tracking, Packing,
 kinetix-warehouse-service/
 ├── app/
 │   ├── clients/                        # External gRPC Clients
-│   │   ├── identity_client.rb          # gRPC Identity Client (:50052)
-│   │   └── fleet_pulse_client.rb       # gRPC Matching Client (:50053)
+│   │   ├── identity/                   # gRPC Identity Client (:50052)
+│   │   └── order/                      # gRPC Order Client (:50055)
 │   ├── controllers/                    # Rails Controllers
 │   ├── models/                         # Sorbet ActiveRecord Models
 │   │   ├── warehouse_bin.rb

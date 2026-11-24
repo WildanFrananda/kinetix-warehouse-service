@@ -1,13 +1,13 @@
 # typed: false
 
 FactoryBot.define do
-  factory :merchant do
-    principal_id { SecureRandom.uuid }
+  factory :fulfillment_setting do
+    merchant_principal_id { SecureRandom.uuid }
     cutoff_hour { 14 }
   end
 
   factory :fulfillment_task do
-    merchant
+    fulfillment_setting
     sequence(:order_number) { |n| "ORD-#{n}" }
     status { "received" }
     same_day_cutoff_at { Time.current + 2.hours }

@@ -12,8 +12,8 @@ module Api
 
       sig { void }
       def index
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         order_number = params[:order_number]
         unless order_number.is_a?(String) && string_problem(order_number).nil? && !order_number.strip.empty?
@@ -25,26 +25,26 @@ module Api
         end
 
         service = T.let(Container[:task_lookup_service], Fulfillment::TaskLookupService)
-        result = service.call(merchant_id: merchant.id, order_number: order_number.strip)
+        result = service.call(merchant_principal_id: setting.merchant_principal_id, order_number: order_number.strip)
 
         render_result(result)
       end
 
       sig { void }
       def queue
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         service = T.let(Container[:task_queue_service], Fulfillment::TaskQueueService)
-        result = service.call(merchant_id: merchant.id)
+        result = service.call(merchant_principal_id: setting.merchant_principal_id)
 
         render_result(result)
       end
 
       sig { void }
       def update_status
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         task_id = require_task_id!
         return if task_id.nil?
@@ -52,7 +52,7 @@ module Api
 
         service = T.let(Container[:advance_task_service], Fulfillment::AdvanceTaskService)
         result = service.call(
-          merchant_id: merchant.id,
+          merchant_principal_id: setting.merchant_principal_id,
           task_id: task_id,
           new_status: string_param(:status).to_s
         )
@@ -62,22 +62,22 @@ module Api
 
       sig { void }
       def generate_label
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         task_id = require_task_id!
         return if task_id.nil?
 
         service = T.let(Container[:generate_shipping_label_service], Labels::GenerateShippingLabelService)
-        result = service.call(merchant_id: merchant.id, fulfillment_task_id: task_id)
+        result = service.call(merchant_principal_id: setting.merchant_principal_id, fulfillment_task_id: task_id)
 
         render_result(result)
       end
 
       sig { void }
       def verify_scan
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         task_id = require_task_id!
         return if task_id.nil?
@@ -91,7 +91,11 @@ module Api
         end
 
         service = T.let(Container[:verify_scan_service], Fulfillment::VerifyScanService)
-        result = service.call(merchant_id: merchant.id, task_id: task_id, scanned_code: scanned_code)
+        result = service.call(
+          merchant_principal_id: setting.merchant_principal_id,
+          task_id: task_id,
+          scanned_code: scanned_code
+        )
 
         render_result(result)
       end

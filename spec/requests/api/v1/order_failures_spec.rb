@@ -9,8 +9,8 @@ RSpec.describe "what a client sees when order answers a return with a gRPC error
   include_context "order answers over gRPC"
 
   let(:principal_id) { "11111111-2222-3333-4444-777777777777" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, order_number: "ORD-RETURN-9") }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-RETURN-9") }
   let(:headers) { bearer(access_token(principal_id: principal_id)).merge("Content-Type" => "application/json") }
   let(:orders_words) { "order's own words: row 42 on pgsql-node" }
 
@@ -124,7 +124,7 @@ RSpec.describe "what a client sees when order answers a return with a gRPC error
     end
 
     it "leaves a packed parcel packed and says order was not told, rather than showing order's dispatch ref" do
-      packing = create(:fulfillment_task, merchant: merchant, order_number: "ORD-PACK-9", status: "packing")
+      packing = create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-PACK-9", status: "packing")
       order_stub.answer(
         :fulfillment_packed,
         ::Order::V1::FulfillmentPackedResponse.new(success: true, dispatch_ref: "DISP-\u00001")
@@ -142,7 +142,7 @@ RSpec.describe "what a client sees when order answers a return with a gRPC error
 
   describe "a gRPC error from order when a parcel is packed" do
     it "keeps the task packed and says in fixed words that order was not told" do
-      packing = create(:fulfillment_task, merchant: merchant, order_number: "ORD-PACK-8", status: "packing")
+      packing = create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-PACK-8", status: "packing")
       order_stub.fail_with(codes::INVALID_ARGUMENT, orders_words)
 
       patch "/api/v1/fulfillment_tasks/#{packing.id}/status", params: { status: "packed" }.to_json, headers: headers

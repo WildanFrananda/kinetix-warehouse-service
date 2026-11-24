@@ -22,7 +22,7 @@ Local Muslim-fashion boutiques and e-commerce platforms (hijab, gamis, koko, muk
 Build a Rails-based **Order Management System (OMS)** that gives boutique warehouse staff and merchant brand owners a real-time operational screen to:
 1. See incoming orders that require same-day fulfillment, prioritized by cutoff time.
 2. Print shipping labels/AWB per order with Code128 vector barcodes.
-3. Track courier pickup → delivery status in real time via FleetPulse Elixir Radar.
+3. Track courier pickup → delivery status in real time via Kinetix Matching Elixir Radar.
 4. Manage returns without leaking data across tenants (brands).
 5. Configure merchant API credentials, SLA cutoff hours, and warehouse staff access.
 
@@ -37,7 +37,7 @@ The platform serves **4 distinct operational user roles**, each requiring tailor
 | **1. Warehouse Manager** | Executive Operations Lead (`Budi Hendra`, `Siti Nurhaliza`) | `/analytics`, `/settings`, `/orders`, `/support` | - **RBAC & Authentication**: User login (`/login`) with role permissions.<br>- **Emergency Halt**: Warehouse emergency override button.<br>- **Audit Log**: Digital trail of staff actions.<br>- **Cutoff Triage**: Override same-day SLA cutoff for VIP orders.<br>- **Staff Leaderboard**: Packing productivity per shift. |
 | **2. Picker & Packer Staff** | Warehouse Physical Operations Staff | `/orders`, `/inventory`, `/manifests`, `/scan` | - **Bin Location Finder**: Physical bin mapping (`Rak A-01, Bin 12`).<br>- **JsBarcode Engine**: 100mm x 150mm thermal AWB sticker.<br>- **Handover PDF**: Printable Surat Jalan PDF.<br>- **PDA Barcode Mode (`/scan`)**: Camera/laser barcode scanning for hands-free pick/pack validation.<br>- **Wave Picking**: Batch route picking for 50 orders simultaneously.<br>- **Scale Check**: Digital weight scale validation. |
 | **3. Brand Merchant** | E-Commerce Store Owner (`Boutique Hijab Premium`, `Gamis Elegant Style`) | `/settings`, `/inventory`, `/api/v1/orders` | - **Isolated Portal View**: Strict tenant isolation for merchant owners.<br>- **API Key Management**: Production API keys & Webhook URL configuration.<br>- **Marketplace Sync**: Real-time stock sync with Shopify/TikTok/Tokopedia.<br>- **Inbound PO (`/inbound`)**: Booking schedule for new stock arrival from factory. |
-| **4. FleetPulse Courier** | Instant Delivery Driver (FleetPulse Elixir Cluster) | `/fleet_radar`, `/driver_app` | - **FleetPulse Radar (`/fleet_radar`)**: Live GPS telemetry stream (speed, ETA, coordinates).<br>- **Pickup Request**: Real-time dispatch trigger.<br>- **Driver Mobile PWA (`/driver_app`)**: Driver app to accept tasks & update status.<br>- **Proof of Delivery (POD)**: Photo attachment & digital signature on delivery. |
+| **4. Courier** | Instant Delivery Driver (Kinetix Matching Elixir Cluster) | `/fleet_radar`, `/driver_app` | - **Driver Radar (`/fleet_radar`)**: Live GPS telemetry stream (speed, ETA, coordinates).<br>- **Pickup Request**: Real-time dispatch trigger.<br>- **Driver Mobile PWA (`/driver_app`)**: Driver app to accept tasks & update status.<br>- **Proof of Delivery (POD)**: Photo attachment & digital signature on delivery. |
 
 ---
 
@@ -62,7 +62,8 @@ The platform serves **4 distinct operational user roles**, each requiring tailor
 - **`⚡ Filter Order Queue`**: Smooth slide-over drawer (`cubic-bezier` transition) with Date Range, SLA Urgency Multi-select, Status Grid, and Merchant filter.
 - **`🚨 Emergency Halt`**: Instant warehouse override dispatch pause.
 
-### 5.2 Module 2: FleetPulse Driver Radar (`/fleet_radar`)
+### 5.2 Module 2: Kinetix Matching Driver Radar (`/fleet_radar`)
+
 - Live GPS telemetry stream (latitude, longitude, speed in km/h, ETA countdown, call driver action).
 - Real-time driver status tracking for `dispatched`, `in_transit`, and `delivered` orders.
 
@@ -148,9 +149,9 @@ To prevent monolithic bloat, the ecosystem is strictly decoupled into single-res
    - Dedicated warehouse fulfillment engine (`# typed: strict`).
    - Responsible for Order Queue Triage, Warehouse Bin Picking (`bin_location`), Barcode Scanner Packing Verification (`/scan`), Thermal Shipping Label PDF Generation, and Fleet Dispatch Triggers.
 
-3. **Fleet & Telemetry Microservice (`fleet_pulse` — Elixir / Phoenix)**:
+3. **Fleet & Telemetry Microservice (`kinetix-matching-service` — Elixir / Phoenix)**:
    - Dedicated real-time courier telemetry cluster (`ws://localhost:4000/socket/websocket`).
-   - Responsible for Live GPS Telemetry, Driver Duty Status, and Push Notifications to Driver App (`fleet_pulse_mobile`).
+   - Responsible for Live GPS Telemetry, Driver Duty Status, and Push Notifications to Driver App (`kinetix-courier-mobile`).
 
 ### 9.2 Inter-Service Protocol & Contract Specifications (`fulfillment_service.proto`)
 - **Inter-Service Communication**: gRPC (Google Remote Procedure Call) over HTTP/2 using binary Protocol Buffers (`.proto`).

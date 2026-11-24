@@ -21,7 +21,7 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
       StockReservation.delete_all
       BinInventory.delete_all
       WarehouseBin.delete_all
-      Merchant.where(principal_id: [ principal, other_principal ]).delete_all
+      FulfillmentSetting.where(merchant_principal_id: [ principal, other_principal ]).delete_all
     end
   end
 
@@ -29,9 +29,9 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
     @threads = []
     @gates = []
     wipe
-    @merchant = Merchant.create!(cutoff_hour: 14, principal_id: principal)
-    @other_merchant = Merchant.create!(cutoff_hour: 14,
-      principal_id: other_principal)
+    @setting = FulfillmentSetting.create!(cutoff_hour: 14, merchant_principal_id: principal)
+    @other_setting = FulfillmentSetting.create!(cutoff_hour: 14,
+      merchant_principal_id: other_principal)
     @bin = WarehouseBin.create!(bin_code: "C-01", zone: "C", shelf_level: 1)
     @inventory = BinInventory.create!(
       warehouse_bin: @bin, sku: "SKU-C", quantity: 10, reserved_quantity: 0,
@@ -256,12 +256,12 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
 
     expect(reserved_quantity).to eq(3)
 
-    rows = StockReservation.where(order_number: "ORD-C").order(:merchant_id)
+    rows = StockReservation.where(order_number: "ORD-C").order(:merchant_principal_id)
     expect(rows.count).to eq(2)
-    expect(rows.find_by(merchant_id: @merchant.id))
+    expect(rows.find_by(merchant_principal_id: @setting.merchant_principal_id))
       .to have_attributes(quantity: 3, released_at: nil)
-    expect(rows.find_by(merchant_id: @other_merchant.id).quantity).to eq(0)
-    expect(rows.find_by(merchant_id: @other_merchant.id).released_at).to be_present
+    expect(rows.find_by(merchant_principal_id: @other_setting.merchant_principal_id).quantity).to eq(0)
+    expect(rows.find_by(merchant_principal_id: @other_setting.merchant_principal_id).released_at).to be_present
   end
 
   it "moves the counter exactly once under a burst of identical duplicates" do
@@ -451,7 +451,7 @@ RSpec.describe "Rpc::BinStockServiceHandler across two connections" do
       ApplicationRecord.transaction do
         ApplicationRecord.connection.execute("SET LOCAL lock_timeout = 10000")
         Inventory::ReleaseStockService.new(
-          merchant: @merchant, order_number: "ORD-C", sku: "SKU-C"
+          setting: @setting, order_number: "ORD-C", sku: "SKU-C"
         ).call
       end
     end

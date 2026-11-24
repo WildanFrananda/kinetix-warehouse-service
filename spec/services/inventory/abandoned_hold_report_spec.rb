@@ -4,20 +4,20 @@
 require "rails_helper"
 
 RSpec.describe Inventory::AbandonedHoldReport do
-  let!(:merchant) do
-    Merchant.create!(cutoff_hour: 14,
-      principal_id: "ffffffff-1111-2222-3333-444444444444")
+  let!(:setting) do
+    FulfillmentSetting.create!(cutoff_hour: 14,
+      merchant_principal_id: "ffffffff-1111-2222-3333-444444444444")
   end
 
   let!(:bin) { WarehouseBin.create!(bin_code: "H-01", zone: "H", shelf_level: 1) }
   let!(:inventory) do
     BinInventory.create!(warehouse_bin: bin, sku: "SKU-H", quantity: 20, reserved_quantity: 0,
-                         merchant_principal_id: merchant.principal_id)
+                         merchant_principal_id: setting.merchant_principal_id)
   end
 
   def hold(order_number:, age_hours:, quantity: 3, released_at: nil)
     StockReservation.create!(
-      merchant: merchant, order_number: order_number, sku: "SKU-H", quantity: quantity,
+      fulfillment_setting: setting, order_number: order_number, sku: "SKU-H", quantity: quantity,
       bin_inventory: inventory, released_at: released_at
     ).tap { |row| row.update_column(:created_at, age_hours.hours.ago) }
   end

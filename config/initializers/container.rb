@@ -2,7 +2,7 @@
 
 require_relative "../../app/core/container"
 
-Container.register(:merchant_repository) { MerchantRepository.new }
+Container.register(:fulfillment_setting_repository) { FulfillmentSettingRepository.new }
 Container.register(:fulfillment_task_repository) { FulfillmentTaskRepository.new }
 Container.register(:stock_reservation_repository) { StockReservationRepository.new }
 Container.register(:shipping_label_repository) { ShippingLabelRepository.new }
@@ -10,7 +10,7 @@ Container.register(:stock_ledger_repository) { StockLedgerRepository.new }
 
 Container.register(:create_task_service) do
   Fulfillment::CreateTaskService.new(
-    merchant_repository: Container[:merchant_repository],
+    setting_repository: Container[:fulfillment_setting_repository],
     task_repository: Container[:fulfillment_task_repository],
     reservation_repository: Container[:stock_reservation_repository],
     time_zone: Rails.configuration.x.platform_time_zone
@@ -36,7 +36,7 @@ Container.register(:identity_grpc_client) { Identity::GrpcClient.new }
 
 Container.register(:resolve_merchant_service) do
   Merchants::ResolveService.new(
-    merchant_repository: Container[:merchant_repository],
+    setting_repository: Container[:fulfillment_setting_repository],
     identity_client: Container[:identity_grpc_client]
   )
 end

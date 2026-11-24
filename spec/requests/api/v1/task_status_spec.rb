@@ -7,7 +7,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
   let(:order) { FakePackedReport.new }
 
@@ -25,7 +25,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
   describe "moving a task by hand" do
     it "goes forward one step at a time, and tells order once it is packed" do
-      task = create(:fulfillment_task, merchant: merchant, status: "received")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "received")
 
       move(task, "packing")
       expect(response).to have_http_status(:ok)
@@ -37,7 +37,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
     end
 
     it "lets a packed task be reported again, for when order did not hear it the first time" do
-      task = create(:fulfillment_task, merchant: merchant, status: "packed")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "packed")
 
       move(task, "packed")
 
@@ -49,7 +49,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
       let(:order) { Order::GrpcClient.new(host: "127.0.0.1:1") }
 
       it "keeps the task packed and says order was not told, without the transport's own words" do
-        task = create(:fulfillment_task, merchant: merchant, status: "packing")
+        task = create(:fulfillment_task, fulfillment_setting: merchant, status: "packing")
 
         move(task, "packed")
 
@@ -63,7 +63,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
     end
 
     it "will not skip packing" do
-      task = create(:fulfillment_task, merchant: merchant, status: "received")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "received")
 
       move(task, "packed")
 
@@ -73,7 +73,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
     end
 
     it "will not bring a task order cancelled back to life" do
-      task = create(:fulfillment_task, merchant: merchant, status: "cancelled")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "cancelled")
 
       move(task, "packed")
 
@@ -83,7 +83,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
     end
 
     it "will not let a merchant cancel a task; that is order's to do" do
-      task = create(:fulfillment_task, merchant: merchant, status: "received")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "received")
 
       move(task, "cancelled")
 
@@ -92,7 +92,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
     end
 
     it "will not move a task backwards" do
-      task = create(:fulfillment_task, merchant: merchant, status: "packed")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "packed")
 
       move(task, "received")
 
@@ -102,7 +102,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
     [ {}, { status: "" }, { status: "   " } ].each do |body|
       it "says the status is missing for #{body.inspect}, rather than quoting an empty value" do
-        task = create(:fulfillment_task, merchant: merchant, status: "received")
+        task = create(:fulfillment_task, fulfillment_setting: merchant, status: "received")
 
         patch "/api/v1/fulfillment_tasks/#{task.id}/status", params: body, headers: headers
 
@@ -115,7 +115,7 @@ RSpec.describe "Api::V1::FulfillmentTasks status changes", type: :request do
 
   describe "moving a task by scanning it" do
     it "will not scan a cancelled task back into packing" do
-      task = create(:fulfillment_task, merchant: merchant, status: "cancelled")
+      task = create(:fulfillment_task, fulfillment_setting: merchant, status: "cancelled")
       create(:fulfillment_task_line, fulfillment_task: task, sku: "GAMIS-RED-M")
 
       scan(task, "GAMIS-RED-M")

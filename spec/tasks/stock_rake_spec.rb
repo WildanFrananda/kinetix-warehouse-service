@@ -10,8 +10,8 @@ RSpec.describe "stock rake tasks" do
   let(:handler) { Rpc::BinStockServiceHandler.new }
   let(:principal) { "abababab-1111-2222-3333-444444444444" }
 
-  let!(:merchant) do
-    Merchant.create!(cutoff_hour: 14, principal_id: principal)
+  let!(:setting) do
+    FulfillmentSetting.create!(cutoff_hour: 14, merchant_principal_id: principal)
   end
   let!(:bin) { WarehouseBin.create!(bin_code: "R-01", zone: "R", shelf_level: 1) }
   let!(:inventory) do

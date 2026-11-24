@@ -6,8 +6,8 @@ require "fulfillment/v1/task_services_pb"
 RSpec.describe "Rpc::FulfillmentTaskServiceHandler#record_courier_awb" do
   let(:handler) { Rpc::FulfillmentTaskServiceHandler.new }
   let(:principal) { "cccccccc-1111-4222-8333-444444444444" }
-  let!(:merchant) { create(:merchant, principal_id: principal) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, status: "packed") }
+  let!(:setting) { create(:fulfillment_setting, merchant_principal_id: principal) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: setting, status: "packed") }
 
   def record(awb:, task_id: task.id, who: principal)
     handler.record_courier_awb(
@@ -61,7 +61,7 @@ RSpec.describe "Rpc::FulfillmentTaskServiceHandler#record_courier_awb" do
   end
 
   it "refuses a task that is not this merchant's" do
-    other = create(:fulfillment_task, merchant: create(:merchant))
+    other = create(:fulfillment_task, fulfillment_setting: create(:fulfillment_setting))
 
     res = record(awb: "KNX-20260921-ABCDEFGH", task_id: other.id)
 

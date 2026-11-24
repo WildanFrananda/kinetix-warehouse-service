@@ -10,7 +10,7 @@ RSpec.describe OneInventoryRowPerBinAndSku do
   let(:connection) { ActiveRecord::Base.connection }
   let(:owner) { "aaaaaaaa-2222-4333-8444-555555555555" }
   let(:other) { "bbbbbbbb-2222-4333-8444-555555555555" }
-  let!(:merchant) { Merchant.create!(principal_id: owner, cutoff_hour: 14) }
+  let!(:setting) { FulfillmentSetting.create!(merchant_principal_id: owner, cutoff_hour: 14) }
   let!(:bin) { WarehouseBin.create!(bin_code: "DUP-01", zone: "D", shelf_level: 1) }
 
   before { connection.remove_index :bin_inventories, name: described_class::INDEX }
@@ -37,7 +37,7 @@ RSpec.describe OneInventoryRowPerBinAndSku do
     first = row(quantity: 4, reserved: 1, owner_id: owner)
     second = row(quantity: 6, reserved: 2, owner_id: owner)
     held = StockReservation.create!(
-      merchant: merchant,
+      fulfillment_setting: setting,
       order_number: "ORD-DUP",
       sku: "SKU-DUP",
       quantity: 2,

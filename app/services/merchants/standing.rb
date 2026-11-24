@@ -2,7 +2,7 @@
 
 module Merchants
   class Standing < T::Struct
-    const :merchant, Merchant
+    const :setting, FulfillmentSetting
     const :may_sell, T::Boolean
   end
 end

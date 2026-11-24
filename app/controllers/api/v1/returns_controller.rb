@@ -13,10 +13,10 @@ module Api
 
       sig { void }
       def create
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
-        task = find_task(merchant, Kinetix::IntegerParam.id(params[:fulfillment_task_id]))
+        task = find_task(setting, Kinetix::IntegerParam.id(params[:fulfillment_task_id]))
         return if task.nil?
         return if refuse_unusable_strings(%i[reason], coded: false)
 
@@ -29,7 +29,7 @@ module Api
 
         relay = T.let(Container[:order_grpc_client], Order::ReturnRelay)
         result = relay.open_return(
-          merchant_principal_id: T.must(merchant.principal_id),
+          merchant_principal_id: setting.merchant_principal_id,
           order_number: T.must(task.order_number),
           reason: reason
         )
@@ -47,8 +47,8 @@ module Api
 
       sig { void }
       def received
-        merchant = require_api_merchant!
-        return if merchant.nil?
+        setting = require_api_merchant!
+        return if setting.nil?
 
         return_number = Returns::ReturnNumber.read(params[:return_number])
         if return_number.nil?
@@ -88,7 +88,7 @@ module Api
 
         relay = T.let(Container[:order_grpc_client], Order::ReturnRelay)
         result = relay.return_goods_received(
-          merchant_principal_id: T.must(merchant.principal_id),
+          merchant_principal_id: setting.merchant_principal_id,
           return_number: return_number,
           lines: form.lines,
           bin_code: bin_code,
@@ -107,10 +107,10 @@ module Api
 
       private
 
-      sig { params(merchant: Merchant, task_id: T.nilable(Integer)).returns(T.nilable(FulfillmentTask)) }
-      def find_task(merchant, task_id)
+      sig { params(setting: FulfillmentSetting, task_id: T.nilable(Integer)).returns(T.nilable(FulfillmentTask)) }
+      def find_task(setting, task_id)
         repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-        task = task_id && repository.find_by_id(merchant_id: merchant.id, id: task_id)
+        task = task_id && repository.find_by_id(merchant_principal_id: setting.merchant_principal_id, id: task_id)
 
         if task.nil?
           render json: { error: "Fulfillment task not found" }, status: :not_found

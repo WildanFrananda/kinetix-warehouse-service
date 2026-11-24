@@ -9,7 +9,7 @@ RSpec.describe Inventory::ReceiveStockService do
   let(:owner) { "22222222-3333-4444-5555-666666666666" }
   let(:identity_client) { FakeIdentityClient.new }
   let(:resolver) do
-    Merchants::ResolveService.new(merchant_repository: MerchantRepository.new, identity_client: identity_client)
+    Merchants::ResolveService.new(setting_repository: FulfillmentSettingRepository.new, identity_client: identity_client)
   end
 
   def receive(quantity: 5, key: "RCV-1", sku: "SKU-1", bin_code: "A-01-1", merchant: nil)

@@ -9,7 +9,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#queue", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-4333-8444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id, cutoff_hour: 14) }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id, cutoff_hour: 14) }
   let(:headers) { bearer(access_token(principal_id: principal_id)) }
 
   def queue
@@ -18,7 +18,7 @@ RSpec.describe "Api::V1::FulfillmentTasks#queue", type: :request do
   end
 
   def task(status, order_number, cutoff: 1.hour.ago)
-    create(:fulfillment_task, merchant: merchant, status: status, order_number: order_number,
+    create(:fulfillment_task, fulfillment_setting: merchant, status: status, order_number: order_number,
                               same_day_cutoff_at: cutoff)
   end
 

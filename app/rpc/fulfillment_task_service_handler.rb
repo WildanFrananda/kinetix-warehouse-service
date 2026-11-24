@@ -25,8 +25,8 @@ module Rpc
       Rpc::StringLimits.refuse_longer!("order_number", [ req.order_number ], StockOperation::MAX_ORDER_NUMBER_LENGTH)
       Rpc::StringLimits.refuse_longer!("lines.sku", req.lines.map(&:sku), StockOperation::MAX_SKU_LENGTH)
 
-      merchant = merchant_for(req.merchant_principal_id)
-      return refuse_create("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
+      setting = setting_for(req.merchant_principal_id)
+      return refuse_create("UNKNOWN_MERCHANT", NO_MERCHANT) unless setting
 
       lines = req.lines.map do |line|
         Fulfillment::CreateTaskForm::LineInput.new(sku: line.sku, quantity: line.quantity)
@@ -34,7 +34,7 @@ module Rpc
       form = Fulfillment::CreateTaskForm.new(order_number: req.order_number, lines: lines)
 
       service = T.let(Container[:create_task_service], Fulfillment::CreateTaskService)
-      result = service.call(merchant_id: merchant.id, form: form)
+      result = service.call(merchant_principal_id: setting.merchant_principal_id, form: form)
 
       return refuse_create("VALIDATION_FAILED", result.error.to_s) unless result.success?
 
@@ -54,19 +54,20 @@ module Rpc
       ).returns(Fulfillment::V1::CancelFulfillmentTaskResponse)
     end
     def cancel_fulfillment_task(req, _call)
-      merchant = merchant_for(req.merchant_principal_id)
-      return refuse_cancel("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
+      setting = setting_for(req.merchant_principal_id)
+      return refuse_cancel("UNKNOWN_MERCHANT", NO_MERCHANT) unless setting
 
       task_id = Kinetix::IntegerParam.id(req.task_id)
       return refuse_cancel("UNKNOWN_TASK", "task_id is not a number this warehouse could have issued") unless task_id
 
+      principal = setting.merchant_principal_id
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-      task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
+      task = repository.find_by_id(merchant_principal_id: principal, id: task_id)
       return refuse_cancel("UNKNOWN_TASK", "no task with that id belongs to this merchant") unless task
 
       return already_cancelled(task) if task.status == "cancelled"
 
-      repository.update_status(merchant_id: merchant.id, task_id: task_id, status: "cancelled")
+      repository.update_status(merchant_principal_id: principal, task_id: task_id, status: "cancelled")
 
       Fulfillment::V1::CancelFulfillmentTaskResponse.new(success: true, already_cancelled: false)
     end
@@ -80,8 +81,8 @@ module Rpc
     def record_courier_awb(req, _call)
       Rpc::StringLimits.refuse_longer!("awb_number", [ req.awb_number ], ShippingLabel::MAX_AWB_LENGTH)
 
-      merchant = merchant_for(req.merchant_principal_id)
-      return refuse_awb("UNKNOWN_MERCHANT", NO_MERCHANT) unless merchant
+      setting = setting_for(req.merchant_principal_id)
+      return refuse_awb("UNKNOWN_MERCHANT", NO_MERCHANT) unless setting
 
       if req.awb_number.strip.empty?
         return refuse_awb("BLANK_AWB", "awb_number is required: a parcel is not labelled with nothing")
@@ -93,7 +94,7 @@ module Rpc
       end
 
       repository = T.let(Container[:fulfillment_task_repository], FulfillmentTaskRepositoryInterface)
-      task = repository.find_by_id(merchant_id: merchant.id, id: task_id)
+      task = repository.find_by_id(merchant_principal_id: setting.merchant_principal_id, id: task_id)
       return refuse_awb("UNKNOWN_TASK", "no task with that id belongs to this merchant") unless task
 
       existing = task.shipping_label
@@ -119,9 +120,10 @@ module Rpc
 
     private
 
-    sig { params(principal_id: String).returns(T.nilable(Merchant)) }
-    def merchant_for(principal_id)
-      T.let(Container[:merchant_repository], MerchantRepositoryInterface).find_by_principal_id(principal_id)
+    sig { params(principal_id: String).returns(T.nilable(FulfillmentSetting)) }
+    def setting_for(principal_id)
+      T.let(Container[:fulfillment_setting_repository], FulfillmentSettingRepositoryInterface)
+       .find_by_principal_id(principal_id)
     end
 
     sig { params(_task: FulfillmentTask).returns(Fulfillment::V1::CancelFulfillmentTaskResponse) }

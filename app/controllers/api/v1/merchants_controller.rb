@@ -12,19 +12,19 @@ module Api
         standing = require_api_standing!
         return if standing.nil?
 
-        merchant = standing.merchant
+        setting = standing.setting
         render json: {
-          id: merchant.id,
-          principal_id: merchant.principal_id,
-          cutoff_hour: merchant.cutoff_hour,
+          id: setting.id,
+          principal_id: setting.merchant_principal_id,
+          cutoff_hour: setting.cutoff_hour,
           may_sell: standing.may_sell
         }, status: :ok
       end
 
       sig { void }
       def update
-        merchant = require_trading_merchant!
-        return if merchant.nil?
+        setting = require_trading_merchant!
+        return if setting.nil?
 
         id = Kinetix::IntegerParam.id(params[:id])
         if id.nil?
@@ -32,7 +32,7 @@ module Api
           return
         end
 
-        if merchant.id != id
+        if setting.id != id
           render json: { error: "Forbidden: that merchant is not yours" }, status: :forbidden
           return
         end
@@ -54,8 +54,8 @@ module Api
           return
         end
 
-        merchant.update!(cutoff_hour: cutoff_hour)
-        render json: { id: merchant.id, cutoff_hour: merchant.cutoff_hour }, status: :ok
+        setting.update!(cutoff_hour: cutoff_hour)
+        render json: { id: setting.id, cutoff_hour: setting.cutoff_hour }, status: :ok
       end
     end
   end

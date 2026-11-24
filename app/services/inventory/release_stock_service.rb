@@ -7,9 +7,9 @@ module Inventory
   class ReleaseStockService
     extend T::Sig
 
-    sig { params(merchant: Merchant, order_number: String, sku: String).void }
-    def initialize(merchant:, order_number:, sku:)
-      @merchant = merchant
+    sig { params(setting: FulfillmentSetting, order_number: String, sku: String).void }
+    def initialize(setting:, order_number:, sku:)
+      @setting = setting
       @order_number = order_number
       @sku = sku
     end
@@ -29,8 +29,11 @@ module Inventory
 
     sig { returns(T.nilable(StockReservation)) }
     def locked_reservation
-      StockReservation.lock("FOR UPDATE")
-                      .find_by(merchant_id: @merchant.id, order_number: @order_number, sku: @sku)
+      StockReservation.lock("FOR UPDATE").find_by(
+        merchant_principal_id: @setting.merchant_principal_id,
+        order_number: @order_number,
+        sku: @sku
+      )
     rescue ActiveRecord::LockWaitTimeout
       raise LedgerTimeout
     end
@@ -39,14 +42,14 @@ module Inventory
     def tombstone
       StockReservation.transaction(requires_new: true) do
         StockReservation.create!(
-          merchant: @merchant, order_number: @order_number, sku: @sku,
+          fulfillment_setting: @setting, order_number: @order_number, sku: @sku,
           quantity: 0, released_at: Time.current
         )
       end
 
       Rails.logger.error(
         "stock.idem orphan_release order_number=#{@order_number} sku=#{@sku} " \
-        "merchant_id=#{@merchant.id} — released stock that was never reserved; a tombstone now " \
+        "merchant_principal_id=#{@setting.merchant_principal_id} — released stock that was never reserved; a tombstone now " \
         "blocks a late reserve for this pair (request_id=#{Kinetix::RequestId.current || '-'})"
       )
       nil

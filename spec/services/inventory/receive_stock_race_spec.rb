@@ -10,18 +10,18 @@ RSpec.describe "two first receipts of one sku into one bin, at the same moment" 
   let(:staff) { "eeeeeeee-1111-4222-8333-444444444444" }
   let!(:bin) { WarehouseBin.create!(bin_code: "RACE-01", zone: "R", shelf_level: 1) }
 
-  before { Merchant.create!(principal_id: owner, cutoff_hour: 14) }
+  before { FulfillmentSetting.create!(merchant_principal_id: owner, cutoff_hour: 14) }
 
   after do
     StockReceipt.where(warehouse_bin_id: bin.id).delete_all
     BinInventory.where(warehouse_bin_id: bin.id).delete_all
     bin.delete
-    Merchant.where(principal_id: owner).delete_all
+    FulfillmentSetting.where(merchant_principal_id: owner).delete_all
   end
 
   def book(key, quantity)
     resolver = Merchants::ResolveService.new(
-      merchant_repository: MerchantRepository.new,
+      setting_repository: FulfillmentSettingRepository.new,
       identity_client: FakeIdentityClient.new
     )
 

@@ -55,19 +55,19 @@ module ApiAuthentication
     claims
   end
 
-  sig { returns(T.nilable(Merchant)) }
+  sig { returns(T.nilable(FulfillmentSetting)) }
   def require_api_merchant!
     standing = require_api_standing!
     return nil if standing.nil?
 
-    standing.merchant
+    standing.setting
   end
 
-  sig { returns(T.nilable(Merchant)) }
+  sig { returns(T.nilable(FulfillmentSetting)) }
   def require_trading_merchant!
     standing = require_api_standing!
     return nil if standing.nil?
-    return standing.merchant if standing.may_sell
+    return standing.setting if standing.may_sell
 
     render json: {
       error: "MERCHANT_NOT_TRADING",

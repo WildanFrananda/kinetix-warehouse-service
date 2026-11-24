@@ -7,8 +7,8 @@ RSpec.describe "Api::V1::Returns", type: :request do
   include_context "identity answers about merchants"
 
   let(:principal_id) { "11111111-2222-3333-4444-555555555555" }
-  let!(:merchant) { create(:merchant, principal_id: principal_id) }
-  let!(:task) { create(:fulfillment_task, merchant: merchant, order_number: "ORD-RETURN-1") }
+  let!(:merchant) { create(:fulfillment_setting, merchant_principal_id: principal_id) }
+  let!(:task) { create(:fulfillment_task, fulfillment_setting: merchant, order_number: "ORD-RETURN-1") }
   let(:valid_headers) { bearer(access_token(principal_id: principal_id)) }
 
   let(:relay) { FakeReturnRelay.new }
@@ -49,7 +49,7 @@ RSpec.describe "Api::V1::Returns", type: :request do
     end
 
     it "refuses a task that is not this merchant's" do
-      other = create(:fulfillment_task, merchant: create(:merchant))
+      other = create(:fulfillment_task, fulfillment_setting: create(:fulfillment_setting))
 
       post "/api/v1/fulfillment_tasks/#{other.id}/returns",
            params: { reason: "Wrong size" }, headers: valid_headers

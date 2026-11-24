@@ -32,14 +32,14 @@ module Rpc
     def check_bin_stock(req, _call)
       Rpc::StringLimits.refuse_longer!("sku", [ req.sku ], StockOperation::MAX_SKU_LENGTH)
 
-      merchant = merchant_for(req.merchant_principal_id)
-      return NOT_FOUND_STOCK if merchant.nil?
+      setting = setting_for(req.merchant_principal_id)
+      return NOT_FOUND_STOCK if setting.nil?
 
       sku = req.sku
 
       inventory = BinInventory
         .joins(:warehouse_bin)
-        .find_by(merchant_principal_id: merchant.principal_id, sku: sku)
+        .find_by(merchant_principal_id: setting.merchant_principal_id, sku: sku)
 
       return NOT_FOUND_STOCK if inventory.nil?
 
@@ -62,13 +62,13 @@ module Rpc
 
       Rpc::StringLimits.refuse_longer!("skus", skus, StockOperation::MAX_SKU_LENGTH)
 
-      merchant = merchant_for(req.merchant_principal_id)
+      setting = setting_for(req.merchant_principal_id)
 
-      return not_found_batch(skus) if merchant.nil?
+      return not_found_batch(skus) if setting.nil?
 
       held = BinInventory
         .joins(:warehouse_bin)
-        .where(merchant_principal_id: merchant.principal_id, sku: skus)
+        .where(merchant_principal_id: setting.merchant_principal_id, sku: skus)
         .index_by(&:sku)
 
       Fulfillment::V1::CheckBinStockBatchResponse.new(
@@ -93,8 +93,8 @@ module Rpc
       ).returns(Fulfillment::V1::ReserveStockResponse)
     end
     def reserve_stock(req, _call)
-      merchant = merchant_for(req.merchant_principal_id)
-      if merchant.nil?
+      setting = setting_for(req.merchant_principal_id)
+      if setting.nil?
         return reserve_refusal(
           UNKNOWN_MERCHANT, "no merchant in this warehouse is linked to that principal"
         )
@@ -114,17 +114,17 @@ module Rpc
         key: key,
         digest: StockOperation.digest_of(
           [
-            StockOperation::RESERVE, merchant.principal_id.to_s,
+            StockOperation::RESERVE, setting.merchant_principal_id,
             req.order_number, req.sku, req.quantity.to_s
           ]
         ),
-        merchant: merchant,
+        setting: setting,
         order_number: req.order_number,
         sku: req.sku,
         quantity: req.quantity
       ).call do
         Inventory::ReserveStockService.new(
-          merchant: merchant, order_number: req.order_number,
+          setting: setting, order_number: req.order_number,
           sku: req.sku, quantity: req.quantity
         ).call
       end
@@ -140,8 +140,8 @@ module Rpc
       ).returns(Fulfillment::V1::ReleaseStockResponse)
     end
     def release_stock(req, _call)
-      merchant = merchant_for(req.merchant_principal_id)
-      if merchant.nil?
+      setting = setting_for(req.merchant_principal_id)
+      if setting.nil?
         return release_refusal(
           UNKNOWN_MERCHANT, "no merchant in this warehouse is linked to that principal"
         )
@@ -156,15 +156,15 @@ module Rpc
         operation: StockOperation::RELEASE,
         key: key,
         digest: StockOperation.digest_of(
-          [ StockOperation::RELEASE, merchant.principal_id.to_s, req.order_number, req.sku ]
+          [ StockOperation::RELEASE, setting.merchant_principal_id, req.order_number, req.sku ]
         ),
-        merchant: merchant,
+        setting: setting,
         order_number: req.order_number,
         sku: req.sku,
         quantity: req.quantity
       ).call do
         Inventory::ReleaseStockService.new(
-          merchant: merchant, order_number: req.order_number, sku: req.sku
+          setting: setting, order_number: req.order_number, sku: req.sku
         ).call
       end
 
@@ -287,9 +287,10 @@ module Rpc
       )
     end
 
-    sig { params(principal_id: String).returns(T.nilable(Merchant)) }
-    def merchant_for(principal_id)
-      T.let(Container[:merchant_repository], MerchantRepositoryInterface).find_by_principal_id(principal_id)
+    sig { params(principal_id: String).returns(T.nilable(FulfillmentSetting)) }
+    def setting_for(principal_id)
+      T.let(Container[:fulfillment_setting_repository], FulfillmentSettingRepositoryInterface)
+       .find_by_principal_id(principal_id)
     end
   end
 end
